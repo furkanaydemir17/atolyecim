@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Atölyecim — Ayakkabı İmalat Atölyesi Yönetim Sistemi">
+  <title>Atölyecim — Atölye Yönetim Sistemi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ============ LOGIN SCREEN ============ -->
+  <div id="login-screen">
+    <div class="login-bg-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+    </div>
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="logo-icon">👟</div>
+        <h1>Atölyecim</h1>
+        <p class="login-subtitle">Ayakkabı İmalat Yönetim Sistemi</p>
+      </div>
+      <form id="login-form" autocomplete="off">
+        <div class="form-group">
+          <label for="login-username">Kullanıcı Adı</label>
+          <input type="text" id="login-username" placeholder="Kullanıcı adınız" required>
+        </div>
+        <div class="form-group">
+          <label for="login-password">Şifre</label>
+          <input type="password" id="login-password" placeholder="Şifreniz" required>
+        </div>
+        <div id="login-error" class="login-error" style="display:none;">
+          Kullanıcı adı veya şifre hatalı!
+        </div>
+        <button type="submit" class="btn btn-primary btn-login" id="login-btn">
+          <span>Giriş Yap</span>
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </form>
+      <div class="login-footer">
+        <span>© 2026 Atölyecim</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MAIN APP ============ -->
+  <div id="app" class="app-hidden">
+
+    <!-- MOBILE HAMBURGER -->
+    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Menü">
+      <span></span><span></span><span></span>
+    </button>
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <!-- SIDEBAR -->
+    <nav id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">👟</div>
+        <div>
+          <h2>Atölyecim</h2>
+          <span class="sidebar-version">v2.0</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section-label">ANA MENÜ</div>
+      <ul class="sidebar-nav">
+        <li class="nav-item active" data-page="dashboard">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          <span>Dashboard</span>
+        </li>
+        <li class="nav-item" data-page="products">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          <span>Ürünler</span>
+        </li>
+        <li class="nav-item" data-page="contacts">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          <span>Cari Hesaplar</span>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="user-avatar">A</div>
+          <div>
+            <div class="user-name">Admin</div>
+            <div class="user-role">Yönetici</div>
+          </div>
+        </div>
+        <button id="logout-btn" class="btn-logout" title="Çıkış Yap">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main id="content">
+
+      <!-- ======= DASHBOARD PAGE ======= -->
+      <section id="page-dashboard" class="page active">
+        <div class="page-header">
+          <div>
+            <h1>Dashboard</h1>
+            <p class="page-desc">Atölyenizin genel durumuna göz atın</p>
+          </div>
+          <div class="header-date" id="header-date"></div>
+        </div>
+
+        <!-- Financial Summary Cards -->
+        <div class="cards-grid" id="financial-cards">
+          <div class="stat-card stat-receivable">
+            <div class="stat-icon">
+              <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Toplam Alacak</span>
+              <span class="stat-value" id="total-receivable">₺0</span>
+            </div>
+          </div>
+          <div class="stat-card stat-payable">
+            <div class="stat-icon">
+              <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Toplam Borç</span>
+              <span class="stat-value" id="total-payable">₺0</span>
+            </div>
+          </div>
+          <div class="stat-card stat-balance">
+            <div class="stat-icon">
+              <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Net Bakiye</span>
+              <span class="stat-value" id="net-balance">₺0</span>
+            </div>
+          </div>
+          <div class="stat-card stat-products">
+            <div class="stat-icon">
+              <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Toplam Ürün</span>
+              <span class="stat-value" id="total-products">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="dashboard-row">
+          <!-- Category Distribution Chart -->
+          <div class="dashboard-card chart-card">
+            <div class="card-header">
+              <h3>Kategori Dağılımı</h3>
+              <span class="card-badge">Ürünler</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="category-chart" width="280" height="280"></canvas>
+              <div id="chart-legend" class="chart-legend"></div>
+            </div>
+            <div id="chart-empty" class="empty-state" style="display:none;">
+              <span>📊</span>
+              <p>Henüz ürün eklenmedi</p>
+            </div>
+          </div>
+
+          <!-- Manufacturing Stages Widget -->
+          <div class="dashboard-card stages-card">
+            <div class="card-header">
+              <h3>İmalat Aşamaları</h3>
+              <span class="card-badge">Üretim</span>
+            </div>
+            <div class="stages-list" id="stages-list">
+              <div class="stage-item" data-stage="kesim">
+                <div class="stage-icon">✂️</div>
+                <div class="stage-info">
+                  <div class="stage-name">Kesim Aşaması</div>
+                  <div class="stage-bar-container">
+                    <div class="stage-bar" id="stage-bar-kesim" style="width:0%"></div>
+                  </div>
+                </div>
+                <div class="stage-count" id="stage-count-kesim">0</div>
+              </div>
+              <div class="stage-item" data-stage="saya">
+                <div class="stage-icon">🪡</div>
+                <div class="stage-info">
+                  <div class="stage-name">Saya (Dikiş) Aşaması</div>
+                  <div class="stage-bar-container">
+                    <div class="stage-bar" id="stage-bar-saya" style="width:0%"></div>
+                  </div>
+                </div>
+                <div class="stage-count" id="stage-count-saya">0</div>
+              </div>
+              <div class="stage-item" data-stage="montaj">
+                <div class="stage-icon">🔨</div>
+                <div class="stage-info">
+                  <div class="stage-name">Montaj (Kalıp) Aşaması</div>
+                  <div class="stage-bar-container">
+                    <div class="stage-bar" id="stage-bar-montaj" style="width:0%"></div>
+                  </div>
+                </div>
+                <div class="stage-count" id="stage-count-montaj">0</div>
+              </div>
+              <div class="stage-item" data-stage="paketleme">
+                <div class="stage-icon">📦</div>
+                <div class="stage-info">
+                  <div class="stage-name">Finisaj / Paketleme</div>
+                  <div class="stage-bar-container">
+                    <div class="stage-bar" id="stage-bar-paketleme" style="width:0%"></div>
+                  </div>
+                </div>
+                <div class="stage-count" id="stage-count-paketleme">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly Production Target -->
+        <div class="dashboard-card weekly-card">
+          <div class="card-header">
+            <h3>Haftalık Üretim Hedefi</h3>
+            <div class="weekly-controls">
+              <label>Hedef:</label>
+              <input type="number" id="weekly-target-input" class="weekly-input" min="1" value="100" placeholder="100">
+              <button class="btn btn-sm btn-accent" id="set-weekly-target">Kaydet</button>
+            </div>
+          </div>
+          <div class="weekly-progress-container">
+            <div class="weekly-progress-bar">
+              <div class="weekly-progress-fill" id="weekly-progress-fill" style="width:0%"></div>
+            </div>
+            <div class="weekly-progress-info">
+              <span id="weekly-completed">0</span> / <span id="weekly-target-display">100</span> çift
+              <span class="weekly-percentage" id="weekly-percentage">(%0)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======= PRODUCTS PAGE ======= -->
+      <section id="page-products" class="page">
+        <div class="page-header">
+          <div>
+            <h1>Ürünler</h1>
+            <p class="page-desc">Ürün envanterini yönetin</p>
+          </div>
+          <button class="btn btn-primary" id="add-product-btn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Yeni Ürün</span>
+          </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-bar" id="product-filters">
+          <button class="filter-btn active" data-filter="all">Tümü</button>
+          <button class="filter-btn" data-filter="Erkek">👔 Erkek</button>
+          <button class="filter-btn" data-filter="Kadın">👠 Kadın</button>
+          <button class="filter-btn" data-filter="Çocuk">🧒 Çocuk</button>
+        </div>
+
+        <!-- Products Table -->
+        <div class="table-container">
+          <table class="data-table" id="products-table">
+            <thead>
+              <tr>
+                <th>Model Adı</th>
+                <th>Kategori</th>
+                <th>Beden</th>
+                <th>Renk</th>
+                <th>Fiyat</th>
+                <th>Adet</th>
+                <th>Aşama</th>
+                <th>İşlemler</th>
+              </tr>
+            </thead>
+            <tbody id="products-tbody"></tbody>
+          </table>
+          <div id="products-empty" class="empty-state" style="display:none;">
+            <span>👟</span>
+            <p>Henüz ürün eklenmedi</p>
+            <button class="btn btn-primary btn-sm" id="add-product-empty-btn">İlk Ürünü Ekle</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======= CONTACTS PAGE ======= -->
+      <section id="page-contacts" class="page">
+        <div class="page-header">
+          <div>
+            <h1>Cari Hesaplar</h1>
+            <p class="page-desc">Müşteri ve tedarikçi hesaplarını yönetin</p>
+          </div>
+          <button class="btn btn-primary" id="add-contact-btn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Yeni Cari</span>
+          </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-bar" id="contact-filters">
+          <button class="filter-btn active" data-filter="all">Tümü</button>
+          <button class="filter-btn" data-filter="musteri">🤝 Müşteri</button>
+          <button class="filter-btn" data-filter="tedarikci">🏭 Tedarikçi</button>
+        </div>
+
+        <!-- Contacts Table -->
+        <div class="table-container">
+          <table class="data-table" id="contacts-table">
+            <thead>
+              <tr>
+                <th>Ad Soyad / Firma</th>
+                <th>Tür</th>
+                <th>Telefon</th>
+                <th>Alacak</th>
+                <th>Borç</th>
+                <th>Bakiye</th>
+                <th>İşlemler</th>
+              </tr>
+            </thead>
+            <tbody id="contacts-tbody"></tbody>
+          </table>
+          <div id="contacts-empty" class="empty-state" style="display:none;">
+            <span>👥</span>
+            <p>Henüz cari hesap eklenmedi</p>
+            <button class="btn btn-primary btn-sm" id="add-contact-empty-btn">İlk Cari Ekle</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ============ PRODUCT MODAL ============ -->
+  <div class="modal-overlay" id="product-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="product-modal-title">Yeni Ürün Ekle</h2>
+        <button class="modal-close" data-modal="product-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="product-form">
+          <input type="hidden" id="product-id">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="product-name">Model Adı</label>
+              <input type="text" id="product-name" placeholder="Örn: Comfort Plus" required>
+            </div>
+            <div class="form-group">
+              <label for="product-category">Kategori</label>
+              <select id="product-category" required>
+                <option value="">Seçiniz</option>
+                <option value="Erkek">Erkek</option>
+                <option value="Kadın">Kadın</option>
+                <option value="Çocuk">Çocuk</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="product-size">Beden</label>
+              <input type="text" id="product-size" placeholder="Örn: 38-44">
+            </div>
+            <div class="form-group">
+              <label for="product-color">Renk</label>
+              <input type="text" id="product-color" placeholder="Örn: Siyah">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="product-price">Fiyat (₺)</label>
+              <input type="number" id="product-price" step="0.01" min="0" placeholder="0.00" required>
+            </div>
+            <div class="form-group">
+              <label for="product-quantity">Adet</label>
+              <input type="number" id="product-quantity" min="0" placeholder="0" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="product-stage">İmalat Aşaması</label>
+            <select id="product-stage">
+              <option value="kesim">✂️ Kesim</option>
+              <option value="saya">🪡 Saya (Dikiş)</option>
+              <option value="montaj">🔨 Montaj (Kalıp)</option>
+              <option value="paketleme">📦 Finisaj / Paketleme</option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-modal="product-modal">İptal</button>
+            <button type="submit" class="btn btn-primary" id="product-save-btn">Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CONTACT MODAL ============ -->
+  <div class="modal-overlay" id="contact-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="contact-modal-title">Yeni Cari Ekle</h2>
+        <button class="modal-close" data-modal="contact-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="contact-form">
+          <input type="hidden" id="contact-id">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="contact-name">Ad Soyad / Firma</label>
+              <input type="text" id="contact-name" placeholder="Örn: Ahmet Yılmaz" required>
+            </div>
+            <div class="form-group">
+              <label for="contact-type">Tür</label>
+              <select id="contact-type" required>
+                <option value="">Seçiniz</option>
+                <option value="musteri">Müşteri</option>
+                <option value="tedarikci">Tedarikçi</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="contact-phone">Telefon</label>
+              <input type="tel" id="contact-phone" placeholder="05XX XXX XX XX">
+            </div>
+            <div class="form-group">
+              <label for="contact-address">Adres</label>
+              <input type="text" id="contact-address" placeholder="Şehir / İlçe">
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-modal="contact-modal">İptal</button>
+            <button type="submit" class="btn btn-primary" id="contact-save-btn">Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TRANSACTION MODAL ============ -->
+  <div class="modal-overlay" id="transaction-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="transaction-modal-title">İşlem Ekle</h2>
+        <button class="modal-close" data-modal="transaction-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="transaction-form">
+          <input type="hidden" id="tx-contact-id">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tx-type">İşlem Türü</label>
+              <select id="tx-type" required>
+                <option value="alacak">Alacak (Müşteriden)</option>
+                <option value="borc">Borç (Tedarikçiye)</option>
+                <option value="tahsilat">Tahsilat (Ödeme Alındı)</option>
+                <option value="odeme">Ödeme (Ödeme Yapıldı)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="tx-amount">Tutar (₺)</label>
+              <input type="number" id="tx-amount" step="0.01" min="0.01" placeholder="0.00" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="tx-description">Açıklama</label>
+            <input type="text" id="tx-description" placeholder="İşlem açıklaması">
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-modal="transaction-modal">İptal</button>
+            <button type="submit" class="btn btn-primary">İşlemi Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TOAST NOTIFICATION ============ -->
+  <div id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="db.js"></script>
+  <script src="dashboard.js"></script>
+  <script src="products.js"></script>
+  <script src="contacts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
