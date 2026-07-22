@@ -1,0 +1,1791 @@
+import { escapeHtml, bindOnce, trToAscii, safeAdd, safeSub, generateId } from './utils.js';
+
+// Format any Turkish phone number to international format (905XXXXXXXXX)
+function formatPhone(raw) {
+  let phone = (raw || '').replace(/\D/g, '');
+  // Remove leading 0 (e.g. 05462753908 -> 5462753908)
+  if (phone.startsWith('0')) phone = phone.substring(1);
+  // Remove leading +90 or 90 prefix if already present
+  if (phone.startsWith('90') && phone.length === 12) phone = phone.substring(2);
+  // Now phone should be 10 digits starting with 5
+  if (phone.length === 10 && phone.startsWith('5')) {
+    return '90' + phone;
+  }
+  // If already has country code or other format, return as-is
+  return phone;
+}
+
+function openWhatsAppPrompt(waUrl, titleText, bodyText) {
+  // Detect if user is on mobile
+  const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.25s ease;';
+
+  const content = document.createElement('div');
+  content.style.cssText = 'background:var(--bg-card,#1a1a2e);border:1px solid var(--border-card,#2a2a4a);border-radius:20px;padding:28px 24px;max-width:420px;width:92%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.5);transform:scale(0.9);transition:transform 0.25s ease;';
+
+  // QR code via Google Charts API (free, no library needed)
+  const qrCodeUrl = `https://chart.googleapis.com/chart?chs=220x220&cht=qr&chl=${encodeURIComponent(waUrl)}&choe=UTF-8`;
+
+  if (isMobile) {
+    // On mobile, just show a button that opens WhatsApp directly
+    content.innerHTML = `
+      <div style="font-size:40px;margin-bottom:12px;">💬</div>
+      <h3 style="margin:0 0 8px;color:var(--text-primary,#fff);font-size:18px;">${titleText}</h3>
+      <p style="color:var(--text-secondary,#aaa);font-size:13px;line-height:1.5;margin-bottom:22px;">${bodyText}</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <button id="btn-wa-prompt-cancel" class="btn btn-ghost" style="padding:10px 22px;border-radius:10px;">Kapat</button>
+        <a id="btn-wa-prompt-ok" href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="padding:10px 22px;background:#25D366;border-color:#25D366;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px;border-radius:10px;font-weight:600;">WhatsApp'tan Gönder 💬</a>
+      </div>
+    `;
+  } else {
+    // On desktop, show QR code so user can scan with phone
+    content.innerHTML = `
+      <div style="font-size:40px;margin-bottom:8px;">📱</div>
+      <h3 style="margin:0 0 6px;color:var(--text-primary,#fff);font-size:18px;">${titleText}</h3>
+      <p style="color:var(--text-secondary,#aaa);font-size:13px;line-height:1.5;margin-bottom:16px;">${bodyText}</p>
+      <div style="background:#fff;border-radius:14px;padding:16px;display:inline-block;margin-bottom:16px;">
+        <img src="${qrCodeUrl}" alt="WhatsApp QR Kod" width="200" height="200" style="display:block;border-radius:6px;" />
+      </div>
+      <p style="color:#25D366;font-size:12px;font-weight:600;margin:0 0 16px;">📷 Telefonunuzun kamerasıyla QR kodu okutun<br><span style="color:var(--text-secondary,#888);font-weight:400;">WhatsApp direkt telefonunuzda açılacak!</span></p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <button id="btn-wa-prompt-cancel" class="btn btn-ghost" style="padding:10px 22px;border-radius:10px;">Kapat</button>
+        <a id="btn-wa-prompt-ok" href="${waUrl}" target="_blank" rel="noopener noreferrer" style="padding:10px 18px;background:transparent;border:1px solid var(--border-card,#2a2a4a);color:var(--text-secondary,#aaa);text-decoration:none;display:inline-flex;align-items:center;gap:6px;border-radius:10px;font-size:12px;">veya WhatsApp Web'den Aç</a>
+      </div>
+    `;
+  }
+
+  overlay.appendChild(content);
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    overlay.style.opacity = '1';
+    content.style.transform = 'scale(1)';
+  });
+
+  const close = () => {
+    overlay.style.opacity = '0';
+    content.style.transform = 'scale(0.9)';
+    setTimeout(() => overlay.remove(), 250);
+  };
+
+  overlay.querySelector('#btn-wa-prompt-cancel').addEventListener('click', close);
+  const okBtn = overlay.querySelector('#btn-wa-prompt-ok');
+  if (okBtn) okBtn.addEventListener('click', () => setTimeout(close, 400));
+}
+
+const Orders = {
+  editingId: null,
+  colorGroupCounter: 0,
+
+  async render() {
+    this.bindEvents();
+    await this.loadOrders();
+  },
+
+  bindEvents() {
+    // B2B Order Tabs switching
+    const tabActiveOrders = document.getElementById('btn-tab-active-orders');
+    const tabIncomingOrders = document.getElementById('btn-tab-incoming-orders');
+    const containerActive = document.getElementById('orders-active-container');
+    const containerIncoming = document.getElementById('orders-incoming-container');
+
+    if (tabActiveOrders && !tabActiveOrders._bound) {
+      tabActiveOrders._bound = true;
+      tabActiveOrders.addEventListener('click', () => {
+        tabActiveOrders.classList.add('active');
+        if (tabIncomingOrders) tabIncomingOrders.classList.remove('active');
+        if (containerActive) containerActive.style.display = 'block';
+        if (containerIncoming) containerIncoming.style.display = 'none';
+        this.activeTab = 'active';
+      });
+    }
+
+    if (tabIncomingOrders && !tabIncomingOrders._bound) {
+      tabIncomingOrders._bound = true;
+      tabIncomingOrders.addEventListener('click', () => {
+        tabIncomingOrders.classList.add('active');
+        if (tabActiveOrders) tabActiveOrders.classList.remove('active');
+        if (containerActive) containerActive.style.display = 'none';
+        if (containerIncoming) containerIncoming.style.display = 'block';
+        this.activeTab = 'incoming';
+      });
+    }
+
+    // Approve form submission
+    const approveForm = document.getElementById('incoming-order-approve-form');
+    if (approveForm && !approveForm._bound) {
+      approveForm._bound = true;
+      approveForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await this.submitApproval();
+      });
+    }
+
+    // Add order buttons
+    const addBtn = document.getElementById('add-order-btn');
+    const addEmptyBtn = document.getElementById('add-order-empty-btn');
+
+    if (addBtn && !addBtn._bound) {
+      addBtn._bound = true;
+      addBtn.addEventListener('click', () => this.openModal());
+    }
+    if (addEmptyBtn && !addEmptyBtn._bound) {
+      addEmptyBtn._bound = true;
+      addEmptyBtn.addEventListener('click', () => this.openModal());
+    }
+
+    // Order form submit
+    const form = document.getElementById('order-form');
+    if (form && !form._bound) {
+      form._bound = true;
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.saveOrder();
+      });
+    }
+
+    // Model code input listener (manual type with suggestions)
+    const modelCodeInput = document.getElementById('order-model-code');
+    if (modelCodeInput && !modelCodeInput._bound) {
+      modelCodeInput._bound = true;
+      modelCodeInput.addEventListener('input', async (e) => {
+        const mCode = e.target.value.trim();
+        await this.updateAvailableColorsList(mCode);
+      });
+    }
+
+    // Add color group button
+    const addColorGroupBtn = document.getElementById('btn-order-add-color-group');
+    if (addColorGroupBtn && !addColorGroupBtn._bound) {
+      addColorGroupBtn._bound = true;
+      addColorGroupBtn.addEventListener('click', () => {
+        this.addColorGroup();
+      });
+    }
+
+    // Event delegation for color groups container
+    const groupsContainer = document.getElementById('order-color-groups-container');
+    if (groupsContainer && !groupsContainer._bound) {
+      groupsContainer._bound = true;
+      groupsContainer.addEventListener('click', (e) => {
+        // Remove entire color group
+        if (e.target.classList.contains('btn-remove-color-group') || e.target.closest('.btn-remove-color-group')) {
+          const group = e.target.closest('.color-group-card');
+          if (group) {
+            group.remove();
+            this.recalcGrandTotal();
+          }
+        }
+        // Add size row within a color group
+        if (e.target.classList.contains('btn-add-size-row') || e.target.closest('.btn-add-size-row')) {
+          const group = e.target.closest('.color-group-card');
+          if (group) {
+            this.addSizeRow(group);
+          }
+        }
+        // Remove size row
+        if (e.target.classList.contains('btn-remove-size-row') || e.target.closest('.btn-remove-size-row')) {
+          const row = e.target.closest('.size-row');
+          const group = e.target.closest('.color-group-card');
+          if (row) {
+            row.remove();
+            if (group) this.recalcGroupTotal(group);
+          }
+        }
+      });
+
+      // Listen for input changes to recalculate totals
+      groupsContainer.addEventListener('input', (e) => {
+        if (e.target.classList.contains('size-qty-input')) {
+          const group = e.target.closest('.color-group-card');
+          if (group) this.recalcGroupTotal(group);
+        }
+      });
+    }
+  },
+
+  async updateAvailableColorsList(mCode) {
+    let datalist = document.getElementById('order-colors-list');
+    if (!datalist) {
+      datalist = document.createElement('datalist');
+      datalist.id = 'order-colors-list';
+      document.body.appendChild(datalist);
+    }
+    
+    if (!mCode) {
+      datalist.innerHTML = '';
+      return;
+    }
+    
+    const products = await dbGetAll('products');
+    const matches = products.filter(p => (p.modelCode || '').toLowerCase() === mCode.toLowerCase());
+    
+    datalist.innerHTML = matches.map(p => `<option value="${this.escape(p.color)}">`).join('');
+    
+    // Auto-fill price if price field is empty
+    const priceInput = document.getElementById('order-price');
+    if (priceInput && !priceInput.value && matches.length > 0) {
+      priceInput.value = matches[0].price || 0;
+    }
+  },
+
+  /**
+   * Adds a new color group card to the container.
+   * Each group = 1 color + multiple size/qty rows + subtotal
+   */
+  addColorGroup(colorName = '', sizeRows = []) {
+    const container = document.getElementById('order-color-groups-container');
+    if (!container) return;
+
+    this.colorGroupCounter++;
+    const groupId = `color-group-${this.colorGroupCounter}`;
+
+    const group = document.createElement('div');
+    group.className = 'color-group-card';
+    group.id = groupId;
+    group.style.cssText = 'background: rgba(99,102,241,0.04); border: 1px solid rgba(99,102,241,0.15); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; position: relative;';
+
+    group.innerHTML = `
+      <!-- Color Group Header -->
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+          <span style="font-weight: 700; font-size: 0.82rem; color: var(--text-accent); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">RENK:</span>
+          <input type="text" list="order-colors-list" class="color-group-name" placeholder="Renk adı yazın" value="${this.escape(colorName)}" 
+            style="flex: 1; margin-bottom: 0; padding: 7px 12px; font-weight: 600; font-size: 0.9rem; border-radius: 6px;" required>
+        </div>
+        <button type="button" class="btn-icon danger btn-remove-color-group" style="flex-shrink: 0; height: 34px; width: 34px; font-size: 16px;" title="Renk Grubunu Sil">&times;</button>
+      </div>
+
+      <!-- Size/Qty Table Header -->
+      <div style="display: flex; gap: 8px; margin-bottom: 4px; font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; padding-left: 4px;">
+        <span style="flex: 1; text-align: center;">Asorti (Numara)</span>
+        <span style="flex: 1; text-align: center;">Toplam Adet</span>
+        <span style="width: 34px;"></span>
+      </div>
+
+      <!-- Size Rows Container -->
+      <div class="size-rows-container" style="display: flex; flex-direction: column; gap: 5px;">
+        <!-- Dynamic size rows will be inserted here -->
+      </div>
+
+      <!-- Add Size Row Button -->
+      <button type="button" class="btn btn-sm btn-add-size-row" style="margin-top: 8px; padding: 4px 10px; font-size: 0.72rem; background: rgba(99,102,241,0.1); color: var(--text-accent); border: 1px dashed rgba(99,102,241,0.3); border-radius: 6px; cursor: pointer; width: 100%;">
+        + Numara Ekle
+      </button>
+
+      <!-- Subtotal -->
+      <div class="color-group-subtotal" style="margin-top: 10px; padding: 6px 10px; background: rgba(99,102,241,0.08); border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.85rem; color: var(--text-accent);">
+        <span>Toplam</span>
+        <span class="color-group-total-value">0 Çift</span>
+      </div>
+    `;
+
+    container.appendChild(group);
+
+    // Pre-populate size rows if provided
+    if (sizeRows.length > 0) {
+      sizeRows.forEach(sr => this.addSizeRow(group, sr.size, sr.qty));
+    }
+
+    this.recalcGrandTotal();
+    return group;
+  },
+
+  /**
+   * Adds a numara/adet row inside a color group
+   */
+  addSizeRow(groupElement, size = '', qty = '') {
+    const container = groupElement.querySelector('.size-rows-container');
+    if (!container) return;
+
+    const row = document.createElement('div');
+    row.className = 'size-row';
+    row.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+
+    row.innerHTML = `
+      <input type="text" class="size-number-input" placeholder="No" value="${this.escape(size)}" 
+        style="flex: 1; margin-bottom: 0; padding: 7px 10px; text-align: center; font-weight: 600; font-size: 0.9rem; border-radius: 6px;" required>
+      <input type="number" class="size-qty-input" placeholder="Adet" min="1" value="${qty}" 
+        style="flex: 1; margin-bottom: 0; padding: 7px 10px; text-align: center; font-size: 0.9rem; border-radius: 6px;" required>
+      <button type="button" class="btn-icon danger btn-remove-size-row" style="flex-shrink: 0; height: 32px; width: 32px; font-size: 14px;" title="Satırı Sil">&times;</button>
+    `;
+
+    container.appendChild(row);
+    this.recalcGroupTotal(groupElement);
+  },
+
+  /**
+   * Recalculates the subtotal of a single color group
+   */
+  recalcGroupTotal(groupElement) {
+    const qtyInputs = groupElement.querySelectorAll('.size-qty-input');
+    let total = 0;
+    qtyInputs.forEach(input => {
+      total += parseInt(input.value) || 0;
+    });
+    const totalDisplay = groupElement.querySelector('.color-group-total-value');
+    if (totalDisplay) totalDisplay.textContent = `${total} Çift`;
+    this.recalcGrandTotal();
+  },
+
+  /**
+   * Recalculates the grand total across all color groups
+   */
+  recalcGrandTotal() {
+    const container = document.getElementById('order-color-groups-container');
+    if (!container) return;
+
+    let grandTotal = 0;
+    container.querySelectorAll('.color-group-card').forEach(group => {
+      group.querySelectorAll('.size-qty-input').forEach(input => {
+        grandTotal += parseInt(input.value) || 0;
+      });
+    });
+
+    const grandTotalDisplay = document.getElementById('order-grand-total-value');
+    if (grandTotalDisplay) grandTotalDisplay.textContent = `${grandTotal} Çift`;
+  },
+
+  /**
+   * Collects all data from the color groups UI
+   * Returns: { colors: [{color, qty, sizes: [{size, qty}]}], totalQty }
+   */
+  collectColorGroupsData() {
+    const container = document.getElementById('order-color-groups-container');
+    if (!container) return { colors: [], totalQty: 0 };
+
+    const colors = [];
+    let totalQty = 0;
+
+    container.querySelectorAll('.color-group-card').forEach(group => {
+      const colorName = group.querySelector('.color-group-name').value.trim();
+      if (!colorName) return;
+
+      const sizes = [];
+      let colorTotal = 0;
+
+      group.querySelectorAll('.size-row').forEach(row => {
+        const size = row.querySelector('.size-number-input').value.trim();
+        const qty = parseInt(row.querySelector('.size-qty-input').value) || 0;
+        if (size && qty > 0) {
+          sizes.push({ size, qty });
+          colorTotal += qty;
+        }
+      });
+
+      if (sizes.length > 0) {
+        colors.push({
+          color: colorName,
+          qty: colorTotal,
+          sizes: sizes
+        });
+        totalQty += colorTotal;
+      }
+    });
+
+    return { colors, totalQty };
+  },
+
+  async loadOrders() {
+    const orders = await dbGetAll('orders');
+    const contacts = await dbGetAll('contacts');
+
+    const contactMap = {};
+    contacts.forEach(c => contactMap[c.id] = c.name);
+
+    // 1. Separate Active and Incoming Orders
+    const activeOrders = orders.filter(o => o.status !== 'gelen');
+    const incomingOrders = orders.filter(o => o.status === 'gelen');
+
+    // 2. Update Incoming Orders tab badge and sidebar badge
+    const badge = document.getElementById('incoming-orders-badge');
+    const sidebarBadge = document.getElementById('sidebar-incoming-badge');
+    
+    if (incomingOrders.length > 0) {
+      if (badge) {
+        badge.textContent = incomingOrders.length;
+        badge.style.display = 'inline-block';
+      }
+      if (sidebarBadge) {
+        sidebarBadge.textContent = incomingOrders.length;
+        sidebarBadge.style.display = 'inline-block';
+      }
+    } else {
+      if (badge) badge.style.display = 'none';
+      if (sidebarBadge) sidebarBadge.style.display = 'none';
+    }
+
+    // Trigger notification alert if new orders arrived
+    if (window._prevIncomingCount !== undefined && incomingOrders.length > window._prevIncomingCount) {
+      if (window.sendNotificationAlert) {
+        window.sendNotificationAlert('new-order', `Katalogdan yeni bir sipariş geldi! (${incomingOrders.length} onay bekleyen)`);
+      }
+    }
+    window._prevIncomingCount = incomingOrders.length;
+
+    // 3. Render Active Orders
+    const tbody = document.getElementById('orders-tbody');
+    const emptyState = document.getElementById('orders-empty');
+    const table = document.getElementById('orders-table');
+
+    if (tbody) {
+      if (activeOrders.length === 0) {
+        if (table) table.style.display = 'none';
+        if (emptyState) emptyState.style.display = 'block';
+      } else {
+        if (table) table.style.display = 'table';
+        if (emptyState) emptyState.style.display = 'none';
+
+        tbody.innerHTML = activeOrders.map(o => {
+          const customerName = contactMap[o.contactId] || 'Bilinmeyen Müşteri';
+          const totalAmount = o.qty * o.price;
+          const orderDate = o.date ? new Date(o.date).toLocaleDateString('tr-TR') : '-';
+          const deadlineDate = o.deadline ? new Date(o.deadline).toLocaleDateString('tr-TR') : '-';
+
+          // Build status badge
+          let statusBadge = '';
+          if (o.status === 'beklemede') {
+            statusBadge = '<span class="category-badge badge-tedarikci" style="background: var(--color-warning-bg); color: var(--color-warning);">Beklemede</span>';
+          } else if (o.status === 'kargoda') {
+            statusBadge = '<span class="category-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">Kargoda</span>';
+          } else if (o.status === 'tamamlandi') {
+            statusBadge = '<span class="category-badge badge-musteri" style="background: var(--color-success-bg); color: var(--color-success);">Tamamlandı</span>';
+          } else { 
+            statusBadge = '<span class="category-badge" style="background: var(--color-danger-bg); color: var(--color-danger);">İptal Edildi</span>';
+          }
+
+          // Render colors breakdown badges with size details
+          const colorBadges = (o.colors || []).map(c => {
+            let sizeInfo = '';
+            if (c.sizes && c.sizes.length > 0) {
+              sizeInfo = c.sizes.map(s => `${this.escape(s.size)}:${s.qty}`).join(', ');
+              sizeInfo = ` [${sizeInfo}]`;
+            }
+            return `<span style="background: rgba(99, 102, 241, 0.08); color: var(--text-accent); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;">${this.escape(c.color)}: ${c.qty} Çift${sizeInfo}</span>`;
+          }).join(' ');
+
+          // Sub-details row
+          const detailsText = `Klişe: ${o.klise || '-'} | Aks. Rengi: ${o.accessoryColor || '-'}`;
+
+          return `
+            <tr>
+              <td><strong>#${o.id}</strong></td>
+              <td>${this.escape(customerName)}</td>
+              <td>
+                <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">${this.escape(o.modelCode)}</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;">${colorBadges}</div>
+                <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">${this.escape(detailsText)}</div>
+              </td>
+              <td><strong>${o.qty} Çift</strong></td>
+              <td>₺${o.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+              <td><strong>₺${totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</strong></td>
+              <td>
+                <div style="font-size: 12px; font-weight: 500;">Sip: ${orderDate}</div>
+                <div style="font-size: 12px; font-weight: 600; color: var(--color-warning); margin-top: 2px;">Ter: ${deadlineDate}</div>
+              </td>
+              <td>${statusBadge}</td>
+              <td>
+                <div class="actions-cell">
+                  <button class="btn-icon success" title="Fatura Oluştur" onclick="Orders.openInvoiceModal(${o.id})">🧾</button>
+                  <button class="btn-icon warning" title="Koli Etiketi Yazdır" onclick="Orders.openLabelModal(${o.id})">🏷️</button>
+                  <button class="btn-icon info" title="Durum Değiştir" onclick="Orders.openModal(${o.id})">✏️</button>
+                  <button class="btn-icon danger" title="Sil" onclick="Orders.deleteOrder(${o.id})">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    // 4. Render Incoming Orders (Gelen Siparişler)
+    const incomingTbody = document.getElementById('incoming-orders-tbody');
+    const incomingEmptyState = document.getElementById('incoming-orders-empty');
+    const incomingTable = document.getElementById('incoming-orders-table');
+
+    if (incomingTbody) {
+      if (incomingOrders.length === 0) {
+        if (incomingTable) incomingTable.style.display = 'none';
+        if (incomingEmptyState) incomingEmptyState.style.display = 'block';
+      } else {
+        if (incomingTable) incomingTable.style.display = 'table';
+        if (incomingEmptyState) incomingEmptyState.style.display = 'none';
+
+        incomingTbody.innerHTML = incomingOrders.map(o => {
+          const rawCustomer = o.customerName || 'Bilinmeyen Müşteri';
+          const orderDate = o.date ? new Date(o.date).toLocaleDateString('tr-TR') : '-';
+
+          // Render colors breakdown badges
+          const colorBadges = (o.colors || []).map(c => {
+            let sizeInfo = '';
+            if (c.sizes && c.sizes.length > 0) {
+              sizeInfo = c.sizes.map(s => `${this.escape(s.size)}:${s.qty}`).join(', ');
+              sizeInfo = ` [${sizeInfo}]`;
+            }
+            return `<span style="background: rgba(99, 102, 241, 0.08); color: var(--text-accent); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;">${this.escape(c.color)}: ${c.qty} Çift${sizeInfo}</span>`;
+          }).join(' ');
+
+          return `
+            <tr>
+              <td>${orderDate}</td>
+              <td style="font-weight: 600; color: var(--text-accent);">${this.escape(rawCustomer)}</td>
+              <td>
+                <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">${this.escape(o.modelCode)}</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;">${colorBadges}</div>
+              </td>
+              <td><strong>${o.qty} Çift</strong></td>
+              <td>₺${(o.price || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+              <td style="font-size: 12.5px; color: var(--text-secondary); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${this.escape(o.note || '-')}">${this.escape(o.note || '-')}</td>
+              <td>
+                <div class="actions-cell">
+                  <button class="btn btn-secondary btn-sm" onclick="Orders.openApproveModal('${o.id}')" style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 600; border-color: rgba(16, 185, 129, 0.2);" title="Siparişi Onayla">✔️ Onayla</button>
+                  <button class="btn btn-secondary btn-sm" onclick="Orders.rejectIncomingOrder('${o.id}')" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-weight: 600; border-color: rgba(239, 68, 68, 0.2);" title="Siparişi Reddet">🗑️ Reddet</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+  },
+
+  async openModal(id = null) {
+    this.editingId = id;
+    this.colorGroupCounter = 0;
+    const modal = document.getElementById('order-modal');
+    const title = document.getElementById('order-modal-title');
+    const form = document.getElementById('order-form');
+    const groupsContainer = document.getElementById('order-color-groups-container');
+
+    if (form) form.reset();
+    const orderIdInput = document.getElementById('order-id');
+    if (orderIdInput) orderIdInput.value = '';
+    if (groupsContainer) groupsContainer.innerHTML = '';
+
+    // Reset grand total
+    const grandTotalDisplay = document.getElementById('order-grand-total-value');
+    if (grandTotalDisplay) grandTotalDisplay.textContent = '0 Çift';
+
+    // Populate customers (contacts musteri)
+    const contacts = await dbGetAll('contacts');
+    const customers = contacts.filter(c => c.type === 'musteri' || c.type === 'ikisi');
+    const contactSelect = document.getElementById('order-contact-id');
+    if (contactSelect) {
+      contactSelect.innerHTML = '<option value="">Seçiniz</option>' + customers.map(c => `<option value="${c.id}">${this.escape(c.name)}</option>`).join('');
+    }
+
+    const addColorGroupBtn = document.getElementById('btn-order-add-color-group');
+
+    if (id) {
+      if (title) title.textContent = 'Sipariş Düzenle (Durum Güncelle)';
+      dbGet('orders', id).then(async (o) => {
+        if (o) {
+          const orderIdInput = document.getElementById('order-id');
+          if (orderIdInput) orderIdInput.value = o.id;
+          if (contactSelect) contactSelect.value = o.contactId;
+          const modelCodeInput = document.getElementById('order-model-code');
+          if (modelCodeInput) modelCodeInput.value = o.modelCode || '';
+          
+          await this.updateAvailableColorsList(o.modelCode);
+
+          // Load color groups with their sizes
+          if (o.colors && o.colors.length > 0) {
+            o.colors.forEach(c => {
+              const sizeRows = c.sizes || [];
+              this.addColorGroup(c.color, sizeRows);
+            });
+          }
+
+          const priceInput = document.getElementById('order-price');
+          if (priceInput) priceInput.value = o.price;
+          const deadlineInput = document.getElementById('order-deadline');
+          if (deadlineInput) deadlineInput.value = o.deadline || '';
+          const kliseInput = document.getElementById('order-klise');
+          if (kliseInput) kliseInput.value = o.klise || '';
+          const accessoryColorInput = document.getElementById('order-accessory-color');
+          if (accessoryColorInput) accessoryColorInput.value = o.accessoryColor || '';
+          const statusInput = document.getElementById('order-status');
+          if (statusInput) statusInput.value = o.status;
+
+          // Disable fields during editing to prevent stock recalculation errors
+          if (contactSelect) contactSelect.disabled = true;
+          if (modelCodeInput) modelCodeInput.disabled = true;
+          if (priceInput) priceInput.disabled = true;
+          if (deadlineInput) deadlineInput.disabled = true;
+          if (kliseInput) kliseInput.disabled = true;
+          if (accessoryColorInput) accessoryColorInput.disabled = true;
+          if (addColorGroupBtn) addColorGroupBtn.style.display = 'none';
+
+          // Disable all input fields and buttons in groups
+          setTimeout(() => {
+            if (groupsContainer) {
+              groupsContainer.querySelectorAll('input, button').forEach(el => el.disabled = true);
+            }
+          }, 50);
+        }
+      });
+    } else {
+      title.textContent = 'Yeni Sipariş Al';
+      contactSelect.disabled = false;
+      document.getElementById('order-model-code').disabled = false;
+      document.getElementById('order-price').disabled = false;
+      document.getElementById('order-deadline').disabled = false;
+      document.getElementById('order-klise').disabled = false;
+      document.getElementById('order-accessory-color').disabled = false;
+      document.getElementById('order-status').value = 'beklemede';
+      if (addColorGroupBtn) addColorGroupBtn.style.display = 'inline-flex';
+      
+      // Start empty as requested (Komut vermeden açılmasın)
+    }
+
+    openModalById('order-modal');
+  },
+
+  async saveOrder() {
+    const id = document.getElementById('order-id').value;
+    const status = document.getElementById('order-status').value;
+
+    try {
+      if (id) {
+        // Edit order (Status change)
+        const orderId = parseInt(id);
+        const o = await dbGet('orders', orderId);
+        if (!o) throw new Error('Sipariş bulunamadı!');
+
+        const oldStatus = o.status;
+        const newStatus = status;
+
+        if (oldStatus === newStatus) {
+          closeModalById('order-modal');
+          return;
+        }
+
+        // Handle Stock and Transaction changes if status changes
+        if (newStatus === 'iptal') {
+          if (oldStatus !== 'iptal') {
+            // If status changes to cancelled, refund stock
+            await this.adjustStockForColors(o.colors, 'restore');
+
+            // Delete related transactions
+            const txs = await dbGetAll('transactions');
+            const relatedTxs = txs.filter(tx => tx.orderId === orderId);
+            for (const tx of relatedTxs) {
+              await dbDelete('transactions', tx.id);
+            }
+            showToast('Sipariş iptal edildi, stoklar geri yüklendi!', 'info');
+          }
+        } else if (oldStatus === 'iptal' && (newStatus === 'beklemede' || newStatus === 'tamamlandi' || newStatus === 'kargoda')) {
+          // Re-deduct stock if changing back from cancel
+          const isStockOk = await this.verifyAndDeductStockForColors(o.colors);
+          if (!isStockOk) return; // verification fails, keep old status
+
+          // Re-create transaction
+          const amount = parseFloat((o.qty * o.price).toFixed(2));
+          const tx = {
+            contactId: o.contactId,
+            type: 'alacak',
+            amount: amount,
+            description: `${o.modelCode} (${o.qty} Çift) Sipariş (Yeniden Aktif)`,
+            orderId: orderId,
+            date: new Date().toISOString()
+          };
+          await dbAdd('transactions', tx);
+          showToast('Sipariş yeniden aktif edildi, stoklar düşüldü!', 'success');
+        }
+
+        o.status = newStatus;
+        await dbUpdate('orders', o);
+
+        // Trigger Order Status Notification
+        if (window.sendNotificationAlert) {
+          const statusLabels = {
+            'beklemede': 'Beklemede',
+            'kargoda': 'Kargoya Verildi',
+            'tamamlandi': 'Tamamlandı',
+            'iptal': 'İptal Edildi'
+          };
+          const label = statusLabels[newStatus] || newStatus;
+          const msg = `#${o.id} nolu siparisin durumu guncellendi: ${label.toUpperCase()}. Model: ${o.modelCode}, Adet: ${o.qty} cift.`;
+          window.sendNotificationAlert('order-status', msg);
+        }
+
+        // Send targeted Web Push notification to client
+        if (o.contactId && o.contactId !== 0) {
+          const statusLabelsTr = {
+            'beklemede': 'İmalata Alındı (Üretimde)',
+            'kargoda': 'Kargoya Verildi (Sevk Edildi)',
+            'tamamlandi': 'Tamamlandı (Teslim Edildi)',
+            'iptal': 'İptal Edildi'
+          };
+          const statusLabel = statusLabelsTr[newStatus] || newStatus;
+          const workshopId = localStorage.getItem('saas_workshop_id') || 'default_workshop';
+          fetch('/api/send-push', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              workshopId,
+              title: 'Sipariş Durumu Güncellendi! 👟',
+              message: `#${o.id} nolu siparişinizin durumu güncellendi: ${statusLabel.toUpperCase()}. Model: ${o.modelCode}, Adet: ${o.qty} çift.`,
+              userType: 'client',
+              contactId: o.contactId
+            })
+          }).catch(err => console.warn('Client push status notification failed:', err));
+        }
+
+        // Send WhatsApp notification if status changed to 'kargoda' and customerPhone exists
+        if (newStatus === 'kargoda' && o.customerPhone) {
+          try {
+            const formattedPhone = formatPhone(o.customerPhone);
+            const waMsg = `Merhaba, #${o.id} nolu ${o.modelCode} model kodlu ${o.qty} çift siparişiniz kargoya verildi! 🚚`;
+            const waUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(waMsg)}`;
+            openWhatsAppPrompt(
+              waUrl,
+              'Sipariş Kargoya Verildi! 🚚',
+              `#${o.id} nolu sipariş kargoya verildi. Müşterinize WhatsApp üzerinden kargo teslimat bildirimi göndermek ister misiniz?`
+            );
+          } catch (err) {
+            console.error('WhatsApp notification failed:', err);
+          }
+        }
+
+        showToast('Sipariş durumu güncellendi!', 'success');
+      } else {
+        // New Order
+        const contactId = parseInt(document.getElementById('order-contact-id').value);
+        const modelCode = document.getElementById('order-model-code').value.trim();
+        const price = parseFloat(document.getElementById('order-price').value) || 0;
+        const deadline = document.getElementById('order-deadline').value;
+        const klise = document.getElementById('order-klise').value.trim();
+        const accessoryColor = document.getElementById('order-accessory-color').value.trim();
+
+        if (!contactId || !modelCode || price <= 0 || !deadline) {
+          showToast('Lütfen tüm zorunlu alanları geçerli değerlerle doldurun!', 'error');
+          return;
+        }
+
+        // Collect data from unified color groups
+        const { colors: groupData, totalQty } = this.collectColorGroupsData();
+
+        if (groupData.length === 0) {
+          showToast('Lütfen en az bir adet renk grubu ve numara/adet ekleyin!', 'error');
+          return;
+        }
+
+        // Process each color — auto-register product if needed
+        const products = await dbGetAll('products');
+        const colorsForDb = [];
+        
+        for (const cg of groupData) {
+          let match = products.find(p => 
+            (p.modelCode || '').toLowerCase() === modelCode.toLowerCase() && 
+            (p.color || '').toLowerCase() === cg.color.toLowerCase()
+          );
+          
+          if (!match) {
+            // Automatically register product in catalog
+            const templateProduct = products.find(p => (p.modelCode || '').toLowerCase() === modelCode.toLowerCase());
+            const newProduct = {
+              modelCode: modelCode,
+              color: cg.color,
+              category: templateProduct ? templateProduct.category : 'Ayakkabı',
+              size: templateProduct ? templateProduct.size : '38-44',
+              soleMaterial: templateProduct ? templateProduct.soleMaterial : '',
+              leatherLining: templateProduct ? templateProduct.leatherLining : '',
+              leatherUpper: templateProduct ? templateProduct.leatherUpper : '',
+              leatherType: templateProduct ? templateProduct.leatherType : '',
+              price: price,
+              barcode: '',
+              photo: '',
+              accessoryPhoto: ''
+            };
+            const newProductId = await dbAdd('products', newProduct);
+            
+            // Automatically clone recipe if template has one
+            if (templateProduct) {
+              const templateRecipe = await dbGet('recipes', templateProduct.id);
+              if (templateRecipe) {
+                const newRecipe = {
+                  productId: newProductId,
+                  materials: JSON.parse(JSON.stringify(templateRecipe.materials))
+                };
+                await dbAdd('recipes', newRecipe);
+              }
+            }
+            
+            match = { id: newProductId, color: cg.color };
+            showToast(`Yeni ürün otomatik kaydedildi: ${modelCode} (${cg.color})`, 'info');
+          }
+
+          colorsForDb.push({
+            productId: match.id,
+            color: cg.color,
+            qty: cg.qty,
+            sizes: cg.sizes
+          });
+        }
+
+        // Verify and deduct stock across all colors (non-blocking)
+        const isStockOk = await this.verifyAndDeductStockForColors(colorsForDb);
+        if (!isStockOk) return;
+
+        // Add order record
+        const orderData = {
+          contactId,
+          modelCode,
+          colors: colorsForDb,
+          qty: totalQty,
+          price,
+          deadline,
+          klise,
+          accessoryColor,
+          status,
+          date: new Date().toISOString()
+        };
+        const orderId = await dbAdd('orders', orderData);
+
+        // Trigger New Order SMS
+        if (window.sendNotificationAlert) {
+          const contactSelect = document.getElementById('order-contact-id');
+          const customerName = contactSelect ? (contactSelect.options[contactSelect.selectedIndex]?.text || 'Bilinmeyen Müşteri') : 'Bilinmeyen Müşteri';
+          const msg = `Yeni Siparis Alindi! Siparis ID: #${orderId}, Musteri: ${customerName}, Model: ${modelCode}, Toplam Adet: ${totalQty} cift. Bol bereketli isler dileriz.`;
+          window.sendNotificationAlert('new-order', msg);
+        }
+
+        // Add transaction to contact
+        const amount = parseFloat((totalQty * price).toFixed(2));
+        const tx = {
+          contactId,
+          type: 'alacak',
+          amount: amount,
+          description: `${modelCode} — ${totalQty} Çift Çoklu Renk Sipariş`,
+          orderId: orderId,
+          date: new Date().toISOString()
+        };
+        await dbAdd('transactions', tx);
+
+        showToast('Sipariş başarıyla alındı!', 'success');
+      }
+
+      closeModalById('order-modal');
+      await this.loadOrders();
+      if (window.Dashboard && typeof window.Dashboard.render === 'function') await window.Dashboard.render();
+    } catch (err) {
+      showToast('Hata: ' + err.message, 'error');
+    }
+  },
+
+  async verifyAndDeductStockForColors(colors) {
+    const totalMaterialNeeds = {}; // key: stockId -> { id, name, reqQty, curQty, unit }
+    const warnings = [];
+
+    for (const c of colors) {
+      if (!c.productId) continue;
+      
+      const recipe = await dbGet('recipes', c.productId);
+      if (!recipe || !recipe.materials || recipe.materials.length === 0) {
+        const p = await dbGet('products', c.productId);
+        const nameDesc = p ? `${p.modelCode} (${p.color})` : `Ürün (ID: ${c.productId})`;
+        warnings.push(`• ${nameDesc} için reçete (BOM) tanımlanmamış (Stok düşümü yapılmadı).`);
+        continue;
+      }
+
+      for (const mat of recipe.materials) {
+        const stock = await dbGet('stocks', mat.id);
+        if (!stock) {
+          warnings.push(`• Reçetedeki malzeme (ID: ${mat.id}) stokta bulunamadı.`);
+          continue;
+        }
+
+        const reqQty = c.qty * mat.qty;
+        if (!totalMaterialNeeds[mat.id]) {
+          totalMaterialNeeds[mat.id] = {
+            id: mat.id,
+            name: stock.name,
+            reqQty: 0,
+            curQty: stock.qty,
+            unit: stock.unit
+          };
+        }
+        totalMaterialNeeds[mat.id].reqQty += reqQty;
+      }
+    }
+
+    // Verify shortages and update stocks
+    const stockItemsToUpdate = [];
+    const shortageLines = [];
+
+    for (const id in totalMaterialNeeds) {
+      const need = totalMaterialNeeds[id];
+      if (need.curQty < need.reqQty) {
+        const missingAmt = safeSub(need.reqQty, need.curQty);
+        shortageLines.push(`• ${need.name} (Elindeki Stok: ${need.curQty} ${need.unit}, Gereken Ek İhtiyaç: ${missingAmt} ${need.unit})`);
+      }
+    }
+
+    if (shortageLines.length > 0) {
+      const confirmMsg = `⚠️ Stok Yetersiz! Aşağıdaki kalemler eksiye düşecektir:\n\n${shortageLines.join('\n')}\n\nDevam etmek istiyor musunuz?`;
+      if (!confirm(confirmMsg)) {
+        return false;
+      }
+    }
+
+    // Deduct stock after confirmation
+    for (const id in totalMaterialNeeds) {
+      const need = totalMaterialNeeds[id];
+      const stock = await dbGet('stocks', need.id);
+      if (stock) {
+        stock.qty = safeSub(stock.qty, need.reqQty);
+        stockItemsToUpdate.push(stock);
+      }
+    }
+
+    // Save stock updates
+    for (const stock of stockItemsToUpdate) {
+      await dbUpdate('stocks', stock);
+    }
+
+    // Show warnings formatted
+    if (warnings.length > 0) {
+      alert(`⚠️ Sipariş Kaydedildi. Bazı uyarılar var:\n\n${warnings.join('\n')}`);
+    }
+
+    return true;
+  },
+
+  async adjustStockForColors(colors, action = 'restore') {
+    for (const c of colors) {
+      if (!c.productId) continue;
+      const recipe = await dbGet('recipes', c.productId);
+      if (!recipe || !recipe.materials) continue;
+
+      for (const mat of recipe.materials) {
+        const stock = await dbGet('stocks', mat.id);
+        if (stock) {
+          const amt = c.qty * mat.qty;
+          if (action === 'restore') {
+            stock.qty = safeAdd(stock.qty, amt);
+          } else {
+            stock.qty = safeSub(stock.qty, amt);
+          }
+          await dbUpdate('stocks', stock);
+        }
+      }
+    }
+  },
+
+  async deleteOrder(id) {
+    if (!confirm('Bu siparişi silmek istediğinizden emin misiniz?')) return;
+
+    try {
+      const o = await dbGet('orders', id);
+      if (o) {
+        // K7 Düzeltme: İptal edilmemiş siparişlerin stokları silinirken geri yüklenir
+        if (o.status !== 'iptal' && o.colors) {
+          await this.adjustStockForColors(o.colors, 'restore');
+        }
+
+        // Y3 Düzeltme: Siparişe ait TÜM işlemler silinir (.filter ile)
+        const txs = await dbGetAll('transactions');
+        const relatedTxs = txs.filter(tx => tx.orderId === id);
+        for (const tx of relatedTxs) {
+          await dbDelete('transactions', tx.id);
+        }
+        
+        await dbDelete('orders', id);
+        showToast('Sipariş kaydı silindi, stoklar güncellendi.', 'info');
+        await this.loadOrders();
+        
+        if (window.Dashboard && typeof window.Dashboard.render === 'function') {
+          await window.Dashboard.render();
+        }
+      }
+    } catch (err) {
+      showToast('Silme hatası: ' + err.message, 'error');
+    }
+  },
+
+  async openInvoiceModal(orderId) {
+    try {
+      const order = await dbGet('orders', orderId);
+      if (!order) {
+        showToast('Sipariş bulunamadı!', 'error');
+        return;
+      }
+
+      const contacts = await dbGetAll('contacts');
+      const contact = contacts.find(c => c.id === order.contactId);
+      const contactName = contact ? contact.name : 'Bilinmeyen Müşteri';
+      const contactPhone = contact ? (contact.phone || '-') : '-';
+      const contactAddress = contact ? (contact.address || '-') : '-';
+
+      // Generate invoice number (e.g. FAT + Year + Month + Day + OrderId) (Y21 fix)
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const mockInvNo = order.invoiceNo || `FAT${year}${month}${day}${String(orderId).padStart(3, '0')}`;
+      const mockInvDate = order.invoiceDate || `${year}-${month}-${day}`;
+
+      // Populate Inputs
+      const inputNo = document.getElementById('inv-input-no');
+      const inputDate = document.getElementById('inv-input-date');
+      const inputTaxOffice = document.getElementById('inv-input-tax-office');
+      const inputTaxNo = document.getElementById('inv-input-tax-no');
+      const selectKdv = document.getElementById('inv-input-kdv');
+
+      inputNo.value = mockInvNo;
+      inputDate.value = mockInvDate;
+      inputTaxOffice.value = '';
+      inputTaxNo.value = '';
+      selectKdv.value = '10'; // default KDV 10%
+
+      // Update Preview fields
+      const myCompany = localStorage.getItem('atolyecim_auth_company') || 'Atölyecim Master';
+      const companyNameEl = document.getElementById('invoice-company-name');
+      const companyInfoEl = document.getElementById('invoice-company-info');
+      if (companyNameEl) companyNameEl.textContent = myCompany.toUpperCase();
+      if (companyInfoEl) {
+        if (myCompany === 'Atölyecim Master') {
+          companyInfoEl.innerHTML = 'Ayakkabı İmalat ve Toptan Satış Atölyesi<br>Güngören / İstanbul<br>Tel: 0212 XXX XX XX';
+        } else {
+          companyInfoEl.innerHTML = 'Ayakkabı İmalat ve Toptan Satış Atölyesi';
+        }
+      }
+
+      document.getElementById('inv-no-preview').textContent = mockInvNo;
+      document.getElementById('inv-date-preview').textContent = new Date(mockInvDate).toLocaleDateString('tr-TR');
+      document.getElementById('inv-tax-office-preview').textContent = '-';
+      document.getElementById('inv-tax-no-preview').textContent = '-';
+      document.getElementById('inv-cust-name').textContent = contactName;
+      document.getElementById('inv-cust-phone').textContent = `Tel: ${contactPhone}`;
+      document.getElementById('inv-cust-address').textContent = contactAddress;
+
+      // Render Table Rows
+      const tbody = document.getElementById('inv-table-tbody');
+      tbody.innerHTML = '';
+
+      let subtotal = 0;
+      
+      if (order.colors && order.colors.length > 0) {
+        order.colors.forEach(c => {
+          let sizeDetail = '';
+          if (c.sizes && c.sizes.length > 0) {
+            sizeDetail = c.sizes.map(s => `${this.escape(s.size)} Nmr: ${s.qty} Ad.`).join(', ');
+          }
+          const rowSubtotal = c.qty * order.price;
+          subtotal += rowSubtotal;
+
+          const tr = document.createElement('tr');
+          tr.style.borderBottom = '1px solid #e2e8f0';
+          tr.innerHTML = `
+            <td style="padding: 10px 5px;"><strong>${this.escape(order.modelCode)}</strong></td>
+            <td style="padding: 10px 5px; color: #475569;">${this.escape(c.color)} ${sizeDetail ? `(${sizeDetail})` : ''}</td>
+            <td style="padding: 10px 5px; text-align: right;">${c.qty} Çift</td>
+            <td style="padding: 10px 5px; text-align: right;">₺${order.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+            <td style="padding: 10px 5px; text-align: right; font-weight: 600;">₺${rowSubtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } else {
+        // Fallback if no colors breakdown
+        const rowSubtotal = order.qty * order.price;
+        subtotal += rowSubtotal;
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid #e2e8f0';
+        tr.innerHTML = `
+          <td style="padding: 10px 5px;"><strong>${this.escape(order.modelCode)}</strong></td>
+          <td style="padding: 10px 5px; color: #475569;">Standart Dağılım</td>
+          <td style="padding: 10px 5px; text-align: right;">${order.qty} Çift</td>
+          <td style="padding: 10px 5px; text-align: right;">₺${order.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+          <td style="padding: 10px 5px; text-align: right; font-weight: 600;">₺${rowSubtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      // Calculations Function
+      const recalcTotals = () => {
+        const kdvPercent = parseFloat(selectKdv.value) || 0;
+        const kdvAmount = (subtotal * kdvPercent) / 100;
+        const grandtotal = subtotal + kdvAmount;
+
+        document.getElementById('inv-sum-subtotal').textContent = `₺${subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+        document.getElementById('inv-sum-kdv-percent').textContent = `%${kdvPercent}`;
+        document.getElementById('inv-sum-kdv-amount').textContent = `₺${kdvAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+        document.getElementById('inv-sum-grandtotal').textContent = `₺${grandtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+      };
+
+      recalcTotals();
+
+      // Bind dynamic input changes to live preview
+      const handleInput = (inputEl, previewId, placeholderText = '-') => {
+        inputEl.oninput = () => {
+          document.getElementById(previewId).textContent = inputEl.value.trim() || placeholderText;
+        };
+      };
+
+      handleInput(inputNo, 'inv-no-preview');
+      
+      inputDate.onchange = () => {
+        const val = inputDate.value;
+        document.getElementById('inv-date-preview').textContent = val ? new Date(val).toLocaleDateString('tr-TR') : '-';
+      };
+
+      handleInput(inputTaxOffice, 'inv-tax-office-preview');
+      handleInput(inputTaxNo, 'inv-tax-no-preview');
+
+      selectKdv.onchange = () => {
+        recalcTotals();
+      };
+
+      // Bind Print button click
+      const printBtn = document.getElementById('btn-invoice-print');
+      printBtn.onclick = async () => {
+        try {
+          const actualInvNo = inputNo.value.trim() || mockInvNo;
+          order.invoiceNo = actualInvNo;
+          order.invoiceDate = inputDate.value || mockInvDate;
+          await dbUpdate('orders', order);
+          
+          document.body.classList.add('printing-invoice');
+          window.print();
+          document.body.classList.remove('printing-invoice');
+        } catch (e) {
+          console.error('Invoice save failed:', e);
+        }
+      };
+
+      openModalById('invoice-modal');
+    } catch (err) {
+      showToast('Fatura yüklenemedi: ' + err.message, 'error');
+    }
+  },
+
+  generateCode39SVG(text) {
+    const Code39Map = {
+      '0': '111221211', '1': '211211112', '2': '112211112', '3': '212211111',
+      '4': '111221112', '5': '211221111', '6': '112221111', '7': '111211212',
+      '8': '211211211', '9': '112211211', 'A': '211112112', 'B': '112112112',
+      'C': '212112111', 'D': '111122112', 'E': '211122111', 'F': '112122111',
+      'G': '111112212', 'H': '211112211', 'I': '112112211', 'J': '111122211',
+      'K': '211111122', 'L': '112111122', 'M': '212111121', 'N': '111121122',
+      'O': '211121121', 'P': '112121121', 'Q': '111111222', 'R': '211111221',
+      'S': '112111221', 'T': '111121221', 'U': '221111112', 'V': '122111112',
+      'W': '222111111', 'X': '121121112', 'Y': '221121111', 'Z': '122121111',
+      '-': '121111212', '.': '221111211', ' ': '122111211', '*': '121121211',
+      '$': '121212111', '/': '121211121', '+': '121112121', '%': '111212121'
+    };
+    
+    const trMap = {
+      'ç': 'C', 'Ç': 'C', 'ğ': 'G', 'Ğ': 'G', 'ı': 'I', 'İ': 'I',
+      'ö': 'O', 'Ö': 'O', 'ş': 'S', 'Ş': 'S', 'ü': 'U', 'Ü': 'U'
+    };
+    let clean = text;
+    for (let char in trMap) {
+      clean = clean.replaceAll(char, trMap[char]);
+    }
+    const cleanText = '*' + clean.toUpperCase().replace(/[^0-9A-Z\-.\s$/+%]/g, '-') + '*';
+    let svgContent = '';
+    let x = 0;
+    const narrowWidth = 1.5;
+    const wideWidth = 3.5;
+    const height = 40;
+
+    for (let i = 0; i < cleanText.length; i++) {
+      const char = cleanText[i];
+      const pattern = Code39Map[char] || Code39Map['-'];
+      for (let j = 0; j < 9; j++) {
+        const isBar = (j % 2 === 0);
+        const isWide = (pattern[j] === '2');
+        const width = isWide ? wideWidth : narrowWidth;
+        if (isBar) {
+          svgContent += `<rect x="${x}" y="0" width="${width}" height="${height}" fill="black" />`;
+        }
+        x += width;
+      }
+      x += narrowWidth; // Gap
+    }
+    
+    return `<svg width="100%" height="100%" viewBox="0 0 ${x} ${height}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">${svgContent}</svg>`;
+  },
+
+  async openLabelModal(orderId) {
+    try {
+      const order = await dbGet('orders', orderId);
+      if (!order) {
+        showToast('Sipariş bulunamadı!', 'error');
+        return;
+      }
+
+      const contacts = await dbGetAll('contacts');
+      const contact = contacts.find(c => c.id === order.contactId);
+      const contactName = contact ? contact.name : 'Bilinmeyen Müşteri';
+      const contactPhone = contact ? (contact.phone || '-') : '-';
+      const contactAddress = contact ? (contact.address || '-') : '-';
+
+      // Load persistent sender name
+      let savedSender = localStorage.getItem('atolyecim_label_sender_name');
+      if (!savedSender) savedSender = 'AYDEMİR AYAKKABI';
+      
+      // Select elements
+      const inputSender = document.getElementById('label-input-sender');
+      const inputReceiverName = document.getElementById('label-input-receiver-name');
+      const inputReceiverPhone = document.getElementById('label-input-receiver-phone');
+      const inputReceiverAddress = document.getElementById('label-input-receiver-address');
+      const selectColor = document.getElementById('label-input-color-select');
+      const inputKoliNo = document.getElementById('label-input-koli-no');
+      const inputKoliTotal = document.getElementById('label-input-koli-total');
+      const inputKlise = document.getElementById('label-input-klise');
+      const inputAccessory = document.getElementById('label-input-accessory');
+      const inputBarcode = document.getElementById('label-input-barcode');
+      const inputNotes = document.getElementById('label-input-notes');
+
+      // Populate Inputs
+      inputSender.value = savedSender;
+      inputReceiverName.value = contactName;
+      inputReceiverPhone.value = contactPhone;
+      inputReceiverAddress.value = contactAddress;
+      inputKoliNo.value = 1;
+      inputKoliTotal.value = 1;
+      inputKlise.value = order.klise || '';
+      inputAccessory.value = order.accessoryColor || '';
+      inputNotes.value = '';
+
+      // Populate Color Select
+      selectColor.innerHTML = '';
+      if (order.colors && order.colors.length > 0) {
+        if (order.colors.length > 1) {
+          selectColor.innerHTML += '<option value="all">Tüm Sipariş (Tek Koli)</option>';
+        }
+        order.colors.forEach(c => {
+          selectColor.innerHTML += `<option value="${this.escape(c.color)}">${this.escape(c.color)}</option>`;
+        });
+      } else {
+        selectColor.innerHTML += '<option value="standart">Standart</option>';
+      }
+
+      // Populate Barcode (default)
+      const sanitizeBarcodeText = (txt) => {
+        return trToAscii(txt).toUpperCase().replace(/[^0-9A-Z\-.\s$/+%]/g, '-');
+      };
+      
+      const updateBarcodeDefault = () => {
+        const colorVal = selectColor.value === 'all' ? 'HEPSI' : selectColor.value;
+        const rawCode = `ORD-${order.id}-${colorVal}-${inputKoliNo.value}`;
+        inputBarcode.value = sanitizeBarcodeText(rawCode);
+      };
+
+      updateBarcodeDefault();
+
+      // Render sizes based on selection
+      const sizeContainer = document.getElementById('label-size-inputs-container');
+      
+      const renderSizesForm = () => {
+        sizeContainer.innerHTML = '';
+        let sizesData = [];
+
+        if (selectColor.value === 'all') {
+          // Merge all colors sizes
+          const merged = {};
+          if (order.colors) {
+            order.colors.forEach(c => {
+              if (c.sizes) {
+                c.sizes.forEach(s => {
+                  merged[s.size] = (merged[s.size] || 0) + parseInt(s.qty || 0);
+                });
+              }
+            });
+          }
+          sizesData = Object.keys(merged).map(sz => ({ size: sz, qty: merged[sz] }));
+        } else if (order.colors) {
+          // Specific color
+          const colObj = order.colors.find(c => c.color === selectColor.value);
+          if (colObj && colObj.sizes) {
+            sizesData = colObj.sizes.map(s => ({ size: s.size, qty: s.qty }));
+          }
+        }
+
+        if (sizesData.length === 0) {
+          sizeContainer.innerHTML = '<span style="font-size:12px; color:var(--text-muted);">Numara dağılımı bulunamadı.</span>';
+          return;
+        }
+
+        sizesData.forEach(s => {
+          const div = document.createElement('div');
+          div.style.cssText = 'display: flex; flex-direction: column; align-items: center; width: 45px;';
+          div.innerHTML = `
+            <span style="font-size: 11px; font-weight: bold; margin-bottom: 2px; color: var(--text-accent);">${this.escape(s.size)}</span>
+            <input type="number" class="size-qty-input" data-size="${this.escape(s.size)}" min="0" value="${s.qty}" style="width: 100%; text-align: center; padding: 4px; border-radius: 4px; border: 1px solid var(--border-card); background: var(--bg-primary); color: var(--text-primary); font-size: 12px;">
+          `;
+          sizeContainer.appendChild(div);
+        });
+
+        // Add event listener to each size input to update preview
+        sizeContainer.querySelectorAll('.size-qty-input').forEach(inp => {
+          inp.oninput = () => {
+            updatePreview();
+          };
+        });
+      };
+
+      // Function to build/render the preview layout
+      const updatePreview = () => {
+        // Save sender name in localStorage
+        localStorage.setItem('atolyecim_label_sender_name', inputSender.value.trim());
+
+        // Update basic preview fields
+        document.getElementById('lbl-sender-preview').textContent = inputSender.value.trim() || '-';
+        document.getElementById('lbl-receiver-name-preview').textContent = inputReceiverName.value.trim() || '-';
+        document.getElementById('lbl-receiver-phone-preview').textContent = `TEL: ${inputReceiverPhone.value.trim() || '-'}`;
+        document.getElementById('lbl-receiver-address-preview').textContent = inputReceiverAddress.value.trim() || '-';
+        document.getElementById('lbl-koli-no-preview').textContent = `${inputKoliNo.value} / ${inputKoliTotal.value}`;
+        
+        document.getElementById('lbl-model-preview').textContent = order.modelCode || '-';
+        document.getElementById('lbl-color-preview').textContent = selectColor.value === 'all' ? 'TÜM RENKLER' : selectColor.value.toUpperCase();
+        
+        document.getElementById('lbl-klise-preview').textContent = inputKlise.value.trim() || '-';
+        document.getElementById('lbl-accessory-preview').textContent = inputAccessory.value.trim() || '-';
+        
+        document.getElementById('lbl-notes-preview').textContent = inputNotes.value.trim() || 'YOK';
+        document.getElementById('lbl-date-preview').textContent = new Date().toLocaleDateString('tr-TR');
+
+        // Render Size Table in preview
+        const trHead = document.getElementById('lbl-size-tr-head');
+        const trBody = document.getElementById('lbl-size-tr-body');
+        trHead.innerHTML = '';
+        trBody.innerHTML = '';
+
+        let totalQty = 0;
+        const sizeInputs = sizeContainer.querySelectorAll('.size-qty-input');
+        if (sizeInputs.length > 0) {
+          sizeInputs.forEach(inp => {
+            const sz = inp.getAttribute('data-size');
+            const qty = parseInt(inp.value) || 0;
+            totalQty += qty;
+
+            const th = document.createElement('th');
+            th.style.padding = '4px 2px';
+            th.style.border = '1px solid #000';
+            th.style.color = '#000';
+            th.textContent = sz;
+            trHead.appendChild(th);
+
+            const td = document.createElement('td');
+            td.style.padding = '4px 2px';
+            td.style.border = '1px solid #000';
+            td.style.color = '#000';
+            td.textContent = qty || '-';
+            trBody.appendChild(td);
+          });
+        } else {
+          trHead.innerHTML = '<th style="padding: 4px 2px; border:1px solid #000; color:#000;">Beden</th>';
+          trBody.innerHTML = '<td style="padding: 4px 2px; border:1px solid #000; color:#000;">-</td>';
+        }
+
+        document.getElementById('lbl-total-qty-preview').textContent = `${totalQty} Çift`;
+
+        // Render Barcode
+        const barcodeVal = sanitizeBarcodeText(inputBarcode.value.trim()) || 'ORD-0';
+        const svgBarcode = this.generateCode39SVG(barcodeVal);
+        document.getElementById('lbl-barcode-svg-container').innerHTML = svgBarcode;
+        document.getElementById('lbl-barcode-text-preview').textContent = `*${barcodeVal.toUpperCase()}*`;
+      };
+
+      // Set up listeners for configuration fields
+      inputSender.oninput = updatePreview;
+      inputReceiverName.oninput = updatePreview;
+      inputReceiverPhone.oninput = updatePreview;
+      inputReceiverAddress.oninput = updatePreview;
+      
+      inputKoliNo.oninput = () => {
+        updateBarcodeDefault();
+        updatePreview();
+      };
+      
+      inputKoliTotal.oninput = updatePreview;
+      inputKlise.oninput = updatePreview;
+      inputAccessory.oninput = updatePreview;
+      
+      inputBarcode.oninput = () => {
+        inputBarcode.value = sanitizeBarcodeText(inputBarcode.value);
+        updatePreview();
+      };
+      
+      inputNotes.oninput = updatePreview;
+
+      selectColor.onchange = () => {
+        renderSizesForm();
+        updateBarcodeDefault();
+        updatePreview();
+      };
+
+      // Initial render of sizes form & preview
+      renderSizesForm();
+      updatePreview();
+
+      // Bind Print Button
+      const printBtn = document.getElementById('btn-label-print');
+      printBtn.onclick = () => {
+        document.body.classList.add('printing-label');
+        window.print();
+        document.body.classList.remove('printing-label');
+      };
+
+      openModalById('label-modal');
+    } catch (err) {
+      showToast('Koli etiketi hazırlanamadı: ' + err.message, 'error');
+    }
+  },
+
+  async openApproveModal(id) {
+    try {
+      const o = await dbGet('orders', id);
+      if (!o) return;
+
+      document.getElementById('approve-order-id').value = o.id;
+      document.getElementById('approve-customer-raw').textContent = o.customerName || 'Bilinmeyen Müşteri';
+      document.getElementById('approve-price').value = o.price || 0;
+      document.getElementById('approve-deadline').value = new Date().toISOString().split('T')[0];
+      document.getElementById('approve-new-contact-chk').checked = false;
+
+      // Populate contacts select
+      const contacts = await dbGetAll('contacts');
+      const customers = contacts.filter(c => c.type === 'musteri' || c.type === 'ikisi');
+      const select = document.getElementById('approve-contact-id');
+      if (select) {
+        select.innerHTML = '<option value="">Cari Seçiniz</option>' + customers.map(c => `<option value="${c.id}">${this.escape(c.name)}</option>`).join('');
+      }
+
+      openModalById('incoming-order-approve-modal');
+    } catch (e) {
+      showToast('Hata: ' + e.message, 'error');
+    }
+  },
+
+  async rejectIncomingOrder(id) {
+    if (!confirm('Bu gelen siparişi reddetmek ve silmek istediğinizden emin misiniz?')) return;
+    try {
+      await dbDelete('orders', id);
+      showToast('Gelen sipariş reddedildi.', 'info');
+      await this.loadOrders();
+    } catch (e) {
+      showToast('Hata: ' + e.message, 'error');
+    }
+  },
+
+  async submitApproval() {
+    const orderId = document.getElementById('approve-order-id').value;
+    const select = document.getElementById('approve-contact-id');
+    const newContactChk = document.getElementById('approve-new-contact-chk');
+    const priceInput = document.getElementById('approve-price');
+    const deadlineInput = document.getElementById('approve-deadline');
+
+    if (!orderId) return;
+
+    try {
+      const o = await dbGet('orders', orderId);
+      if (!o) throw new Error('Sipariş kaydı bulunamadı.');
+
+      let contactId = null;
+
+      if (newContactChk && newContactChk.checked) {
+        // Auto-create contact
+        const rawName = document.getElementById('approve-customer-raw').textContent.trim();
+        const newContact = {
+          id: generateId(),
+          name: rawName,
+          type: 'musteri',
+          phone: '',
+          email: '',
+          notes: 'B2B Katalog Sipariş Portalı üzerinden otomatik oluşturuldu.'
+        };
+        await dbAdd('contacts', newContact);
+        contactId = newContact.id;
+      } else {
+        if (!select || !select.value) {
+          showToast('Lütfen eşleştirmek için bir Cari Kart seçin veya yeni kart oluşturma seçeneğini işaretleyin!', 'error');
+          return;
+        }
+        contactId = parseInt(select.value);
+      }
+
+      const price = parseFloat(priceInput.value) || 0;
+      const deadline = deadlineInput.value;
+
+      if (price <= 0 || !deadline) {
+        showToast('Lütfen fiyat ve termin tarihlerini eksiksiz doldurun!', 'error');
+        return;
+      }
+
+      // Check stock and deduct (non-blocking)
+      const isStockOk = await this.verifyAndDeductStockForColors(o.colors);
+      if (!isStockOk) return; // User cancelled stock deduction warning, abort!
+
+      // Update order status and activate it
+      o.contactId = contactId;
+      o.price = price;
+      o.deadline = deadline;
+      o.status = 'beklemede';
+      o.date = new Date().toISOString(); // Set active order date to approval date
+
+      await dbUpdate('orders', o);
+
+      // Map B2B push subscription to contactId if clientPushEndpoint exists
+      if (o.clientPushEndpoint && window.supabaseClient) {
+        try {
+          await window.supabaseClient
+            .from('push_subscriptions')
+            .update({ contact_id: contactId })
+            .eq('endpoint', o.clientPushEndpoint);
+        } catch (err) {
+          console.warn('Failed to associate client push subscription with contact:', err);
+        }
+      }
+
+      // Send push notification to the client
+      const workshopId = localStorage.getItem('saas_workshop_id') || 'default_workshop';
+      fetch('/api/send-push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workshopId,
+          title: 'Siparişiniz Onaylandı! 👟',
+          message: `${o.modelCode} model kodlu ${o.qty} çift siparişiniz aktif imalata alındı.`,
+          userType: 'client',
+          contactId: contactId
+        })
+      }).catch(err => console.warn('Client push notification failed on approval:', err));
+
+      // Add financial transaction to the customer
+      const amount = parseFloat((o.qty * o.price).toFixed(2));
+      const tx = {
+        contactId: contactId,
+        type: 'alacak',
+        amount: amount,
+        description: `${o.modelCode} — ${o.qty} Çift (Katalogdan Gelen Sipariş Onayı)`,
+        orderId: o.id,
+        date: new Date().toISOString()
+      };
+      await dbAdd('transactions', tx);
+      closeModalById('incoming-order-approve-modal');
+      showToast('Sipariş başarıyla onaylandı ve üretime alındı! 🚀', 'success');
+
+      // Send WhatsApp approval notification if customerPhone exists (via user gesture modal)
+      if (o.customerPhone) {
+        try {
+          const formattedPhone = formatPhone(o.customerPhone);
+          const waMsg = `Merhaba, #${o.id} nolu ${o.modelCode} model kodlu ${o.qty} çift siparişiniz onaylandı ve imalata/hazırlanmaya alındı! 👟`;
+          const waUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(waMsg)}`;
+          openWhatsAppPrompt(
+            waUrl,
+            'Sipariş Onaylandı! 🚀',
+            `#${o.id} nolu sipariş onaylandı. Müşterinize WhatsApp üzerinden sipariş onay/hazırlık bildirimi göndermek ister misiniz?`
+          );
+        } catch (err) {
+          console.error('WhatsApp notification failed on approval:', err);
+        }
+      }
+
+      await this.loadOrders();
+
+      if (window.Dashboard && typeof window.Dashboard.render === 'function') {
+        await window.Dashboard.render();
+      }
+    } catch (e) {
+      showToast('Hata: ' + e.message, 'error');
+    }
+  },
+
+  escape(str) {
+    return escapeHtml(str);
+  }
+};
+
+const Recipes = {
+  currentProductId: null,
+  currentMaterials: [],
+
+  async openModal(productId) {
+    this.currentProductId = productId;
+    this.currentMaterials = [];
+
+    const product = await dbGet('products', productId);
+    if (!product) {
+      showToast('Ürün bulunamadı!', 'error');
+      return;
+    }
+
+    document.getElementById('recipe-modal-title').textContent = `${product.modelCode} — Malzeme Reçetesi (BOM)`;
+    document.getElementById('recipe-product-id').value = productId;
+
+    // Reset dropdowns
+    document.getElementById('recipe-material-type').value = '';
+    const matSelect = document.getElementById('recipe-material-id');
+    matSelect.innerHTML = '<option value="">Önce tür seçin</option>';
+    document.getElementById('recipe-material-qty').value = '';
+    document.getElementById('recipe-material-unit-display').textContent = '-';
+
+    // Load recipe
+    const recipe = await dbGet('recipes', productId);
+    if (recipe && recipe.materials) {
+      this.currentMaterials = recipe.materials;
+    }
+
+    this.bindEvents();
+    await this.renderMaterialsTable();
+
+    openModalById('recipe-modal');
+  },
+
+  bindEvents() {
+    // Material type change
+    const typeSelect = document.getElementById('recipe-material-type');
+    if (typeSelect && !typeSelect._bound) {
+      typeSelect._bound = true;
+      typeSelect.addEventListener('change', async (e) => {
+        const type = e.target.value;
+        const matSelect = document.getElementById('recipe-material-id');
+        
+        if (!type) {
+          matSelect.innerHTML = '<option value="">Önce tür seçin</option>';
+          document.getElementById('recipe-material-unit-display').textContent = '-';
+          return;
+        }
+
+        const stocks = await dbGetByIndex('stocks', 'type', type);
+        matSelect.innerHTML = '<option value="">Seçiniz</option>' + 
+          stocks.map(s => `<option value="${s.id}" data-unit="${s.unit}">${this.escape(s.name)} (${s.unit})</option>`).join('');
+        document.getElementById('recipe-material-unit-display').textContent = '-';
+      });
+    }
+
+    // Material item select change
+    const matSelect = document.getElementById('recipe-material-id');
+    if (matSelect && !matSelect._bound) {
+      matSelect._bound = true;
+      matSelect.addEventListener('change', (e) => {
+        const option = e.target.options[e.target.selectedIndex];
+        const unit = option ? option.dataset.unit : '-';
+        document.getElementById('recipe-material-unit-display').textContent = unit || '-';
+      });
+    }
+
+    // Add material form submit
+    const addMatForm = document.getElementById('recipe-add-material-form');
+    if (addMatForm && !addMatForm._bound) {
+      addMatForm._bound = true;
+      addMatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.addMaterialItem();
+      });
+    }
+
+    // Save recipe button
+    const saveBtn = document.getElementById('btn-save-recipe');
+    if (saveBtn && !saveBtn._bound) {
+      saveBtn._bound = true;
+      saveBtn.addEventListener('click', () => this.saveRecipe());
+    }
+  },
+
+  async addMaterialItem() {
+    const type = document.getElementById('recipe-material-type').value;
+    const id = parseInt(document.getElementById('recipe-material-id').value);
+    const qty = parseFloat(document.getElementById('recipe-material-qty').value);
+
+    if (!type || !id || qty <= 0) {
+      showToast('Lütfen geçerli bir malzeme ve miktar seçin!', 'error');
+      return;
+    }
+
+    // Check if material already in list
+    if (this.currentMaterials.some(m => m.id === id)) {
+      showToast('Bu malzeme reçetede zaten ekli!', 'error');
+      return;
+    }
+
+    const stock = await dbGet('stocks', id);
+    if (!stock) return;
+
+    this.currentMaterials.push({
+      type: type,
+      id: id,
+      name: stock.name,
+      qty: qty,
+      unit: stock.unit
+    });
+
+    // Reset fields
+    document.getElementById('recipe-material-qty').value = '';
+    
+    await this.renderMaterialsTable();
+    showToast('Malzeme eklendi.', 'success');
+  },
+
+  async renderMaterialsTable() {
+    const tbody = document.getElementById('recipe-materials-tbody');
+    const empty = document.getElementById('recipe-materials-empty');
+
+    if (this.currentMaterials.length === 0) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+
+    const typeLabels = {
+      sole: 'Taban',
+      accessory: 'Aksesuar',
+      leather: 'Deri',
+      raw: 'Ham Madde'
+    };
+
+    tbody.innerHTML = this.currentMaterials.map((m, idx) => `
+      <tr>
+        <td><span class="category-badge badge-tedarikci" style="background: rgba(99, 102, 241, 0.08); color: var(--text-accent);">${typeLabels[m.type] || m.type}</span></td>
+        <td><strong>${this.escape(m.name)}</strong></td>
+        <td>${m.qty}</td>
+        <td>${m.unit}</td>
+        <td>
+          <button class="btn-icon danger" type="button" onclick="Recipes.removeMaterialItem(${idx})">🗑️</button>
+        </td>
+      </tr>
+    `).join('');
+  },
+
+  removeMaterialItem(index) {
+    this.currentMaterials.splice(index, 1);
+    this.renderMaterialsTable();
+    showToast('Malzeme kaldırıldı.', 'info');
+  },
+
+  async saveRecipe() {
+    if (this.currentMaterials.length === 0) {
+      if (!confirm('Reçetede malzeme kalmadı. Reçeteyi tamamen silmek istediğinizden emin misiniz?')) {
+        return;
+      }
+    }
+
+    try {
+      const data = {
+        productId: this.currentProductId,
+        materials: this.currentMaterials
+      };
+
+      await dbUpdate('recipes', data);
+      showToast('Reçete başarıyla kaydedildi!', 'success');
+      closeModalById('recipe-modal');
+    } catch (err) {
+      showToast('Hata: ' + err.message, 'error');
+    }
+  },
+
+  escape(str) {
+    return escapeHtml(str);
+  }
+};
+
+window.Orders = Orders;
+window.Recipes = Recipes;
