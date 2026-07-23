@@ -1925,16 +1925,16 @@ const Orders = {
     }
 
     let modelCode = "";
-    const modelRegex = /\b([A-Z]-[0-9]{3}|[A-Z][0-9]{3})\b/i;
+    const modelRegex = /(?:model(?:\s*kodu)?:?\s*|\b)([A-Z]{1,3}[-_\s]?[0-9]{2,4})\b/i;
     const modelMatch = text.match(modelRegex);
     if (modelMatch) {
-      modelCode = modelMatch[1].toUpperCase();
+      modelCode = modelMatch[1].toUpperCase().replace(/\s+/, '-');
     }
 
     let color = "Siyah";
-    const colors = ["Siyah", "Beyaz", "Kahverengi", "Taba", "Lacivert", "Kırmızı", "Mavi", "Yeşil", "Gri", "Bej"];
+    const colors = ["Siyah", "Beyaz", "Kahverengi", "Taba", "Lacivert", "Kırmızı", "Mavi", "Yeşil", "Gri", "Bej", "Bordo", "Vizon", "Taba"];
     for (const col of colors) {
-      const colReg = new RegExp(col, 'i');
+      const colReg = new RegExp(`\\b${col}\\b`, 'i');
       if (colReg.test(text)) {
         color = col;
         break;
@@ -1942,23 +1942,40 @@ const Orders = {
     }
 
     let price = "";
-    const priceRegex = /(\d+)\s*(?:TL|₺|lira)/i;
+    const priceRegex = /(?:birim\s*)?fiyat(?:ı|u)?:?\s*(\d+(?:[.,]\d+)?)\s*(?:tl|₺|lira)?|(\d+(?:[.,]\d+)?)\s*(?:tl|₺|lira)/i;
     const priceMatch = text.match(priceRegex);
     if (priceMatch) {
-      price = parseFloat(priceMatch[1]);
+      price = parseFloat((priceMatch[1] || priceMatch[2]).replace(',', '.'));
     }
 
     const sizes = [];
-    const sizeRegex = /(3[6-9]|4[0-5])\s*(?::|->|numara|nmr|a|:)?\s*(\d+)/gi;
-    let match;
     const tempMap = {};
-    
-    while ((match = sizeRegex.exec(text)) !== null) {
-      const size = match[1];
-      const qty = parseInt(match[2], 10);
-      if (qty > 0 && !tempMap[size]) {
-        tempMap[size] = qty;
-        sizes.push({ size, qty });
+    const lines = text.split(/\r?\n/);
+
+    for (let line of lines) {
+      line = line.trim();
+      if (!line) continue;
+
+      // Skip header lines or pure price lines
+      if (/^(gönderen|tarih|konu|sevk adresi|müşteri adı|sipariş detay)/i.test(line)) {
+        continue;
+      }
+      if (/(birim fiyat|fiyatı|fiyat:)\s*\d+/i.test(line) && !/(3[5-9]|4[0-8])\s*[:->]/i.test(line)) {
+        continue;
+      }
+
+      // Find all size and quantity patterns in line
+      const sizeRegex = /\b(3[5-9]|4[0-8])\b(?:[^\d\n]*?)\b(\d{1,4})\b/g;
+      let m;
+      while ((m = sizeRegex.exec(line)) !== null) {
+        const size = m[1];
+        const qty = parseInt(m[2], 10);
+        
+        if (qty > 0 && qty < 5000 && !tempMap[size]) {
+          if (qty >= 2020 && qty <= 2030) continue; // Skip years like 2026
+          tempMap[size] = qty;
+          sizes.push({ size, qty });
+        }
       }
     }
 
