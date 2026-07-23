@@ -1842,6 +1842,60 @@ const Orders = {
       }
     });
 
+    // PDF File upload handler
+    const pdfInput = document.getElementById('email-pdf-file');
+    if (pdfInput && !pdfInput._bound) {
+      pdfInput._bound = true;
+      pdfInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.type !== 'application/pdf') {
+          showToast('Lütfen geçerli bir PDF dosyası seçin!', 'error');
+          return;
+        }
+
+        showToast('PDF yükleniyor ve okunuyor...', 'info');
+
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const pdfjsLib = window['pdfjs-dist/build/pdf'];
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+          
+          const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+          const pdf = await loadingTask.promise;
+          
+          let extractedText = '';
+          
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const textItems = textContent.items;
+            let lastY = -1;
+            let pageText = '';
+            
+            for (const item of textItems) {
+              if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 5) {
+                pageText += '\n';
+              }
+              pageText += item.str + ' ';
+              lastY = item.transform[5];
+            }
+            extractedText += pageText + '\n';
+          }
+          
+          if (textarea) {
+            textarea.value = extractedText.trim();
+            showToast('PDF metni başarıyla okundu! Şimdi tarıyoruz...', 'success');
+            this.parseEmailContent();
+          }
+        } catch (err) {
+          console.error(err);
+          showToast('PDF okunurken bir hata oluştu: ' + err.message, 'error');
+        }
+      });
+    }
+
     const saveBtn = document.getElementById('btn-email-save-incoming');
     if (saveBtn && !saveBtn._bound) {
       saveBtn._bound = true;

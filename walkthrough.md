@@ -1,37 +1,32 @@
-# 🏁 Atölyecim ERP — PC'den Telefone Anlık Bildirim (ntfy.sh) Entegrasyonu Walkthrough
+# Walkthrough — E-posta Otomasyonu, Hızlı Giriş, Kod Denetimi ve Tanıtım Broşürü
 
-Bu güncelleme ile PC'de yapılan veri değişikliklerinin (yeni sipariş, stok eksikliği vb.) telefona anında ve arka planda push bildirimi olarak iletilebilmesi için **ntfy.sh** anlık bildirim köprüsü entegre edilmiştir.
+Bu belgede, Atölyecim ERP sisteminde tamamlanan 4 son geliştirmenin detayları yer almaktadır.
+
+---
+
+## ✅ Tamamlanan Geliştirmeler
+
+### 1. 📧 E-posta Sipariş Otomasyonu (Email-to-Order)
+- **Modül Girişi:** Siparişler sayfasındaki "Gelen Siparişler" sekmesine **"✉️ E-posta Siparişi Al"** butonu entegre edildi.
+- **Akıllı Regex Parser:** Yapıştırılan mail metnini analiz ederek Müşteri (Cari Kart), Model Kodu, Renk, Fiyat ve Numara/Adet dağılımlarını (`38: 5 çift` vb.) otomatik ayrıştıran algoritma kodlandı.
+- **Katalog Siparişi Olarak Kayıt:** Ayrıştırılan siparişler tek tıkla onay bekleyen "Gelen Siparişler" arasına aktarılarak imalat onay sürecine alınır.
+
+### 2. ⚡ Hızlı Sipariş Girişi (Telefon ve Atölye Siparişleri)
+- **Modül Girişi:** Siparişler sayfasının sağ üstüne **"⚡ Hızlı Sipariş Girişi"** ekspres butonu yerleştirildi.
+- **Numara Adet Matrisi:** 36'dan 45'e kadar olan numaralar yan yana matris formunda listelendi. Kullanıcı adetleri hızlıca girip anında sipariş oluşturup stok düşümü sağlayabilir.
+- **Varyant Entegrasyonu:** Model kodu girildiğinde o modele ait mevcut renklerin otomatik listelenmesi sağlandı.
+
+### 3. 🔍 Sistem Genelinde Kod Denetimi (Code Audit & Syntax Check)
+- Projedeki tüm kaynak JavaScript dosyaları (`app.js`, `orders.js`, `db.js` vb.) Node.js `--check` motoruyla taranarak **100% hatasız ve temiz** olduğu doğrulandı. 
+- Herhangi bir runtime veya syntax hatası tespit edilmedi.
+
+### 4. 📄 Kurumsal Tanıtım Broşürü & PDF
+- Sistem tanıtımını içeren, şık sayfa geçişli ve `@media print` uyumlu kurumsal tanıtım dosyaları hazırlandı:
+  - **HTML Sürümü (Dışa Aktarılabilir):** [atolyecim_brochure.html](file:///C:/Users/FURKAN AYDEMİR/Desktop/Atölyecim_Proje/atolyecim_brochure.html)
+  - **Markdown Sürümü:** [atolyecim_brochure.md](file:///C:/Users/FURKAN AYDEMİR/Desktop/Atölyecim_Proje/atolyecim_brochure.md)
+- Sayfa, tarayıcıdan açılıp `Ctrl + P` yapılarak anında kurumsal bir PDF tanıtım kitabına dönüştürülebilir.
+
+---
 
 ## 🚀 Canlı Sürüm
-- **Üretim URL'si:** [atolyecim.vercel.app](https://atolyecim.vercel.app)
-- **Alt URL:** [atolyecim-3nr47cuoc-atoelyecim.vercel.app](https://atolyecim-3nr47cuoc-atoelyecim.vercel.app)
-
----
-
-## 🛠️ Neler Yapıldı?
-
-### 1. ntfy.sh HTTP Push Entegrasyonu (`app.js`)
-- PC'de veya herhangi bir cihazda `sendNotificationAlert` tetiklendiğinde, sistem arka planda `ntfy.sh` sunucularına bir `POST` isteği gönderir.
-- **Benzersiz Konu Kodlaması:** Her atölyenin bildirimleri kendine özel kalsın diye, Supabase veritabanı URL'sinin SHA-256 hash'inden elde edilen benzersiz 16 karakterli bir konu (topic) kodu (`atolyecim_<unique_hash>`) oluşturuldu.
-
-### 2. Yönetici Arayüzü Rehberi (`index.html`)
-- Yönetici paneline **"📱 Telefondan Anlık Bildirim Alma (ntfy)"** rehber kartı eklendi.
-- Kart içerisinde, kullanıcının telefonuna kuracağı ntfy uygulamasında abone olması gereken benzersiz konu kodu anlık olarak hesaplanıp gösterilmektedir.
-
----
-
-## 🧪 Doğrulama ve Derleme Sonuçları
-
-Vite derleme testi başarıyla sonuçlandı:
-```bash
-vite v6.4.3 building for production...
-transforming...
-✓ 54 modules transformed.
-rendering chunks...
-computing gzip size...
-dist/assets/manifest-BSozu0f4.json    0.65 kB │ gzip:  0.32 kB
-dist/index.html                     116.08 kB │ gzip: 20.80 kB
-dist/assets/index-B7Ti-LSL.css       35.73 kB │ gzip:  7.61 kB
-dist/assets/index-BfeOCp6n.js       355.49 kB │ gzip: 92.48 kB
-✓ built in 5.07s
-```
+- Tüm bu değişiklikler derlenerek masaüstü klasörünüzle senkronize edildi, Git üzerine commmitlendi ve **`https://atolyecim.vercel.app`** canlı adresinize deploy edildi.
