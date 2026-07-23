@@ -1,6 +1,7 @@
 # 📋 Atölyecim ERP — Gelecek Oturum Yapılacaklar ve Geliştirme Haritası
 
-## 📌 1. E-posta İle Gelen Sipariş Otomasyonu (Email-to-Order Integration)
+## 📌 1. E-posta İle Gelen Sipariş Otomasyonu (Email-to-Order Integration) [/]
+- **Durum:** İşlemde ⏳
 - **Amaç:** E-posta ile gelen siparişlerin tek tıkla sisteme düşmesi.
 - **Detaylar:**
   - E-posta içeriğini/sipariş metnini veya e-posta entegrasyonu (webhook / e-posta ayrıştırıcı) ile okuyup "Gelen Siparişler" sekmesine aktarma.
@@ -8,7 +9,8 @@
 
 ---
 
-## 📌 2. Telefonla ve Yüz Yüze (Atölyeden) Gelen Siparişler İçin Hızlı Giriş & Fikirler
+## 📌 2. Telefonla ve Yüz Yüze (Atölyeden) Gelen Siparişler İçin Hızlı Giriş & Fikirler [/]
+- **Durum:** İşlemde ⏳
 - **Sorun:** Telefonda konuşurken veya müşteri atölyedeyken uzun uzun sipariş formu doldurmak vakit alıyor.
 - **Önerilen Çözüm ve Otomasyon Fikirleri:**
   1. **Atölye Banko QR Kodu (Kiosk / Müşteri Kendi Seçsin):**

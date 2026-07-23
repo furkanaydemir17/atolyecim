@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Atölyecim ERP — Kurumsal Tanıtım Broşürü</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #6366f1;
+      --color-primary-dark: #4f46e5;
+      --color-bg-dark: #0f172a;
+      --color-text-dark: #1e293b;
+      --color-text-muted: #64748b;
+      --color-accent: #10b981;
+      --color-warning: #f59e0b;
+      --border-color: #e2e8f0;
+      --font-title: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--color-text-dark);
+      background-color: #f8fafc;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Print styling to force color print */
+    @media print {
+      body {
+        background-color: #ffffff;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .page-break {
+        page-break-after: always;
+      }
+      .print-exact {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: #ffffff;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    /* Page Setup */
+    .page {
+      padding: 60px 80px;
+      position: relative;
+      background: #ffffff;
+    }
+
+    /* Cover Page */
+    .cover-page {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      min-height: 900px;
+      padding: 80px 60px;
+      position: relative;
+      overflow: hidden;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .cover-page::before {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
+      top: -100px;
+      right: -100px;
+    }
+
+    .cover-page::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%);
+      bottom: -150px;
+      left: -150px;
+    }
+
+    .logo-container {
+      margin-bottom: 40px;
+    }
+
+    .logo-icon {
+      width: 96px;
+      height: 96px;
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px auto;
+      box-shadow: 0 12px 30px rgba(99, 102, 241, 0.4);
+    }
+
+    .logo-icon svg {
+      width: 56px;
+      height: 56px;
+      color: #ffffff;
+    }
+
+    .logo-text {
+      font-family: var(--font-title);
+      font-size: 2.8rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .cover-title {
+      font-family: var(--font-title);
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      max-width: 600px;
+      line-height: 1.3;
+    }
+
+    .cover-subtitle {
+      font-size: 1.1rem;
+      font-weight: 400;
+      color: #94a3b8;
+      max-width: 500px;
+      margin-bottom: 80px;
+    }
+
+    .badge-vip {
+      background: rgba(16,185,129,0.15);
+      border: 1px solid rgba(16,185,129,0.3);
+      color: #34d399;
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 30px;
+      display: inline-block;
+    }
+
+    .cover-footer {
+      margin-top: auto;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+
+    /* Section Styles */
+    .section-title {
+      font-family: var(--font-title);
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--color-bg-dark);
+      margin-bottom: 24px;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title span {
+      color: var(--color-primary);
+    }
+
+    p {
+      margin-bottom: 20px;
+      font-size: 1rem;
+      color: #334155;
+    }
+
+    /* Feature Grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 30px;
+      margin-bottom: 30px;
+    }
+
+    .feature-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+      position: relative;
+    }
+
+    .feature-card-header {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--color-bg-dark);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature-card-header span {
+      font-size: 1.25rem;
+    }
+
+    .feature-card p {
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+      margin: 0;
+    }
+
+    /* Table Styles */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 25px 0;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      background-color: #f8fafc;
+      font-weight: 700;
+      color: var(--color-bg-dark);
+    }
+
+    /* Fixed Actions bar for browser view */
+    .action-bar {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 1000;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background-color: var(--color-primary);
+      color: #ffffff;
+    }
+
+    .btn-secondary {
+      background-color: #ffffff;
+      color: var(--color-bg-dark);
+      border: 1px solid var(--border-color);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating Action Buttons (Hidden on Print) -->
+  <div class="action-bar no-print">
+    <a href="index.html" class="btn btn-secondary">🏠 Ana Sayfaya Dön</a>
+    <button onclick="window.print()" class="btn btn-primary">🖨️ PDF Olarak Kaydet / Yazdır</button>
+  </div>
+
+  <div class="container print-exact">
+
+    <!-- PAGE 1: COVER PAGE -->
+    <div class="cover-page page-break">
+      <div class="badge-vip">Kurumsal Tanıtım Dokümanı</div>
+      
+      <div class="logo-container">
+        <div class="logo-icon">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M21 7.5c0-.828-.672-1.5-1.5-1.5H15l-1-2h-4L9 6H4.5C3.672 6 3 6.672 3 7.5V18c0 .828.672 1.5 1.5 1.5h15c.828 0 1.5-.672 1.5-1.5V7.5zM7 16H5v-2h2v2zm0-4H5V10h2v2zm6 4H9v-2h4v2zm0-4H9V10h4v2zm6 4h-4v-2h4v2zm0-4h-4V10h4v2z"/></svg>
+        </div>
+        <div class="logo-text">ATÖLYECİM ERP</div>
+      </div>
+
+      <h1 class="cover-title">Ayakkabı İmalat Atölyesi Yönetim Sistemi</h1>
+      <p class="cover-subtitle">Modern, Bulut Tabanlı, Çoklu Kiracı İzolasoyunlu ve WhatsApp / Barkod Entegreli Akıllı Atölye ERP Çözümü</p>
+
+      <div class="cover-footer">
+        <span>© 2026 Atölyecim ERP Yazılım Hizmetleri</span>
+        <span>Versiyon 1.4 (Premium)</span>
+      </div>
+    </div>
+
+    <!-- PAGE 2: GİRİŞ VE ÖZELLİKLER -->
+    <div class="page page-break">
+      <h2 class="section-title"><span>01</span> Genel Bakış & Vizyon</h2>
+      <p>
+        Atölyecim ERP; ayakkabı üretim atölyelerinin karmaşık sipariş, stok, malzeme reçetesi ve cari hesap takibi süreçlerini tek bir merkezden, modern ve bulut tabanlı bir arayüzle yönetmelerini sağlayan yeni nesil bir kurumsal kaynak planlama (ERP) yazılımıdır.
+      </p>
+      <p>
+        Geleneksel imalat yöntemlerini en son web teknolojileriyle birleştiren Atölyecim, atölye sahiplerinin üretim verimliliklerini artırmayı, kritik stok seviyelerini anlık takip ederek sipariş gecikmelerini önlemeyi ve cari hesaplardaki finansal dengeleri anında raporlamayı hedefler.
+      </p>
+
+      <h2 class="section-title" style="margin-top: 40px;"><span>02</span> Temel Modüller</h2>
+      
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <span>📊</span> Executive Dashboard
+          </div>
+          <p>1, 3, 6 ve 12 aylık periyot filtreleriyle ciro, borç/alacak dengesi, satış adetleri ve en çok satan modellerin canlı grafiksel takibi.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <span>👟</span> Detaylı Sipariş & İmalat
+          </div>
+          <p>Müşteri bazlı renk, model ve numara (asorti) dağılımıyla sipariş girişi, üretim aşamaları ve kargo sevk takibi.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <span>🏭</span> Stok ve Reçete Yönetimi
+          </div>
+          <p>Ayakkabı modelleri için malzeme reçeteleri (taban, astar, saya vb.) tanımlama ve sipariş alındığında stokların otomatik düşümü.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <span>👥</span> Cari Hesap Defteri (Ledger)
+          </div>
+          <p>Müşteri ve tedarikçilerin borç, alacak, ödeme ve tahsilat hareketlerini tek ekranda toplayan entegre finansal defter.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 3: SMART AUTOMATION & SECURITY -->
+    <div class="page page-break">
+      <h2 class="section-title"><span>03</span> Akıllı Otomasyon & Entegrasyonlar</h2>
+      <p>
+        Atölyecim ERP, operasyonel yükü azaltmak amacıyla gelişmiş entegrasyonlar sunar:
+      </p>
+
+      <div class="feature-grid" style="grid-template-columns: 1fr;">
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <span>✉️</span> E-posta Sipariş Otomasyonu (Email-to-Order)
+          </div>
+          <p style="margin-bottom: 10px;">Müşterilerinizden gelen sipariş e-postalarını doğrudan kopyalayıp yapıştırarak sistemin akıllı algoritmasıyla ayrıştırılmasını sağlayabilirsiniz. Sistem müşteri adını, model kodunu, renk ve numara/adet dağılımlarını anında analiz eder ve tek tıkla "Gelen Siparişler" sekmesine kaydeder.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <span>⚡</span> Hızlı Sipariş Girişi (Telefon & Banko Girişi)
+          </div>
+          <p style="margin-bottom: 10px;">Telefonda veya atölyede yüz yüze sipariş alırken hızlı matris tablosu sayesinde 36'dan 45 numaraya kadar olan adetleri yan yana tek tıkla yazarak 10 saniyede sipariş oluşturabilir ve anında stoktan düşebilirsiniz.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <span>📲</span> WhatsApp Entegrasyonu
+          </div>
+          <p style="margin-bottom: 10px;">Sipariş kaydedildiğinde, onaylandığında veya kargoya verildiğinde müşterilerinize tek tıkla otomatik WhatsApp bilgilendirme mesajları göndererek kurumsal iletişiminizi güçlendirebilirsiniz.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <span>🏷️</span> Barkod Okuyucu ve Koli Etiketi Yazıcı
+          </div>
+          <p>Telefon kamerasını barkod okuyucu olarak kullanarak stok girişi yapabilir veya siparişler için 10x15cm boyutlarında profesyonel koli sevk etiketleri yazdırabilirsiniz.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 4: ALTYAPI VE VERİTABANI MİMARİSİ -->
+    <div class="page">
+      <h2 class="section-title"><span>04</span> Bulut Veritabanı ve Güvenlik Altyapısı</h2>
+      <p>
+        Uygulama, yüksek güvenlik standartlarına ve modern veri mimarisine sahiptir:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Özellik</th>
+            <th>Teknik Detay</th>
+            <th>İşletmeye Faydası</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Çoklu Kiracı (Multi-Tenant)</strong></td>
+            <td>Supabase Row Level Security (RLS) seviyesinde veri izolasyonu.</td>
+            <td>Her atölyenin verileri tamamen kendine aittir, asla diğer firmalarla karışmaz veya dışarıdan okunamaz.</td>
+          </tr>
+          <tr>
+            <td><strong>Veri Şifreleme</strong></td>
+            <td>SHA-256 tabanlı oturum anahtarları ve şifreleme.</td>
+            <td>Kullanıcı şifreleri ve oturumları en yüksek kriptografik standartlarla korunur.</td>
+          </tr>
+          <tr>
+            <td><strong>Offline Çalışma (PWA)</strong></td>
+            <td>Service Worker (`sw.js`) ve IndexedDB yerel yedekleme.</td>
+            <td>İnternet kesilse bile uygulama açılmaya, barkod okumaya ve sipariş almaya devam eder; internet geldiğinde senkronize olur.</td>
+          </tr>
+          <tr>
+            <td><strong>Rol Yetkilendirme</strong></td>
+            <td>Atölye Yöneticisi ve Master Yönetici ayrımı.</td>
+            <td>Atölye içindeki yetki sınırları belirlenerek hassas finansal verilerin korunması sağlanır.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 class="section-title" style="margin-top: 40px;"><span>05</span> Sonuç & İletişim</h2>
+      <p>
+        Atölyecim ERP, ayakkabı imalat sektörünün dinamiklerine özel olarak geliştirilmiş yapısıyla dijital dönüşümünüzü hızlandırır. Kağıt-kalem veya Excel karmaşasına son vererek üretiminizi kontrol altına alın.
+      </p>
+      <p style="font-weight: 700; color: var(--color-primary-dark); font-size: 1.1rem; margin-top: 20px;">
+        🚀 Atölyenizi Dijital Geleceğe Taşıyın!
+      </p>
+    </div>
+
+  </div>
+
+</body>
+</html>

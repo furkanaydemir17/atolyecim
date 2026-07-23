@@ -126,6 +126,8 @@ const Orders = {
     // Add order buttons
     const addBtn = document.getElementById('add-order-btn');
     const addEmptyBtn = document.getElementById('add-order-empty-btn');
+    const emailImportBtn = document.getElementById('btn-email-import-modal');
+    const quickOrderBtn = document.getElementById('btn-quick-order-modal');
 
     if (addBtn && !addBtn._bound) {
       addBtn._bound = true;
@@ -134,6 +136,14 @@ const Orders = {
     if (addEmptyBtn && !addEmptyBtn._bound) {
       addEmptyBtn._bound = true;
       addEmptyBtn.addEventListener('click', () => this.openModal());
+    }
+    if (emailImportBtn && !emailImportBtn._bound) {
+      emailImportBtn._bound = true;
+      emailImportBtn.addEventListener('click', () => this.openEmailImportModal());
+    }
+    if (quickOrderBtn && !quickOrderBtn._bound) {
+      quickOrderBtn._bound = true;
+      quickOrderBtn.addEventListener('click', () => this.openQuickOrderModal());
     }
 
     // Order form submit
@@ -1595,6 +1605,394 @@ const Orders = {
     } catch (e) {
       showToast('Hata: ' + e.message, 'error');
     }
+  },
+
+  async openQuickOrderModal() {
+    const form = document.getElementById('quick-order-form');
+    if (form) form.reset();
+
+    const contacts = await dbGetAll('contacts');
+    const customers = contacts.filter(c => c.type === 'musteri');
+    const contactSelect = document.getElementById('quick-order-contact-id');
+    if (contactSelect) {
+      contactSelect.innerHTML = '<option value="">Seçiniz</option>' + customers.map(c => `<option value="${c.id}">${this.escape(c.name)}</option>`).join('');
+    }
+
+    document.querySelectorAll('.quick-size-input').forEach(input => {
+      input.value = '0';
+    });
+    const totalPreview = document.getElementById('quick-order-total-preview');
+    if (totalPreview) totalPreview.textContent = 'TOPLAM: 0 çift';
+
+    const modelInput = document.getElementById('quick-order-model-code');
+    if (modelInput && !modelInput._quickBound) {
+      modelInput._quickBound = true;
+      modelInput.addEventListener('input', async (e) => {
+        const mCode = e.target.value.trim();
+        await this.updateQuickColorsList(mCode);
+      });
+    }
+
+    const matrix = document.getElementById('quick-order-matrix');
+    if (matrix && !matrix._bound) {
+      matrix._bound = true;
+      matrix.addEventListener('input', () => {
+        let total = 0;
+        document.querySelectorAll('.quick-size-input').forEach(input => {
+          total += parseInt(input.value, 10) || 0;
+        });
+        const preview = document.getElementById('quick-order-total-preview');
+        if (preview) preview.textContent = `TOPLAM: ${total} çift`;
+      });
+    }
+
+    const deadlineInput = document.getElementById('quick-order-deadline');
+    if (deadlineInput) {
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 15);
+      deadlineInput.value = defaultDate.toISOString().split('T')[0];
+    }
+
+    const quickForm = document.getElementById('quick-order-form');
+    if (quickForm && !quickForm._boundSubmit) {
+      quickForm._boundSubmit = true;
+      quickForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await this.saveQuickOrder();
+      });
+    }
+
+    openModalById('quick-order-modal');
+  },
+
+  async updateQuickColorsList(mCode) {
+    let datalist = document.getElementById('quick-colors-list');
+    if (!datalist) return;
+    if (!mCode) {
+      datalist.innerHTML = '';
+      return;
+    }
+    const products = await dbGetAll('products');
+    const matches = products.filter(p => (p.modelCode || '').toLowerCase() === mCode.toLowerCase());
+    datalist.innerHTML = matches.map(p => `<option value="${this.escape(p.color)}">`).join('');
+
+    const priceInput = document.getElementById('quick-order-price');
+    if (priceInput && !priceInput.value && matches.length > 0) {
+      priceInput.value = matches[0].price || 0;
+    }
+  },
+
+  async saveQuickOrder() {
+    const contactId = parseInt(document.getElementById('quick-order-contact-id').value, 10);
+    const modelCode = document.getElementById('quick-order-model-code').value.trim();
+    const color = document.getElementById('quick-order-color').value.trim();
+    const price = parseFloat(document.getElementById('quick-order-price').value) || 0;
+    const deadline = document.getElementById('quick-order-deadline').value;
+    const klise = document.getElementById('quick-order-klise').value.trim();
+    const accessoryColor = document.getElementById('quick-order-accessory').value.trim();
+
+    if (!contactId || !modelCode || !color || price <= 0 || !deadline) {
+      showToast('Lütfen tüm zorunlu alanları doldurun!', 'error');
+      return;
+    }
+
+    const sizes = [];
+    let totalQty = 0;
+    document.querySelectorAll('.quick-size-input').forEach(input => {
+      const size = input.dataset.size;
+      const qty = parseInt(input.value, 10) || 0;
+      if (qty > 0) {
+        sizes.push({ size, qty });
+        totalQty += qty;
+      }
+    });
+
+    if (totalQty === 0) {
+      showToast('Lütfen en az bir adet numara/adet girin!', 'error');
+      return;
+    }
+
+    const products = await dbGetAll('products');
+    let match = products.find(p => 
+      (p.modelCode || '').toLowerCase() === modelCode.toLowerCase() && 
+      (p.color || '').toLowerCase() === color.toLowerCase()
+    );
+
+    if (!match) {
+      const templateProduct = products.find(p => (p.modelCode || '').toLowerCase() === modelCode.toLowerCase());
+      const newProduct = {
+        modelCode,
+        color,
+        category: templateProduct ? templateProduct.category : 'Ayakkabı',
+        size: templateProduct ? templateProduct.size : '36-45',
+        soleMaterial: templateProduct ? templateProduct.soleMaterial : '',
+        leatherLining: templateProduct ? templateProduct.leatherLining : '',
+        leatherUpper: templateProduct ? templateProduct.leatherUpper : '',
+        leatherType: templateProduct ? templateProduct.leatherType : '',
+        price,
+        barcode: '',
+        photo: '',
+        accessoryPhoto: ''
+      };
+      const newProductId = await dbAdd('products', newProduct);
+      if (templateProduct) {
+        const templateRecipe = await dbGet('recipes', templateProduct.id);
+        if (templateRecipe) {
+          const newRecipe = {
+            productId: newProductId,
+            materials: JSON.parse(JSON.stringify(templateRecipe.materials))
+          };
+          await dbAdd('recipes', newRecipe);
+        }
+      }
+      match = { id: newProductId, color };
+      showToast(`Yeni ürün otomatik kaydedildi: ${modelCode} (${color})`, 'info');
+    }
+
+    const colorsForDb = [{
+      productId: match.id,
+      color,
+      qty: totalQty,
+      sizes
+    }];
+
+    const isStockOk = await this.verifyAndDeductStockForColors(colorsForDb);
+    if (!isStockOk) return;
+
+    const orderData = {
+      contactId,
+      modelCode,
+      colors: colorsForDb,
+      qty: totalQty,
+      price,
+      deadline,
+      klise,
+      accessoryColor,
+      status: 'beklemede',
+      date: new Date().toISOString()
+    };
+
+    const orderId = await dbAdd('orders', orderData);
+
+    const amount = parseFloat((totalQty * price).toFixed(2));
+    const tx = {
+      contactId,
+      type: 'alacak',
+      amount,
+      description: `${modelCode} (${color}) — ${totalQty} Çift Hızlı Sipariş`,
+      orderId,
+      date: new Date().toISOString()
+    };
+    await dbAdd('transactions', tx);
+
+    if (window.sendNotificationAlert) {
+      const contactSelect = document.getElementById('quick-order-contact-id');
+      const customerName = contactSelect.options[contactSelect.selectedIndex]?.text || 'Bilinmeyen Müşteri';
+      window.sendNotificationAlert('new-order', `Hizli Siparis Alindi! Siparis ID: #${orderId}, Musteri: ${customerName}, Model: ${modelCode}, Toplam: ${totalQty} cift.`);
+    }
+
+    showToast('Hızlı sipariş başarıyla kaydedildi ve stoktan düşüldü!', 'success');
+    closeModalById('quick-order-modal');
+    await this.render();
+    if (window.Dashboard && typeof window.Dashboard.render === 'function') {
+      await window.Dashboard.render();
+    }
+  },
+
+  async openEmailImportModal() {
+    const textarea = document.getElementById('email-order-text');
+    if (textarea) textarea.value = '';
+
+    const resultCard = document.getElementById('email-parse-result-card');
+    if (resultCard) resultCard.style.display = 'none';
+
+    const contacts = await dbGetAll('contacts');
+    const customers = contacts.filter(c => c.type === 'musteri');
+    const contactSelect = document.getElementById('email-parsed-contact');
+    if (contactSelect) {
+      contactSelect.innerHTML = '<option value="">Seçiniz</option>' + customers.map(c => `<option value="${c.id}">${this.escape(c.name)}</option>`).join('');
+    }
+
+    const deadlineInput = document.getElementById('email-parsed-deadline');
+    if (deadlineInput) {
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 15);
+      deadlineInput.value = defaultDate.toISOString().split('T')[0];
+    }
+
+    const parseBtn = document.getElementById('btn-email-parse');
+    if (parseBtn && !parseBtn._bound) {
+      parseBtn._bound = true;
+      parseBtn.addEventListener('click', () => this.parseEmailContent());
+    }
+
+    const samples = {
+      'sample-1': `Konu: Sipariş Talebi - Ahmet Kundura\n\nMerhaba,\nA-102 model kodlu Siyah ayakkabıdan aşağıdaki numaralara göre sipariş vermek istiyoruz:\n\n38 numara: 5 çift\n39 numara: 10 çift\n40 numara: 8 çift\n41 numara: 2 çift\n\nEn kısa sürede teslim edilmesini rica ederiz.\n\nİyi çalışmalar,\nAhmet Kundura`,
+      'sample-2': `Gönderen: Furkan Mağazacılık <furkan@email.com>\nTarih: 23 Temmuz 2026 14:20\n\nYeni sipariş:\nModel: M-420 Kahverengi\n\nDağılım:\n38 numara -> 3 çift\n40 numara -> 5 çift\n41 numara -> 5 çift\n42 numara -> 10 çift\n43 numara -> 2 çift\n\nSevk Adresi: İstanbul İstoç Depo\nBirim fiyatı 450 TL olarak anlaştığımız gibi.\n\nTeşekkürler.`,
+      'sample-3': `Müşteri Adı: Ayakkabı Dünyası\nSipariş Detayı:\nModel: B-310 Beyaz\nAdetler:\n36: 10\n37: 15\n38: 15\n39: 10\n40: 5\n\nFiyat: 600 TL`
+    };
+
+    Object.entries(samples).forEach(([id, text]) => {
+      const btn = document.getElementById(`btn-email-${id}`);
+      if (btn && !btn._bound) {
+        btn._bound = true;
+        btn.addEventListener('click', () => {
+          if (textarea) textarea.value = text;
+        });
+      }
+    });
+
+    const saveBtn = document.getElementById('btn-email-save-incoming');
+    if (saveBtn && !saveBtn._bound) {
+      saveBtn._bound = true;
+      saveBtn.addEventListener('click', () => this.saveEmailParsedOrder());
+    }
+
+    openModalById('email-order-modal');
+  },
+
+  async parseEmailContent() {
+    const text = document.getElementById('email-order-text').value.trim();
+    if (!text) {
+      showToast('Lütfen e-posta içeriğini yapıştırın!', 'error');
+      return;
+    }
+
+    let matchedContactId = "";
+    const contacts = await dbGetAll('contacts');
+    const customers = contacts.filter(c => c.type === 'musteri');
+    
+    for (const c of customers) {
+      const regex = new RegExp(c.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
+      if (regex.test(text)) {
+        matchedContactId = c.id;
+        break;
+      }
+    }
+
+    let modelCode = "";
+    const modelRegex = /\b([A-Z]-[0-9]{3}|[A-Z][0-9]{3})\b/i;
+    const modelMatch = text.match(modelRegex);
+    if (modelMatch) {
+      modelCode = modelMatch[1].toUpperCase();
+    }
+
+    let color = "Siyah";
+    const colors = ["Siyah", "Beyaz", "Kahverengi", "Taba", "Lacivert", "Kırmızı", "Mavi", "Yeşil", "Gri", "Bej"];
+    for (const col of colors) {
+      const colReg = new RegExp(col, 'i');
+      if (colReg.test(text)) {
+        color = col;
+        break;
+      }
+    }
+
+    let price = "";
+    const priceRegex = /(\d+)\s*(?:TL|₺|lira)/i;
+    const priceMatch = text.match(priceRegex);
+    if (priceMatch) {
+      price = parseFloat(priceMatch[1]);
+    }
+
+    const sizes = [];
+    const sizeRegex = /(3[6-9]|4[0-5])\s*(?::|->|numara|nmr|a|:)?\s*(\d+)/gi;
+    let match;
+    const tempMap = {};
+    
+    while ((match = sizeRegex.exec(text)) !== null) {
+      const size = match[1];
+      const qty = parseInt(match[2], 10);
+      if (qty > 0 && !tempMap[size]) {
+        tempMap[size] = qty;
+        sizes.push({ size, qty });
+      }
+    }
+
+    const contactSelect = document.getElementById('email-parsed-contact');
+    if (contactSelect && matchedContactId) {
+      contactSelect.value = matchedContactId;
+    }
+
+    const modelInput = document.getElementById('email-parsed-model');
+    if (modelInput) {
+      modelInput.value = modelCode;
+    }
+
+    const priceInput = document.getElementById('email-parsed-price');
+    if (priceInput) {
+      if (price) {
+        priceInput.value = price;
+      } else {
+        const products = await dbGetAll('products');
+        const prod = products.find(p => (p.modelCode || '').toLowerCase() === modelCode.toLowerCase());
+        priceInput.value = prod ? prod.price : '';
+      }
+    }
+
+    const previewDiv = document.getElementById('email-parsed-items-preview');
+    if (previewDiv) {
+      if (sizes.length === 0) {
+        previewDiv.innerHTML = `<span style="color: var(--color-danger); font-weight: bold;">Hata: Numara/adet dağılımı ayrıştırılamadı. Lütfen kontrol edin!</span>`;
+      } else {
+        const total = sizes.reduce((acc, s) => acc + s.qty, 0);
+        previewDiv.innerHTML = `
+          <strong>Renk:</strong> <input type="text" id="email-parsed-color" value="${color}" style="background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 2px 6px; color: var(--text-accent); font-weight: 700; width: 80px; text-align: center;"><br>
+          <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px;">
+            ${sizes.map(s => `<span style="background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px;"><strong>${s.size}</strong>: ${s.qty} çift</span>`).join('')}
+          </div>
+          <div style="margin-top: 10px; font-weight: bold; color: var(--accent-primary);">Toplam: ${total} çift</div>
+        `;
+        previewDiv.tempSizes = sizes;
+      }
+    }
+
+    const resultCard = document.getElementById('email-parse-result-card');
+    if (resultCard) {
+      resultCard.style.display = 'block';
+    }
+    showToast('E-posta başarıyla tarandı!', 'success');
+  },
+
+  async saveEmailParsedOrder() {
+    const contactId = parseInt(document.getElementById('email-parsed-contact').value, 10);
+    const modelCode = document.getElementById('email-parsed-model').value.trim();
+    const price = parseFloat(document.getElementById('email-parsed-price').value) || 0;
+    const deadline = document.getElementById('email-parsed-deadline').value;
+    const color = document.getElementById('email-parsed-color')?.value?.trim() || 'Siyah';
+
+    const previewDiv = document.getElementById('email-parsed-items-preview');
+    const sizes = previewDiv ? previewDiv.tempSizes : [];
+
+    if (!contactId || !modelCode || price <= 0 || !deadline || !sizes || sizes.length === 0) {
+      showToast('Lütfen önizleme alanındaki tüm bilgileri eksiksiz doldurun ve geçerli numara dağılımı girildiğinden emin olun!', 'error');
+      return;
+    }
+
+    const totalQty = sizes.reduce((acc, s) => acc + s.qty, 0);
+
+    const incomingOrderData = {
+      contactId,
+      modelCode,
+      colors: [{
+        color,
+        qty: totalQty,
+        sizes
+      }],
+      qty: totalQty,
+      price,
+      deadline,
+      status: 'gelen',
+      date: new Date().toISOString()
+    };
+
+    await dbAdd('orders', incomingOrderData);
+
+    showToast('Sipariş başarıyla "Gelen Siparişler" sekmesine eklendi!', 'success');
+    closeModalById('email-order-modal');
+    await this.render();
+    
+    const tabIncoming = document.getElementById('btn-tab-incoming-orders');
+    if (tabIncoming) tabIncoming.click();
   },
 
   escape(str) {

@@ -519,10 +519,18 @@
             <h1>Siparişler</h1>
             <p class="page-desc">Müşteri siparişlerini ve otomatik stok düşümlerini yönetin</p>
           </div>
-          <button class="btn btn-primary" id="add-order-btn">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Yeni Sipariş Al</span>
-          </button>
+          <div class="page-header-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-ghost" id="btn-email-import-modal" style="border-color: rgba(99,102,241,0.3); color: var(--text-accent); display: flex; align-items: center; gap: 6px;">
+              <span>✉️ E-posta Siparişi Al</span>
+            </button>
+            <button type="button" class="btn btn-secondary" id="btn-quick-order-modal" style="background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.25); color: #a5b4fc; display: flex; align-items: center; gap: 6px;">
+              <span>⚡ Hızlı Sipariş Girişi</span>
+            </button>
+            <button type="button" class="btn btn-primary" id="add-order-btn" style="display: flex; align-items: center; gap: 6px;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Yeni Sipariş Al</span>
+            </button>
+          </div>
         </div>
 
         <!-- Order Tabs -->
@@ -2265,6 +2273,197 @@
           ✔️ Siparişi Onayla & Aktifleştir
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- E-posta Siparişi İçe Aktarma Modalı -->
+  <div class="modal-overlay" id="email-order-modal" style="display: none; align-items: center; justify-content: center; z-index: 10000;">
+    <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2 style="margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+          <span>✉️</span> E-posta Siparişi İçe Aktar
+        </h2>
+        <button type="button" class="modal-close" data-modal="email-order-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px;">
+        <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+          Müşterinizden aldığınız e-posta sipariş metnini aşağıdaki alana yapıştırın. Sistem müşteri adını, model kodunu ve numara dağılımlarını otomatik ayrıştıracaktır.
+        </p>
+
+        <!-- Örnek Şablonlar -->
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <span style="font-size: 11px; font-weight: 700; align-self: center; color: var(--text-secondary);">Örnek Yükle:</span>
+          <button type="button" class="btn btn-sm btn-ghost" id="btn-email-sample-1" style="font-size: 11px; padding: 4px 10px;">📄 Örnek 1 (Standart)</button>
+          <button type="button" class="btn btn-sm btn-ghost" id="btn-email-sample-2" style="font-size: 11px; padding: 4px 10px;">📄 Örnek 2 (Asorti)</button>
+          <button type="button" class="btn btn-sm btn-ghost" id="btn-email-sample-3" style="font-size: 11px; padding: 4px 10px;">📄 Örnek 3 (Çoklu Model)</button>
+        </div>
+
+        <div class="form-group">
+          <label for="email-order-text" style="font-weight: 600; display: block; margin-bottom: 6px;">E-posta İçeriği</label>
+          <textarea id="email-order-text" rows="8" placeholder="E-posta sipariş detaylarını buraya yapıştırın..." style="width: 100%; font-family: monospace; font-size: 13px; box-sizing: border-box; resize: vertical;" maxlength="5000"></textarea>
+        </div>
+
+        <button type="button" class="btn btn-primary" id="btn-email-parse" style="width: 100%; justify-content: center; padding: 12px; font-weight: 700;">
+          🔍 E-postayı Tara ve Ayrıştır
+        </button>
+
+        <!-- Ayrıştırma Sonuçları Paneli -->
+        <div id="email-parse-result-card" style="display: none; background: rgba(99,102,241,0.05); border: 1px solid rgba(99,102,241,0.2); border-radius: var(--radius-md); padding: 16px; margin-top: 6px;">
+          <h4 style="margin-top: 0; margin-bottom: 12px; color: var(--text-accent); font-weight: 700; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
+            📋 Ayrıştırılan Sipariş Önizlemesi
+          </h4>
+          
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Eşleşen Müşteri (Cari)</label>
+                <select id="email-parsed-contact" style="width: 100%;"></select>
+              </div>
+              <div class="form-group">
+                <label style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Model Kodu</label>
+                <input type="text" id="email-parsed-model" style="width: 100%; font-weight: 700;">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Birim Fiyat (₺)</label>
+                <input type="number" id="email-parsed-price" min="0.01" step="0.01" style="width: 100%;">
+              </div>
+              <div class="form-group">
+                <label style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Termin Tarihi</label>
+                <input type="date" id="email-parsed-deadline" style="width: 100%;">
+              </div>
+            </div>
+
+            <!-- Numaralar Önizleme -->
+            <div class="form-group">
+              <label style="font-size: 11px; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 6px;">Sipariş Dağılımı</label>
+              <div id="email-parsed-items-preview" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-card); border-radius: var(--radius-sm); padding: 10px; font-size: 12.5px;">
+                <!-- Dinamik olarak doldurulacak -->
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-secondary" id="btn-email-save-incoming" style="width: 100%; justify-content: center; background: #10b981; border-color: #10b981; color: #fff; padding: 12px; font-weight: 700; margin-top: 8px;">
+              📥 Siparişi Gelen Siparişlerime Ekle
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hızlı Sipariş Girişi Modalı (Quick Order Express) -->
+  <div class="modal-overlay" id="quick-order-modal" style="display: none; align-items: center; justify-content: center; z-index: 10000;">
+    <div class="modal-card" style="max-width: 650px;">
+      <div class="modal-header">
+        <h2 style="margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+          <span>⚡</span> Hızlı Sipariş Girişi
+        </h2>
+        <button type="button" class="modal-close" data-modal="quick-order-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="quick-order-form" style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label for="quick-order-contact-id" style="font-weight: 600; display: block; margin-bottom: 6px;">Müşteri (Cari Kart)</label>
+              <select id="quick-order-contact-id" required style="width: 100%;"></select>
+            </div>
+            <div class="form-group">
+              <label for="quick-order-model-code" style="font-weight: 600; display: block; margin-bottom: 6px;">Model Kodu</label>
+              <input type="text" id="quick-order-model-code" placeholder="Örn: A-102" required style="width: 100%;">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label for="quick-order-color" style="font-weight: 600; display: block; margin-bottom: 6px;">Renk</label>
+              <input type="text" id="quick-order-color" placeholder="Örn: Siyah" required style="width: 100%;" list="quick-colors-list">
+              <datalist id="quick-colors-list"></datalist>
+            </div>
+            <div class="form-group">
+              <label for="quick-order-price" style="font-weight: 600; display: block; margin-bottom: 6px;">Birim Fiyat (₺)</label>
+              <input type="number" id="quick-order-price" min="0.01" step="0.01" placeholder="0.00" required style="width: 100%;">
+            </div>
+            <div class="form-group">
+              <label for="quick-order-deadline" style="font-weight: 600; display: block; margin-bottom: 6px;">Termin Tarihi</label>
+              <input type="date" id="quick-order-deadline" required style="width: 100%;">
+            </div>
+          </div>
+
+          <!-- Numara Matrisi (36 - 45) -->
+          <div class="form-group" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-card); border-radius: var(--radius-md); padding: 14px;">
+            <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-accent); display: block; margin-bottom: 10px; text-transform: uppercase;">
+              Numara Adet Dağılımı
+            </label>
+            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;" id="quick-order-matrix">
+              <!-- 36 - 45 sizes inputs -->
+              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
+                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">36</span>
+                <input type="number" class="quick-size-input" data-size="36" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              </div>
+              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
+                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">37</span>
+                <input type="number" class="quick-size-input" data-size="37" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              </div>
+              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
+                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">38</span>
+                <input type="number" class="quick-size-input" data-size="38" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              </div>
+              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
+                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">39</span>
+                <input type="number" class="quick-size-input" data-size="39" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              </div>
+              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
+                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">40</span>
+                <input type="number" class="quick-size-input" data-size="40" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              </div>
+              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
+                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">41</span>
+                <input type="number" class="quick-size-input" data-size="41" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              </div>
+              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
+                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">42</span>
+                <input type="number" class="quick-size-input" data-size="42" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              </div>
+              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
+                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">43</span>
+                <input type="number" class="quick-size-input" data-size="43" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              </div>
+              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
+                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">44</span>
+                <input type="number" class="quick-size-input" data-size="44" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              </div>
+              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
+                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">45</span>
+                <input type="number" class="quick-size-input" data-size="45" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              </div>
+            </div>
+            
+            <div style="margin-top: 12px; text-align: right; font-weight: 700; color: var(--text-accent); font-size: 13px;" id="quick-order-total-preview">
+              TOPLAM: 0 çift
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label for="quick-order-klise" style="font-weight: 600; display: block; margin-bottom: 6px;">Klişe</label>
+              <input type="text" id="quick-order-klise" placeholder="Örn: Gold Logo" style="width: 100%;">
+            </div>
+            <div class="form-group">
+              <label for="quick-order-accessory" style="font-weight: 600; display: block; margin-bottom: 6px;">Aksesuar Rengi</label>
+              <input type="text" id="quick-order-accessory" placeholder="Örn: Gümüş" style="width: 100%;">
+            </div>
+          </div>
+
+          <div class="modal-actions" style="margin-top: 10px;">
+            <button type="button" class="btn btn-ghost" data-modal="quick-order-modal">İptal</button>
+            <button type="submit" class="btn btn-primary" id="btn-quick-order-save" style="background: #10b981; border-color: #10b981; color: #fff; padding: 12px 24px;">
+              ✔️ Siparişi Hızlı Kaydet & Stoktan Düş
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
