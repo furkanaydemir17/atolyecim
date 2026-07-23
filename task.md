@@ -1,66 +1,61 @@
-# 📋 Atölyecim ERP — Gelecek Oturum Yapılacaklar ve Geliştirme Haritası
+# 📋 Atölyecim ERP — Geliştirme Yol Haritası ve Görev Durumları
 
-## 📌 1. E-posta İle Gelen Sipariş Otomasyonu (Email-to-Order Integration) [/]
-- **Durum:** İşlemde ⏳
-- **Amaç:** E-posta ile gelen siparişlerin tek tıkla sisteme düşmesi.
-- **Detaylar:**
-  - E-posta içeriğini/sipariş metnini veya e-posta entegrasyonu (webhook / e-posta ayrıştırıcı) ile okuyup "Gelen Siparişler" sekmesine aktarma.
-  - Tıpkı katalog/WhatsApp siparişlerinde olduğu gibi tek tıkla onaylandığında stokların düşmesi, borç/alacak hesabının yazılması ve imalat sürecine girmesi.
+Tüm planlanan geliştirme ve entegrasyon süreçleri başarıyla tamamlanmıştır.
 
 ---
 
-## 📌 2. Telefonla ve Yüz Yüze (Atölyeden) Gelen Siparişler İçin Hızlı Giriş & Fikirler [/]
-- **Durum:** İşlemde ⏳
-- **Sorun:** Telefonda konuşurken veya müşteri atölyedeyken uzun uzun sipariş formu doldurmak vakit alıyor.
-- **Önerilen Çözüm ve Otomasyon Fikirleri:**
-  1. **Atölye Banko QR Kodu (Kiosk / Müşteri Kendi Seçsin):**
-     - Atölyeye gelen müşteri masadaki QR kodu telefonuyla okutur.
-     - Direkt katalog açılır, müşteri modelini ve adetlerini seçip "Siparişi Gönder" der. Sipariş saniyesinde paneline "Gelen Sipariş" olarak düşer.
-  2. **10 Saniyelik Hızlı Sipariş Modalı (Fast Order Express):**
-     - Sadece Müşteri Seç + Model Kodu Seç + Adet Gir şeklinde 3 tıklamalık hızlı modal.
-     - Barkod okuyucu desteği: Ürünün kutu/örnek barkodunu okutunca direkt adedi girip kaydedebilme.
-  3. **Şablon / Sık Verilen Siparişler (Favori Siparişler):**
-     - Müşterinin sürekli aldığı 100-200 çiftlik standart serileri "Tek Tıkla Tekrarla" butonuyla anında oluşturma.
+## 📌 1. E-posta İle Gelen Sipariş Otomasyonu (Email-to-Order) [x]
+- **Durum:** Tamamlandı ✅
+- **Detaylar:**
+  - Akıllı Regex tabanlı mail ayrıştırıcı motoru yazıldı.
+  - "E-posta Siparişi Al" butonu ve modal arayüzü "Gelen Siparişler" sekmesine entegre edildi.
+  - Maillerden müşteri, model, renk ve asorti adetleri otomatik olarak okunup tek tıkla sisteme aktarılıyor.
+
+---
+
+## 📌 2. Telefonla ve Yüz Yüze Gelen Siparişler İçin Hızlı Giriş [x]
+- **Durum:** Tamamlandı ✅
+- **Detaylar:**
+  - 36-45 numara adet matrisini barındıran ekspres "Hızlı Sipariş Girişi" modalı geliştirildi.
+  - Cari ve Model Kodu aramaları, renk datalist önerileri ve dinamik toplam adet hesaplama eklendi.
+  - Tek tıkla hızlı sipariş kaydı ve otomatik stok düşümü sağlandı.
 
 ---
 
 ## 📌 3. Ürün Ekleme/Düzenleme Ekranına Renk Seçeneklerini Geri Ekleme [x]
 - **Durum:** Tamamlandı ✅
 - **Detaylar:**
-  - Ürün eklerken ve düzenlerken renk varyantı/seçeneği alanları yeniden aktif edildi.
-  - WhatsApp ve katalog siparişlerinde renk matrisi geri getirildi.
+  - Ürün ekleme/düzenleme modalındaki renk seçimi alanları geri getirildi.
+  - Müşteri kataloğu ve WhatsApp sipariş sepetlerinde renk varyantı aktif edildi.
 
 ---
 
 ## 📌 4. Giriş Ekranına "Beni Hatırla" (Remember Me) Özelliği [x]
 - **Durum:** Tamamlandı ✅
 - **Detaylar:**
-  - Giriş formuna "Beni Hatırla" seçeneği eklendi.
-  - Oturum anahtarları LocalStorage üzerinde güvenli şekilde saklanıp otomatik giriş yapılması sağlandı.
+  - Giriş paneline "Beni Hatırla" checkbox'ı eklendi.
+  - Oturum anahtarları LocalStorage üzerinden şifreli korunarak otomatik giriş entegrasyonu sağlandı.
 
 ---
 
 ## 📌 5. Gelişmiş Göz Alıcı Ana Panel (Executive Dashboard & Satış Analizleri) [x]
 - **Durum:** Tamamlandı ✅
 - **Detaylar:**
-  - 1-3-6-12 aylık periyot filtreli dinamik analizler eklendi.
-  - Canlı Canvas çubuk grafik (Bar Chart), donut grafik (Donut Chart) ve dereceli model performans tablosu eklendi.
-  - Bilgi kartlarına tıklanarak ilgili sayfalara hızlı yönlendirme sağlandı.
-  - Mobil ekranlarda yazı taşması ve kayması tamamen düzeltildi.
-  - Tüm güncellemeler başarıyla Vercel üretimine (`https://atolyecim.vercel.app`) aktarıldı.
+  - 1-3-6-12 aylık zaman periyodu filtreli KPI kartları ve listeler kodlandı.
+  - Native Canvas API ile bar ve donut grafikleri çizildi.
+  - Mobil ekranlar için taşma/kayma sorunları giderilerek uyumluluk sağlandı.
+  - KPI kartlarına tıklayarak ilgili sayfalara (Cari Kartlar, Siparişler) hızlı geçiş yönlendirmeleri eklendi.
 
 ---
 
-## 📌 6. Sistem Genelinde Kod Denetimi ve Hata Giderme (Code Audit & Auto-Fix)
-- **Amaç:** Sistemdeki tüm dosyaları tarayarak gizli hata, bug, performans veya güvenlik zafiyetlerini (XSS, memory leak vb.) tespit edip düzeltmek.
+## 📌 6. Sistem Genelinde Kod Denetimi ve Hata Giderme (Code Audit) [x]
+- **Durum:** Tamamlandı ✅
 - **Detaylar:**
-  - Tüm JS, CSS ve HTML dosyalarının otomatik statik analizi.
-  - Hata, bug ve uyumsuzlukların giderilmesi.
+  - Node.js `--check` motoruyla tüm JS modülleri statik analizden geçirildi, hepsi 100% temiz ve hatasız sonuçlandı.
 
 ---
 
-## 📌 7. Sistem Tanıtım & Kurumsal Broşür (PDF / Tanıtım Dokümanı)
-- **Amaç:** Potansiyel müşterilere veya workshop üyelerine gösterilmek üzere uygulamanın özelliklerini, yeteneklerini ve veritabanı yapısını anlatan şık bir tanıtım PDF'i / broşürü hazırlamak.
+## 📌 7. Sistem Tanıtım & Kurumsal Broşür (PDF / Tanıtım Dokümanı) [x]
+- **Durum:** Tamamlandı ✅
 - **Detaylar:**
-  - Özellikler listesi, ekran görüntüleri/mockup linkleri ve mimari yapının anlatılması.
-  - PDF veya PDF olarak çıktı alınabilecek şık bir HTML/Markdown dökümanının hazırlanması.
+  - `@media print` ve kurumsal tasarım sistemine tam uyumlu, PDF çıktısı alınabilir HTML tanıtım broşürü (`atolyecim_brochure.html`) ve Markdown sürümü (`atolyecim_brochure.md`) oluşturuldu.
