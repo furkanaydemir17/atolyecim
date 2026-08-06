@@ -190,25 +190,47 @@ const Contacts = {
     }
   },
 
-  openTransactionModal(contactId) {
+  openTransactionModal(contactId, txId = null) {
     const form = document.getElementById('transaction-form');
     form.reset();
     document.getElementById('tx-contact-id').value = contactId;
+    document.getElementById('tx-id').value = txId || '';
     document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
     document.getElementById('tx-is-packaging').checked = false;
 
-    // Get contact name for title
-    dbGet('contacts', contactId).then(c => {
-      if (c) {
-        document.getElementById('transaction-modal-title').textContent = c.name + ' — İşlem Ekle';
-      }
-    });
+    const titleEl = document.getElementById('transaction-modal-title');
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    if (txId) {
+      titleEl.textContent = 'İşlemi Düzenle';
+      if (submitBtn) submitBtn.textContent = 'İşlemi Güncelle';
+
+      dbGet('transactions', txId).then(tx => {
+        if (tx) {
+          document.getElementById('tx-type').value = tx.type;
+          document.getElementById('tx-amount').value = tx.amount;
+          document.getElementById('tx-description').value = tx.description || '';
+          document.getElementById('tx-date').value = tx.date ? tx.date.split('T')[0] : new Date().toISOString().split('T')[0];
+          document.getElementById('tx-is-packaging').checked = !!tx.isPackaging;
+        }
+      });
+    } else {
+      titleEl.textContent = 'İşlem Ekle';
+      if (submitBtn) submitBtn.textContent = 'İşlemi Kaydet';
+
+      dbGet('contacts', contactId).then(c => {
+        if (c) {
+          titleEl.textContent = c.name + ' — İşlem Ekle';
+        }
+      });
+    }
 
     openModalById('transaction-modal');
   },
 
   async saveTransaction() {
     const contactId = parseInt(document.getElementById('tx-contact-id').value);
+    const txId = document.getElementById('tx-id').value;
     const dateInput = document.getElementById('tx-date').value;
     const data = {
       contactId: contactId,
@@ -225,9 +247,20 @@ const Contacts = {
     }
 
     try {
-      await dbAdd('transactions', data);
-      const typeLabels = { alacak: 'Alacak', borc: 'Borç', tahsilat: 'Tahsilat', odeme: 'Ödeme' };
-      showToast(`${typeLabels[data.type]} kaydı eklendi!`, 'success');
+      if (txId) {
+        data.id = parseInt(txId);
+        // Preserve orderId reference if it was linked to an order
+        const oldTx = await dbGet('transactions', data.id);
+        if (oldTx && oldTx.orderId) {
+          data.orderId = oldTx.orderId;
+        }
+        await dbUpdate('transactions', data);
+        showToast('İşlem kaydı güncellendi!', 'success');
+      } else {
+        await dbAdd('transactions', data);
+        const typeLabels = { alacak: 'Alacak', borc: 'Borç', tahsilat: 'Tahsilat', odeme: 'Ödeme' };
+        showToast(`${typeLabels[data.type]} kaydı eklendi!`, 'success');
+      }
 
       closeModalById('transaction-modal');
       await this.loadContacts();
@@ -391,7 +424,8 @@ const Contacts = {
               <td style="text-align: right; font-weight: 600;">${creditStr}</td>
               <td class="${cellStyleClass}" style="text-align: right; font-weight: 700; color: #ef4444;">${bakiyeBorcStr}</td>
               <td class="${cellStyleClass}" style="text-align: right; font-weight: 700; color: #10b981;">${bakiyeAlacakStr}</td>
-              <td style="text-align: center;">
+              <td style="text-align: center; white-space: nowrap;">
+                <button class="btn-icon info" title="İşlemi Düzenle" onclick="Contacts.openTransactionModal(${contactId}, ${tx.id})">✏️</button>
                 <button class="btn-icon danger" title="İşlemi Sil" onclick="Contacts.deleteTransaction(${tx.id}, ${contactId})">🗑️</button>
               </td>
             </tr>
@@ -415,7 +449,8 @@ const Contacts = {
               <td>${dateStr}</td>
               <td style="font-weight: 500;">${this.escape(tx.description || '-')}</td>
               <td style="text-align: right; font-weight: 700; color: var(--text-primary);">₺${tx.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
-              <td style="text-align: center;">
+              <td style="text-align: center; white-space: nowrap;">
+                <button class="btn-icon info" title="İşlemi Düzenle" onclick="Contacts.openTransactionModal(${contactId}, ${tx.id})">✏️</button>
                 <button class="btn-icon danger" title="İşlemi Sil" onclick="Contacts.deleteTransaction(${tx.id}, ${contactId})">🗑️</button>
               </td>
             </tr>
