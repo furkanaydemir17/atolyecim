@@ -3,6 +3,7 @@ import { escapeHtml, bindOnce, safeAdd, safeSub, generateId, csvSafe, downloadBl
 
 const Contacts = {
   currentFilter: 'all',
+  currentLedgerContactId: null,
 
   async render() {
     this.bindEvents();
@@ -178,6 +179,9 @@ const Contacts = {
 
       closeModalById('contact-modal');
       await this.loadContacts();
+      if (this.currentLedgerContactId && id && parseInt(id) === this.currentLedgerContactId) {
+        await this.openLedgerModal(this.currentLedgerContactId);
+      }
       if (window.Dashboard && typeof window.Dashboard.render === 'function') {
         await window.Dashboard.render();
       }
@@ -227,6 +231,9 @@ const Contacts = {
 
       closeModalById('transaction-modal');
       await this.loadContacts();
+      if (contactId) {
+        await this.openLedgerModal(contactId);
+      }
       if (window.Dashboard && typeof window.Dashboard.render === 'function') {
         await window.Dashboard.render();
       }
@@ -275,6 +282,7 @@ const Contacts = {
 
   async openLedgerModal(contactId) {
     try {
+      this.currentLedgerContactId = contactId;
       const contact = await dbGet('contacts', contactId);
       if (!contact) {
         showToast('Cari bulunamadı!', 'error');
@@ -352,11 +360,6 @@ const Contacts = {
             debit = tx.amount;  // Supplier debit
           }
 
-          // Cumulative calculation:
-          // Customers: Debit (BORÇLU) increases what they owe us, Credit (ALACAKLI) decreases it.
-          // If we want standard client representation: Balance = Balance + Debit - Credit
-          // Positive balance means they owe us (Bakiye Borçlu).
-          // Negative balance means they paid in advance / we owe them (Bakiye Alacaklı).
           cumulativeBalance += (debit - credit);
 
           const debitStr = debit > 0 ? `₺${debit.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` : '';
@@ -368,7 +371,6 @@ const Contacts = {
 
           if (cumulativeBalance > 0) {
             bakiyeBorcStr = `₺${cumulativeBalance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
-            // If it is the last row (final closing balance), highlight it like the red cell in screenshot
             if (idx === totalRows - 1) {
               cellStyleClass = 'final-debit-cell';
             }
@@ -421,14 +423,31 @@ const Contacts = {
         }).join('');
       }
 
+      // Bind Edit Contact Buttons (Header & Footer)
+      const editHeaderBtn = document.getElementById('btn-ledger-edit-contact');
+      if (editHeaderBtn) {
+        editHeaderBtn.onclick = () => this.openModal(contactId);
+      }
+      const editFooterBtn = document.getElementById('btn-ledger-footer-edit-contact');
+      if (editFooterBtn) {
+        editFooterBtn.onclick = () => this.openModal(contactId);
+      }
+
+      // Bind Add Transaction Button
+      const addTxBtn = document.getElementById('btn-ledger-add-tx');
+      if (addTxBtn) {
+        addTxBtn.onclick = () => this.openTransactionModal(contactId);
+      }
+
       // Bind export button
       const exportBtn = document.getElementById('btn-ledger-export');
-      if (!exportBtn) return;
-      const newExportBtn = exportBtn.cloneNode(true);
-      exportBtn.parentNode.replaceChild(newExportBtn, exportBtn);
-      newExportBtn.addEventListener('click', () => {
-        this.exportLedgerToCSV(contact.name, standardTx, packagingTx);
-      });
+      if (exportBtn) {
+        const newExportBtn = exportBtn.cloneNode(true);
+        exportBtn.parentNode.replaceChild(newExportBtn, exportBtn);
+        newExportBtn.addEventListener('click', () => {
+          this.exportLedgerToCSV(contact.name, standardTx, packagingTx);
+        });
+      }
 
       // Bind WhatsApp Share Button
       const shareBtn = document.getElementById('btn-ledger-share-whatsapp');

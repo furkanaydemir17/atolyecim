@@ -1446,7 +1446,7 @@
   </div>
 
   <!-- ============ CONTACT MODAL ============ -->
-  <div class="modal-overlay" id="contact-modal">
+  <div class="modal-overlay" id="contact-modal" style="z-index: 10050;">
     <div class="modal-card">
       <div class="modal-header">
         <h2 id="contact-modal-title">Yeni Cari Ekle</h2>
@@ -1490,7 +1490,7 @@
   </div>
 
   <!-- ============ TRANSACTION MODAL ============ -->
-  <div class="modal-overlay" id="transaction-modal">
+  <div class="modal-overlay" id="transaction-modal" style="z-index: 10050;">
     <div class="modal-card">
       <div class="modal-header">
         <h2 id="transaction-modal-title">İşlem Ekle</h2>
@@ -1839,9 +1839,17 @@
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
           <h4 style="font-weight: 700; margin-bottom: 0; color: var(--text-accent); text-transform: uppercase; letter-spacing: 0.5px;">📋 Hesap Ekstresi</h4>
-          <button type="button" class="btn btn-primary" id="btn-ledger-export" style="height: 36px; padding: 0 16px; font-size: 13px; display: flex; align-items: center; gap: 6px; border-radius: 6px;">
-            📄 Excel (CSV) Olarak İndir
-          </button>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <button type="button" class="btn btn-secondary" id="btn-ledger-edit-contact" style="height: 36px; padding: 0 14px; font-size: 13px; display: flex; align-items: center; gap: 6px; border-radius: 6px;">
+              ✏️ Cariyi Düzenle
+            </button>
+            <button type="button" class="btn btn-primary" id="btn-ledger-add-tx" style="height: 36px; padding: 0 14px; font-size: 13px; display: flex; align-items: center; gap: 6px; border-radius: 6px; background: var(--color-primary); color: #fff;">
+              💰 İşlem Ekle
+            </button>
+            <button type="button" class="btn btn-primary" id="btn-ledger-export" style="height: 36px; padding: 0 16px; font-size: 13px; display: flex; align-items: center; gap: 6px; border-radius: 6px;">
+              📄 Excel (CSV) Olarak İndir
+            </button>
+          </div>
         </div>
 
         <div class="table-container" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border-card); border-radius: 8px; margin-bottom: 24px;">
@@ -1891,8 +1899,11 @@
           </div>
         </div>
 
-        <div class="modal-actions" style="margin-top: 24px; display: flex; gap: 10px; justify-content: flex-end;">
+        <div class="modal-actions" style="margin-top: 24px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
           <button type="button" class="btn btn-ghost" data-modal="contact-ledger-modal">Kapat</button>
+          <button type="button" class="btn btn-secondary" id="btn-ledger-footer-edit-contact" style="font-weight: 700; display: flex; align-items: center; gap: 6px;">
+            ✏️ Cari Bilgilerini Düzenle
+          </button>
           <button type="button" class="btn btn-primary" id="btn-ledger-share-whatsapp" style="background: #25d366; border-color: #25d366; color: #fff; font-weight: 700; display: flex; align-items: center; gap: 8px;">
             💬 WhatsApp ile Paylaş
           </button>
