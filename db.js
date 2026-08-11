@@ -54,8 +54,8 @@ window.initSupabaseClient = initSupabaseClient;
 initSupabaseClient();
 
 // Local IndexedDB Settings
-const DB_NAME = 'atolyecim_db_v3';
-const DB_VERSION = 3;
+const DB_NAME = 'atolyecim_db_v4';
+const DB_VERSION = 4;
 let db = null;
 
 // Primary key field mappings for different tables
@@ -260,6 +260,24 @@ function initDB() {
         const ss = database.createObjectStore('stocks', { keyPath: 'id', autoIncrement: true });
         ss.createIndex('type', 'type', { unique: false });
       }
+
+      if (!database.objectStoreNames.contains('assortments')) {
+        database.createObjectStore('assortments', { keyPath: 'id', autoIncrement: true });
+      }
+
+      if (!database.objectStoreNames.contains('contractors')) {
+        database.createObjectStore('contractors', { keyPath: 'id', autoIncrement: true });
+      }
+
+      if (!database.objectStoreNames.contains('contractor_jobs')) {
+        const cjs = database.createObjectStore('contractor_jobs', { keyPath: 'id', autoIncrement: true });
+        cjs.createIndex('contractorId', 'contractorId', { unique: false });
+      }
+
+      if (!database.objectStoreNames.contains('contractor_transactions')) {
+        const cts = database.createObjectStore('contractor_transactions', { keyPath: 'id', autoIncrement: true });
+        cts.createIndex('contractorId', 'contractorId', { unique: false });
+      }
     };
 
     request.onsuccess = async (e) => {
@@ -312,17 +330,26 @@ async function dbAdd(storeName, data) {
     let idValue = payload[keyField];
     delete payload[keyField];
 
-    // For settings store, prefix ID in Supabase to avoid cross-tenant ID collision
+    // For settings store, prefix ID in Supabase to avoid cross-tenant ID collision (global_ hariç)
     if (storeName === 'settings' && idValue) {
-      const currentCompany = getCurrentTenantCompany();
-      idValue = `${currentCompany}_${idValue}`;
+      const isGlobal = String(idValue).startsWith('global_');
+      if (!isGlobal) {
+        const currentCompany = getCurrentTenantCompany();
+        idValue = `${currentCompany}_${idValue}`;
+      }
     }
 
     const dbRow = {
       data: payload,
-      created_at: data.createdAt,
       updated_at: new Date().toISOString()
     };
+
+    // Omit created_at column for new tables that lack it in the Supabase schema
+    const TABLES_WITHOUT_CREATED_AT = ['contractors', 'contractor_jobs', 'contractor_transactions', 'assortments'];
+    if (!TABLES_WITHOUT_CREATED_AT.includes(storeName)) {
+      dbRow.created_at = data.createdAt;
+    }
+
 
     if (idValue !== undefined && idValue !== null && idValue !== '') {
       dbRow.id = idValue;
@@ -362,6 +389,7 @@ async function dbAdd(storeName, data) {
 
 async function dbGetAll(storeName) {
   let allItems = [];
+
   if (useSupabase) {
     const currentCompany = getCurrentTenantCompany();
     let query = supabaseClient.from(storeName).select('*')
@@ -391,11 +419,15 @@ async function dbGetAll(storeName) {
 
 async function dbGet(storeName, id) {
   let item = null;
+
   if (useSupabase) {
     const currentCompany = getCurrentTenantCompany();
-    const dbId = storeName === 'settings' ? `${currentCompany}_${id}` : id;
-    let query = supabaseClient.from(storeName).select('*').eq('id', dbId)
-      .eq('data->>_ownerCompany', currentCompany);
+    const isGlobal = storeName === 'settings' && String(id).startsWith('global_');
+    const dbId = (storeName === 'settings' && !isGlobal) ? `${currentCompany}_${id}` : id;
+    let query = supabaseClient.from(storeName).select('*').eq('id', dbId);
+    if (!isGlobal) {
+      query = query.eq('data->>_ownerCompany', currentCompany);
+    }
     const { data: row, error } = await query.maybeSingle();
 
     if (error) {
@@ -430,17 +462,20 @@ async function dbUpdate(storeName, data) {
     }
 
     const currentCompany = getCurrentTenantCompany();
-    const dbId = storeName === 'settings' ? `${currentCompany}_${idValue}` : idValue;
+    const isGlobal = storeName === 'settings' && String(idValue).startsWith('global_');
+    const dbId = (storeName === 'settings' && !isGlobal) ? `${currentCompany}_${idValue}` : idValue;
 
-    // Kiracı Güvenlik Kontrolü: Başka kiracının satırını ezmeyi engelle
-    const { data: existingRow } = await supabaseClient
-      .from(storeName)
-      .select('data')
-      .eq('id', dbId)
-      .maybeSingle();
+    // Kiracı Güvenlik Kontrolü: Başka kiracının satırını ezmeyi engelle (global_ hariç)
+    if (!isGlobal) {
+      const { data: existingRow } = await supabaseClient
+        .from(storeName)
+        .select('data')
+        .eq('id', dbId)
+        .maybeSingle();
 
-    if (existingRow && existingRow.data && existingRow.data._ownerCompany !== data._ownerCompany) {
-      throw new Error("Access Denied: Cannot modify data owned by another tenant.");
+      if (existingRow && existingRow.data && existingRow.data._ownerCompany !== data._ownerCompany) {
+        throw new Error("Access Denied: Cannot modify data owned by another tenant.");
+      }
     }
 
     const payload = { ...data };

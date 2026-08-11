@@ -3,15 +3,18 @@ import { escapeHtml, bindOnce, trToAscii, safeAdd, safeSub, generateId } from '.
 // Format any Turkish phone number to international format (905XXXXXXXXX)
 function formatPhone(raw) {
   let phone = (raw || '').replace(/\D/g, '');
-  // Remove leading 0 (e.g. 05462753908 -> 5462753908)
-  if (phone.startsWith('0')) phone = phone.substring(1);
-  // Remove leading +90 or 90 prefix if already present
-  if (phone.startsWith('90') && phone.length === 12) phone = phone.substring(2);
-  // Now phone should be 10 digits starting with 5
+  // Remove all leading zeros (e.g. 0546... or 0090... -> 546... or 90...)
+  while (phone.startsWith('0')) {
+    phone = phone.substring(1);
+  }
+  // Now check if it is already 12 digits starting with 90
+  if (phone.startsWith('90') && phone.length === 12) {
+    return phone;
+  }
+  // If it is 10 digits starting with 5, prefix with 90
   if (phone.length === 10 && phone.startsWith('5')) {
     return '90' + phone;
   }
-  // If already has country code or other format, return as-is
   return phone;
 }
 
@@ -259,13 +262,25 @@ const Orders = {
 
     group.innerHTML = `
       <!-- Color Group Header -->
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
-          <span style="font-weight: 700; font-size: 0.82rem; color: var(--text-accent); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">RENK:</span>
-          <input type="text" list="order-colors-list" class="color-group-name" placeholder="Renk adı yazın" value="${this.escape(colorName)}" 
-            style="flex: 1; margin-bottom: 0; padding: 7px 12px; font-weight: 600; font-size: 0.9rem; border-radius: 6px;" required>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+            <span style="font-weight: 700; font-size: 0.82rem; color: var(--text-accent); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">RENK:</span>
+            <input type="text" list="order-colors-list" class="color-group-name" placeholder="Renk adı yazın" value="${this.escape(colorName)}" 
+              style="flex: 1; margin-bottom: 0; padding: 7px 12px; font-weight: 600; font-size: 0.9rem; border-radius: 6px;" required>
+          </div>
+          <button type="button" class="btn-icon danger btn-remove-color-group" style="flex-shrink: 0; height: 34px; width: 34px; font-size: 16px;" title="Renk Grubunu Sil">&times;</button>
         </div>
-        <button type="button" class="btn-icon danger btn-remove-color-group" style="flex-shrink: 0; height: 34px; width: 34px; font-size: 16px;" title="Renk Grubunu Sil">&times;</button>
+        
+        <!-- Asorti Şablon Uygulayıcı (Hızlı Doldurucu) -->
+        <div class="asorti-helper-row" style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.02); padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+          <span style="font-size: 11px; font-weight: 600; color: var(--text-secondary); white-space: nowrap;">⚡ ASORTİ:</span>
+          <select class="color-group-asorti-select" style="flex: 2; padding: 4px 6px; font-size: 11px; border-radius: 4px; height: 28px;">
+            <option value="">Şablon Seçin</option>
+          </select>
+          <input type="number" class="color-group-asorti-qty" value="1" min="1" placeholder="Koli" style="width: 50px; padding: 4px 6px; font-size: 11px; text-align: center; border-radius: 4px; height: 28px; margin-bottom: 0;">
+          <button type="button" class="btn btn-sm btn-apply-asorti" style="padding: 4px 8px; font-size: 11px; height: 28px; font-weight: 600; background: var(--accent-primary); border-color: var(--accent-primary);">Doldur</button>
+        </div>
       </div>
 
       <!-- Size/Qty Table Header -->
@@ -293,6 +308,54 @@ const Orders = {
     `;
 
     container.appendChild(group);
+
+    // Populate assortment templates select in the group
+    const asortiSelect = group.querySelector('.color-group-asorti-select');
+    if (asortiSelect) {
+      window.dbGetAll('assortments').then(list => {
+        list.forEach(as => {
+          const option = document.createElement('option');
+          option.value = as.id;
+          option.textContent = as.name;
+          asortiSelect.appendChild(option);
+        });
+      });
+    }
+
+    // Bind Apply button click
+    const btnApply = group.querySelector('.btn-apply-asorti');
+    if (btnApply) {
+      btnApply.addEventListener('click', async () => {
+        const asId = asortiSelect.value;
+        const qtyVal = parseInt(group.querySelector('.color-group-asorti-qty').value) || 1;
+        if (!asId) {
+          if (window.showToast) window.showToast('Lütfen önce bir asorti şablonu seçin!', 'error');
+          return;
+        }
+
+        try {
+          const as = await window.dbGet('assortments', parseInt(asId));
+          if (!as) return;
+
+          // Clear existing size rows
+          const rowsContainer = group.querySelector('.size-rows-container');
+          if (rowsContainer) rowsContainer.innerHTML = '';
+
+          // Add sizes from template
+          for (let s = 36; s <= 45; s++) {
+            const templateQty = parseInt(as.sizes[s] || 0);
+            if (templateQty > 0) {
+              this.addSizeRow(group, s.toString(), (templateQty * qtyVal).toString());
+            }
+          }
+
+          this.recalcGrandTotal();
+          if (window.showToast) window.showToast('Şablon başarıyla uygulandı.', 'success');
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    }
 
     // Pre-populate size rows if provided
     if (sizeRows.length > 0) {
@@ -454,6 +517,9 @@ const Orders = {
           const orderDate = o.date ? new Date(o.date).toLocaleDateString('tr-TR') : '-';
           const deadlineDate = o.deadline ? new Date(o.deadline).toLocaleDateString('tr-TR') : '-';
 
+          const symbols = { TRY: '₺', USD: '$', EUR: '€' };
+          const sym = symbols[o.currency || 'TRY'] || '₺';
+
           // Build status badge
           let statusBadge = '';
           if (o.status === 'beklemede') {
@@ -489,8 +555,8 @@ const Orders = {
                 <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">${this.escape(detailsText)}</div>
               </td>
               <td><strong>${o.qty} Çift</strong></td>
-              <td>₺${o.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
-              <td><strong>₺${totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</strong></td>
+              <td>${sym}${o.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+              <td><strong>${sym}${totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</strong></td>
               <td>
                 <div style="font-size: 12px; font-weight: 500;">Sip: ${orderDate}</div>
                 <div style="font-size: 12px; font-weight: 600; color: var(--color-warning); margin-top: 2px;">Ter: ${deadlineDate}</div>
@@ -498,6 +564,7 @@ const Orders = {
               <td>${statusBadge}</td>
               <td>
                 <div class="actions-cell">
+                  <button class="btn-icon success" style="background: rgba(37, 211, 102, 0.1); color: #25d366; border-color: rgba(37, 211, 102, 0.2);" title="WhatsApp Bildirimi Gönder" onclick="Orders.sendWhatsAppNotification(${o.id})">💬</button>
                   <button class="btn-icon success" title="Fatura Oluştur" onclick="Orders.openInvoiceModal(${o.id})">🧾</button>
                   <button class="btn-icon warning" title="Koli Etiketi Yazdır" onclick="Orders.openLabelModal(${o.id})">🏷️</button>
                   <button class="btn-icon info" title="Durum Değiştir" onclick="Orders.openModal(${o.id})">✏️</button>
@@ -610,6 +677,11 @@ const Orders = {
 
           const priceInput = document.getElementById('order-price');
           if (priceInput) priceInput.value = o.price;
+          const currencyInput = document.getElementById('order-currency');
+          if (currencyInput) {
+            currencyInput.value = o.currency || 'TRY';
+            currencyInput.disabled = true;
+          }
           const deadlineInput = document.getElementById('order-deadline');
           if (deadlineInput) deadlineInput.value = o.deadline || '';
           const kliseInput = document.getElementById('order-klise');
@@ -641,6 +713,11 @@ const Orders = {
       contactSelect.disabled = false;
       document.getElementById('order-model-code').disabled = false;
       document.getElementById('order-price').disabled = false;
+      const currencyInput = document.getElementById('order-currency');
+      if (currencyInput) {
+        currencyInput.value = 'TRY';
+        currencyInput.disabled = false;
+      }
       document.getElementById('order-deadline').disabled = false;
       document.getElementById('order-klise').disabled = false;
       document.getElementById('order-accessory-color').disabled = false;
@@ -766,6 +843,7 @@ const Orders = {
         const contactId = parseInt(document.getElementById('order-contact-id').value);
         const modelCode = document.getElementById('order-model-code').value.trim();
         const price = parseFloat(document.getElementById('order-price').value) || 0;
+        const currency = document.getElementById('order-currency').value || 'TRY';
         const deadline = document.getElementById('order-deadline').value;
         const klise = document.getElementById('order-klise').value.trim();
         const accessoryColor = document.getElementById('order-accessory-color').value.trim();
@@ -806,6 +884,7 @@ const Orders = {
               leatherUpper: templateProduct ? templateProduct.leatherUpper : '',
               leatherType: templateProduct ? templateProduct.leatherType : '',
               price: price,
+              currency: currency,
               barcode: '',
               photo: '',
               accessoryPhoto: ''
@@ -847,6 +926,7 @@ const Orders = {
           colors: colorsForDb,
           qty: totalQty,
           price,
+          currency,
           deadline,
           klise,
           accessoryColor,
@@ -869,6 +949,7 @@ const Orders = {
           contactId,
           type: 'alacak',
           amount: amount,
+          currency: currency,
           description: `${modelCode} — ${totalQty} Çift Çoklu Renk Sipariş`,
           orderId: orderId,
           date: new Date().toISOString()
@@ -1016,6 +1097,94 @@ const Orders = {
     }
   },
 
+  async sendWhatsAppNotification(orderId) {
+    try {
+      const order = await dbGet('orders', orderId);
+      if (!order) {
+        showToast('Sipariş bulunamadı!', 'error');
+        return;
+      }
+
+      let contact = null;
+      if (order.contactId && order.contactId !== 0) {
+        // Safe string/number ID checking
+        const rawId = order.contactId;
+        const numId = Number(rawId);
+        contact = await dbGet('contacts', !isNaN(numId) ? numId : rawId);
+      }
+
+      let phone = contact ? (contact.phone || '') : '';
+      let customerName = contact ? (contact.name || '') : '';
+
+      // Fallbacks
+      if (!phone) phone = order.customerPhone || '';
+      if (!customerName) customerName = order.customerName || 'Müşteri';
+
+      let cleanPhone = phone.replace(/\D/g, '');
+
+      // Prompt if phone is missing
+      if (!cleanPhone) {
+        const userInput = prompt(`"${customerName}" müşterisinin kayıtlı telefon numarası bulunmadı. Lütfen WhatsApp bildirimi göndermek istediğiniz numarayı girin (Örn: 05551234567):`, '');
+        if (!userInput) return;
+        cleanPhone = userInput.replace(/\D/g, '');
+        
+        // Auto-save back to contact card if contact exists
+        if (cleanPhone && contact) {
+          contact.phone = userInput.trim();
+          await dbUpdate('contacts', contact);
+          showToast('Telefon numarası müşteri kartına kaydedildi! 💾', 'info');
+        }
+      }
+
+      if (!cleanPhone) {
+        showToast('Geçersiz telefon numarası!', 'error');
+        return;
+      }
+
+      const statusNames = {
+        'beklemede': 'Beklemede (İmalat Sırasında)',
+        'kargoda': 'Kargoya Verildi',
+        'tamamlandi': 'Tamamlandı (Teslim Edildi)',
+        'iptal': 'İptal Edildi'
+      };
+
+      const statusSymbol = {
+        'beklemede': '⏳',
+        'kargoda': '📦',
+        'tamamlandi': '✅',
+        'iptal': '❌'
+      };
+
+      const company = localStorage.getItem('atolyecim_auth_company') || 'Atölyecim Master';
+      const newStatus = statusNames[order.status] || order.status;
+      const sym = statusSymbol[order.status] || '🔔';
+
+      let msg = `👟 *${company.toUpperCase()} - SİPARİŞ BİLGİLENDİRMESİ* 👟\n\n`;
+      msg += `Sayın *${customerName}*,\n`;
+      msg += `*${order.modelCode}* model siparişinizin durumu güncellendi:\n\n`;
+      msg += `${sym} *Durum:* ${newStatus}\n`;
+      msg += `📐 *Miktar:* ${order.qty} Çift\n`;
+      msg += `📅 *Termin Tarihi:* ${order.deadline ? new Date(order.deadline).toLocaleDateString('tr-TR') : '-'}\n\n`;
+
+      if (order.status === 'kargoda') {
+        msg += `🚚 Ürünleriniz kargoya teslim edilmiştir. Hayırlı işler, bol kazançlar dileriz!`;
+      } else if (order.status === 'tamamlandi') {
+        msg += `🤝 Siparişiniz tamamlanmıştır. Bizi tercih ettiğiniz için teşekkür eder, bereketli satışlar dileriz!`;
+      } else {
+        msg += `Siparişinizin üretim sürecini takip etmeye devam ediyoruz.`;
+      }
+
+      // Turkish country code handling
+      const formattedPhone = formatPhone(cleanPhone);
+      const waLink = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
+      window.open(waLink, '_blank');
+      showToast('WhatsApp yönlendirmesi açıldı! 💬', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('WhatsApp bildirimi oluşturulamadı.', 'error');
+    }
+  },
+
   async openInvoiceModal(orderId) {
     try {
       const order = await dbGet('orders', orderId);
@@ -1077,6 +1246,8 @@ const Orders = {
       tbody.innerHTML = '';
 
       let subtotal = 0;
+      const symbols = { TRY: '₺', USD: '$', EUR: '€' };
+      const sym = symbols[order.currency || 'TRY'] || '₺';
       
       if (order.colors && order.colors.length > 0) {
         order.colors.forEach(c => {
@@ -1093,8 +1264,8 @@ const Orders = {
             <td style="padding: 10px 5px;"><strong>${this.escape(order.modelCode)}</strong></td>
             <td style="padding: 10px 5px; color: #475569;">${this.escape(c.color)} ${sizeDetail ? `(${sizeDetail})` : ''}</td>
             <td style="padding: 10px 5px; text-align: right;">${c.qty} Çift</td>
-            <td style="padding: 10px 5px; text-align: right;">₺${order.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
-            <td style="padding: 10px 5px; text-align: right; font-weight: 600;">₺${rowSubtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+            <td style="padding: 10px 5px; text-align: right;">${sym}${order.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+            <td style="padding: 10px 5px; text-align: right; font-weight: 600;">${sym}${rowSubtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
           `;
           tbody.appendChild(tr);
         });
@@ -1108,8 +1279,8 @@ const Orders = {
           <td style="padding: 10px 5px;"><strong>${this.escape(order.modelCode)}</strong></td>
           <td style="padding: 10px 5px; color: #475569;">Standart Dağılım</td>
           <td style="padding: 10px 5px; text-align: right;">${order.qty} Çift</td>
-          <td style="padding: 10px 5px; text-align: right;">₺${order.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
-          <td style="padding: 10px 5px; text-align: right; font-weight: 600;">₺${rowSubtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+          <td style="padding: 10px 5px; text-align: right;">${sym}${order.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+          <td style="padding: 10px 5px; text-align: right; font-weight: 600;">${sym}${rowSubtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
         `;
         tbody.appendChild(tr);
       }
@@ -1120,10 +1291,10 @@ const Orders = {
         const kdvAmount = (subtotal * kdvPercent) / 100;
         const grandtotal = subtotal + kdvAmount;
 
-        document.getElementById('inv-sum-subtotal').textContent = `₺${subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+        document.getElementById('inv-sum-subtotal').textContent = `${sym}${subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
         document.getElementById('inv-sum-kdv-percent').textContent = `%${kdvPercent}`;
-        document.getElementById('inv-sum-kdv-amount').textContent = `₺${kdvAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
-        document.getElementById('inv-sum-grandtotal').textContent = `₺${grandtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+        document.getElementById('inv-sum-kdv-amount').textContent = `${sym}${kdvAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+        document.getElementById('inv-sum-grandtotal').textContent = `${sym}${grandtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
       };
 
       recalcTotals();
@@ -1503,21 +1674,22 @@ const Orders = {
         // Auto-create contact
         const rawName = document.getElementById('approve-customer-raw').textContent.trim();
         const newContact = {
-          id: generateId(),
           name: rawName,
           type: 'musteri',
-          phone: '',
+          phone: o.customerPhone || '',
           email: '',
           notes: 'B2B Katalog Sipariş Portalı üzerinden otomatik oluşturuldu.'
         };
-        await dbAdd('contacts', newContact);
-        contactId = newContact.id;
+        const newContactId = await dbAdd('contacts', newContact);
+        contactId = newContactId;
       } else {
         if (!select || !select.value) {
           showToast('Lütfen eşleştirmek için bir Cari Kart seçin veya yeni kart oluşturma seçeneğini işaretleyin!', 'error');
           return;
         }
-        contactId = parseInt(select.value);
+        const selectedValue = select.value;
+        const parsed = parseInt(selectedValue);
+        contactId = isNaN(parsed) || parsed.toString() !== selectedValue.trim() ? selectedValue : parsed;
       }
 
       const price = parseFloat(priceInput.value) || 0;
@@ -1687,6 +1859,7 @@ const Orders = {
     const modelCode = document.getElementById('quick-order-model-code').value.trim();
     const color = document.getElementById('quick-order-color').value.trim();
     const price = parseFloat(document.getElementById('quick-order-price').value) || 0;
+    const currency = document.getElementById('quick-order-currency').value || 'TRY';
     const deadline = document.getElementById('quick-order-deadline').value;
     const klise = document.getElementById('quick-order-klise').value.trim();
     const accessoryColor = document.getElementById('quick-order-accessory').value.trim();
@@ -1730,6 +1903,7 @@ const Orders = {
         leatherUpper: templateProduct ? templateProduct.leatherUpper : '',
         leatherType: templateProduct ? templateProduct.leatherType : '',
         price,
+        currency,
         barcode: '',
         photo: '',
         accessoryPhoto: ''
@@ -1765,6 +1939,7 @@ const Orders = {
       colors: colorsForDb,
       qty: totalQty,
       price,
+      currency,
       deadline,
       klise,
       accessoryColor,
@@ -1779,6 +1954,7 @@ const Orders = {
       contactId,
       type: 'alacak',
       amount,
+      currency,
       description: `${modelCode} (${color}) — ${totalQty} Çift Hızlı Sipariş`,
       orderId,
       date: new Date().toISOString()

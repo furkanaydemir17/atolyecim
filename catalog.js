@@ -9,12 +9,31 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_K
 
 let supabase = null;
 
+function formatPhone(raw) {
+  let phone = (raw || '').replace(/\D/g, '');
+  // Remove all leading zeros (e.g. 0546... or 0090... -> 546... or 90...)
+  while (phone.startsWith('0')) {
+    phone = phone.substring(1);
+  }
+  // Now check if it is already 12 digits starting with 90
+  if (phone.startsWith('90') && phone.length === 12) {
+    return phone;
+  }
+  // If it is 10 digits starting with 5, prefix with 90
+  if (phone.length === 10 && phone.startsWith('5')) {
+    return '90' + phone;
+  }
+  return phone;
+}
+
 // 2. State variables
 let companyName = '';
 let productsList = []; // raw product objects from DB
 let groupedProducts = {}; // modelCode -> array of products (different colors)
 let cart = [];
 let activeProduct = null; // currently selected model's products array
+let clientContact = null;
+let discountRate = 0;
 
 // 3. Elements
 const elCompany = document.getElementById('lbl-catalog-company');
@@ -96,6 +115,34 @@ async function initCatalog() {
       return item;
     });
 
+    // Fetch client details if clientId is provided (c parameter)
+    const clientId = params.get('c');
+    if (clientId) {
+      try {
+        const { data: contactRow, error: contactErr } = await supabase
+          .from('contacts')
+          .select('*')
+          .eq('id', parseInt(clientId))
+          .maybeSingle();
+
+        if (contactErr) throw contactErr;
+
+        if (contactRow) {
+          clientContact = { ...contactRow.data, id: Number(contactRow.id) };
+          discountRate = clientContact.discountRate || 0;
+          console.log(`B2B Client identified: ${clientContact.name} with discount: %${discountRate}`);
+          
+          // Display B2B Custom greetings in B2B title
+          const catalogTitlePar = document.querySelector('.catalog-title p');
+          if (catalogTitlePar) {
+            catalogTitlePar.innerHTML = `Sayın <strong>${escapeHtml(clientContact.name)}</strong> için Özel B2B Sipariş Portalı ${discountRate > 0 ? `(<span style="color: #10b981; font-weight: 700;">%${discountRate} İskontolu</span>)` : ''}`;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not load B2B client custom details:', e);
+      }
+    }
+
     if (productsList.length === 0) {
       elContainer.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #9ca3af;">
@@ -161,7 +208,13 @@ function renderCatalog() {
             <strong>Renkler:</strong> ${colorsList}
           </p>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto;">
-            <span class="product-price">₺${Number(rep.price || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+            <div style="display: flex; flex-direction: column;">
+              ${discountRate > 0 
+                ? `<span class="product-price-original" style="text-decoration: line-through; color: #9ca3af; font-size: 0.75rem; line-height: 1;">₺${Number(rep.price || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+                   <span class="product-price" style="color: #10b981; font-weight: 800; font-size: 1.1rem; margin-top: 2px;">₺${Number((rep.price || 0) * (1 - discountRate / 100)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>`
+                : `<span class="product-price">₺${Number(rep.price || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>`
+              }
+            </div>
             <button type="button" class="btn btn-primary btn-sm btn-select-product" onclick="window.selectProduct('${escapeHtml(modelCode)}')">
               Sipariş Ver
             </button>
@@ -213,7 +266,16 @@ function updateSizesForm() {
   const p = activeProduct.find(prod => prod.id === productId);
   if (!p) return;
 
-  optPrice.textContent = `₺${Number(p.price || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+  if (discountRate > 0) {
+    const origPrice = Number(p.price || 0);
+    const discPrice = origPrice * (1 - discountRate / 100);
+    optPrice.innerHTML = `
+      <span style="text-decoration: line-through; color: #9ca3af; font-size: 0.8rem; margin-right: 6px;">₺${origPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+      <span style="color: #10b981; font-weight: 800;">₺${discPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+    `;
+  } else {
+    optPrice.textContent = `₺${Number(p.price || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+  }
 
   // Parse size ranges (e.g. 40-44)
   let sizes = [];
@@ -304,7 +366,8 @@ function addToCart() {
       productId: p.id,
       modelCode: p.modelCode,
       color: p.color,
-      price: p.price || 0,
+      price: discountRate > 0 ? (p.price || 0) * (1 - discountRate / 100) : (p.price || 0),
+      originalPrice: p.price || 0,
       sizes: sizesData,
       qty: itemTotal
     });
@@ -439,9 +502,9 @@ async function submitOrder(e) {
 
       const orderObj = {
         id: randomId,
-        contactId: 0,
-        customerName: buyerName,
-        customerPhone: buyerPhone,
+        contactId: clientContact ? clientContact.id : 0,
+        customerName: clientContact ? clientContact.name : buyerName,
+        customerPhone: clientContact ? clientContact.phone : buyerPhone,
         modelCode: code,
         price: repPrice,
         qty: totalQty,
@@ -471,21 +534,32 @@ async function submitOrder(e) {
     // 3. Format WhatsApp Message
     let waText = `*ATÖLYECİM B2B SİPARİŞİ* 👟\n`;
     waText += `*Alıcı Atölye:* ${companyName}\n`;
-    waText += `*Gönderen Firma:* ${buyerName}\n`;
+    waText += `*Gönderen Firma:* ${clientContact ? clientContact.name : buyerName}\n`;
+    if (clientContact) {
+      waText += `*Müşteri Hesabı:* Kayıtlı Cari Müşteri\n`;
+      if (discountRate > 0) {
+        waText += `*Uygulanan İskonto:* %${discountRate}\n`;
+      }
+    }
     waText += `*Tarih:* ${new Date().toLocaleDateString('tr-TR')}\n`;
     waText += `---------------------------\n\n`;
 
     let totalPairs = 0;
+    let totalCost = 0;
     cart.forEach(item => {
       waText += `*Model:* ${item.modelCode} (${item.color})\n`;
       const sizeList = item.sizes.map(s => `${s.size} Nmr: ${s.qty} Ad`).join(', ');
       waText += `└ _Bedenler:_ ${sizeList}\n`;
+      const originalPriceText = discountRate > 0 ? ` (~₺${item.originalPrice.toFixed(2)}~)` : '';
+      waText += `└ *Birim Fiyat:* ₺${item.price.toFixed(2)}${originalPriceText}\n`;
       waText += `└ *Miktar:* ${item.qty} Çift\n\n`;
       totalPairs += item.qty;
+      totalCost += item.qty * item.price;
     });
 
     waText += `---------------------------\n`;
     waText += `*GENEL TOPLAM:* *${totalPairs} Çift*\n`;
+    waText += `*TOPLAM TUTAR:* *₺${totalCost.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) }*\n`;
     if (buyerNote) {
       waText += `*Sipariş Notu:* ${buyerNote}\n`;
     }
@@ -501,10 +575,7 @@ async function submitOrder(e) {
     let waUrl = '';
 
     if (b2bPhone) {
-      const cleanPhone = b2bPhone.replace(/\D/g, '');
-      const formattedPhone = (cleanPhone.length === 10 && cleanPhone.startsWith('5')) 
-        ? '90' + cleanPhone 
-        : cleanPhone;
+      const formattedPhone = formatPhone(b2bPhone);
       waUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodedText}`;
     } else {
       waUrl = `https://api.whatsapp.com/send?text=${encodedText}`;

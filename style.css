@@ -288,6 +288,19 @@ body::before {
   color: var(--text-muted);
 }
 
+.form-group select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23a5b4fc' fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 28px !important;
+  padding-left: 8px !important;
+  cursor: pointer;
+}
+
 .form-group select option {
   background: var(--bg-secondary);
   color: var(--text-primary);
@@ -2456,4 +2469,29 @@ body::before {
   .db-kpi-card { padding: 12px 14px; }
   .db-kpi-value { font-size: 1.20rem; }
 }
+
+/* Asorti şablonu numara matrisi inputlarının hizalama ve kayma düzeltmeleri */
+.as-size-qty {
+  padding: 6px 2px !important;
+  height: 34px !important;
+  text-align: center !important;
+  font-size: 0.85rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 768px) {
+  #as-sizes-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 10px !important;
+  }
+}
+
+/* Fason ekstre modalının üzerinden açılması gereken iş ve ödeme modallarının z-index katmanı */
+#contractor-job-modal,
+#contractor-payment-modal {
+  z-index: 200 !important;
+}
+
+
 

@@ -65,27 +65,61 @@ const Dashboard = {
   async updateFinancialCards() {
     try {
       const transactions = await dbGetAll('transactions');
-      let totalReceivable = 0;
-      let totalPayable = 0;
+      
+      const currencyTotals = {
+        TRY: { receivable: 0, payable: 0 },
+        USD: { receivable: 0, payable: 0 },
+        EUR: { receivable: 0, payable: 0 }
+      };
 
       transactions.filter(tx => !tx.isPackaging).forEach(tx => {
-        if (tx.type === 'alacak')        totalReceivable += Number(tx.amount) || 0;
-        else if (tx.type === 'borc')     totalPayable    += Number(tx.amount) || 0;
-        else if (tx.type === 'tahsilat') totalReceivable -= Number(tx.amount) || 0;
-        else if (tx.type === 'odeme')    totalPayable    -= Number(tx.amount) || 0;
+        const curr = tx.currency || 'TRY';
+        if (!currencyTotals[curr]) {
+          currencyTotals[curr] = { receivable: 0, payable: 0 };
+        }
+        if (tx.type === 'alacak')        currencyTotals[curr].receivable += Number(tx.amount) || 0;
+        else if (tx.type === 'borc')     currencyTotals[curr].payable    += Number(tx.amount) || 0;
+        else if (tx.type === 'tahsilat') currencyTotals[curr].receivable -= Number(tx.amount) || 0;
+        else if (tx.type === 'odeme')    currencyTotals[curr].payable    -= Number(tx.amount) || 0;
       });
 
-      const netBalance = totalReceivable - totalPayable;
+      const symbols = { TRY: '₺', USD: '$', EUR: '€' };
 
-      this._setMoney('total-receivable', totalReceivable);
-      this._setMoney('total-payable', totalPayable);
-      this._setMoney('net-balance', netBalance);
+      const formatDashboardMoney = (field) => {
+        const parts = [];
+        for (const [code, val] of Object.entries(currencyTotals)) {
+          const amt = field === 'net' ? (val.receivable - val.payable) : val[field];
+          if (amt !== 0) {
+            const sym = symbols[code] || code;
+            const prefix = (field === 'net' && amt < 0) ? '-' : '';
+            parts.push(`${prefix}${sym}${Math.abs(amt).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+          }
+        }
+        return parts.length > 0 ? parts.join(' | ') : '₺0,00';
+      };
+
+      const setDashboardField = (id, textVal) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = textVal;
+      };
+
+      setDashboardField('total-receivable', formatDashboardMoney('receivable'));
+      setDashboardField('total-payable', formatDashboardMoney('payable'));
+      setDashboardField('net-balance', formatDashboardMoney('net'));
 
       const netEl = document.getElementById('net-balance');
       if (netEl) {
-        netEl.style.color = netBalance > 0
-          ? 'var(--color-success)'
-          : netBalance < 0 ? 'var(--color-danger)' : 'var(--color-info)';
+        let hasPositive = false;
+        let hasNegative = false;
+        for (const val of Object.values(currencyTotals)) {
+          const net = val.receivable - val.payable;
+          if (net > 0) hasPositive = true;
+          if (net < 0) hasNegative = true;
+        }
+        if (hasPositive && hasNegative) netEl.style.color = 'var(--color-info)';
+        else if (hasPositive) netEl.style.color = 'var(--color-success)';
+        else if (hasNegative) netEl.style.color = 'var(--color-danger)';
+        else netEl.style.color = 'var(--color-info)';
       }
     } catch (err) {
       console.warn('Finansal kartlar güncellenemedi:', err);

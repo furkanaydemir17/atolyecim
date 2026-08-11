@@ -150,6 +150,22 @@ function initNavigation() {
         else if (pageName === 'orders' && window.Orders) window.Orders.render();
         else if (pageName === 'products' && window.Products) window.Products.render();
         else if (pageName === 'contacts' && window.Contacts) window.Contacts.render();
+        else if (pageName === 'contractors') {
+          if (window.Contractors && typeof window.Contractors.render === 'function') {
+            window.Contractors.render().catch(err => console.error('[Nav] Contractors render error:', err));
+          } else {
+            console.warn('[Nav] window.Contractors not ready:', window.Contractors);
+            showToast('Fason modülü yüklenemedi, sayfayı yenileyin.', 'error');
+          }
+        }
+        else if (pageName === 'assortments') {
+          if (typeof window.loadAssortments === 'function') {
+            window.loadAssortments().catch(err => console.error('[Nav] loadAssortments error:', err));
+          } else {
+            console.warn('[Nav] window.loadAssortments not ready');
+            showToast('Asorti modülü yüklenemedi, sayfayı yenileyin.', 'error');
+          }
+        }
         else if (pageName.startsWith('stock-') && window.Stocks) window.Stocks.render(pageName);
         else if (pageName === 'barcode' && window.BarcodeScanner) window.BarcodeScanner.render();
         else if (pageName === 'manager') initManagerPage();
@@ -590,11 +606,13 @@ async function loadApp() {
     initMobileMenu();
     initNavigation();
     initAdminModulesForm();
+    if (window.initAssortmentsManager) window.initAssortmentsManager();
     if (window.Dashboard) await window.Dashboard.render();
     if (window.Products) window.Products.bindEvents();
     if (window.Contacts) window.Contacts.bindEvents();
     if (window.Orders) window.Orders.bindEvents();
     if (window.Stocks) window.Stocks.bindEvents();
+    if (window.Contractors) window.Contractors.bindEvents();
 
     // Sync B2B settings from DB
     try {
@@ -1117,6 +1135,9 @@ function initManagerPage() {
   }
 
   checkPushSubscriptionState();
+  if (window.initAssortmentsManager) {
+    window.initAssortmentsManager();
+  }
 }
 
 function urlBase64ToUint8Array(base64String) {
@@ -1465,6 +1486,34 @@ async function initAdminPage() {
         </tr>
       `;
     }).join('');
+
+    // Load global gemini api key setting
+    const globalKeyInput = document.getElementById('admin-global-gemini-key');
+    if (globalKeyInput) {
+      dbGet('settings', 'global_gemini_api_key').then(setting => {
+        globalKeyInput.value = setting && setting.value ? setting.value : '';
+      }).catch(err => console.warn('Could not load global gemini api key setting:', err));
+    }
+
+    // Save global settings handler
+    const saveGlobalBtn = document.getElementById('btn-admin-save-global');
+    if (saveGlobalBtn && !saveGlobalBtn._bound) {
+      saveGlobalBtn._bound = true;
+      saveGlobalBtn.addEventListener('click', async () => {
+        saveGlobalBtn.disabled = true;
+        saveGlobalBtn.textContent = '⏳ Kaydediliyor...';
+        try {
+          const value = globalKeyInput.value.replace(/['"\[\]\s]/g, '');
+          await dbUpdate('settings', { key: 'global_gemini_api_key', value: value });
+          showToast('Sistem geneli global ayarlar başarıyla kaydedildi! 💾', 'success');
+        } catch (err) {
+          showToast('Hata: ' + err.message, 'error');
+        } finally {
+          saveGlobalBtn.disabled = false;
+          saveGlobalBtn.textContent = 'Ayarları Kaydet';
+        }
+      });
+    }
 
   } catch (err) {
     console.error('Admin page initialization failed:', err);

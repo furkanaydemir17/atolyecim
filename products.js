@@ -133,6 +133,9 @@ const Products = {
       if (p.leatherType) leatherParts.push(`Tür: ${p.leatherType}`);
       const leatherText = leatherParts.length > 0 ? leatherParts.join(' / ') : '-';
 
+      const symbols = { TRY: '₺', USD: '$', EUR: '€' };
+      const sym = symbols[p.currency || 'TRY'] || '₺';
+
       return `
         <tr>
           <td>${modelPhotoHtml}</td>
@@ -146,7 +149,7 @@ const Products = {
           <td><span style="background: rgba(99,102,241,0.06); padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;">${this.escape(p.soleMaterial || '-')}</span></td>
           <td style="font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${this.escape(leatherText)}">${this.escape(leatherText)}</td>
           <td>${accPhotoHtml}</td>
-          <td>₺${Number(p.price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+          <td>${sym}${Number(p.price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
           <td>
             <div class="actions-cell">
               <button class="btn-icon warning" title="Reçete (BOM)" onclick="Recipes.openModal(${p.id})">🛠️</button>
@@ -201,6 +204,9 @@ const Products = {
           document.getElementById('product-leather-type').value = p.leatherType || '';
           document.getElementById('product-price').value = p.price || 0;
           
+          const currencyEl = document.getElementById('product-currency');
+          if (currencyEl) currencyEl.value = p.currency || 'TRY';
+          
           const barcodeEl = document.getElementById('product-barcode');
           if (barcodeEl) barcodeEl.value = p.barcode || '';
           
@@ -216,6 +222,8 @@ const Products = {
       });
     } else {
       title.textContent = 'Yeni Ürün Ekle';
+      const currencyEl = document.getElementById('product-currency');
+      if (currencyEl) currencyEl.value = 'TRY';
     }
 
     openModalById('product-modal');
@@ -233,6 +241,7 @@ const Products = {
     const sizeEl = document.getElementById('product-size');
     const colorEl = document.getElementById('product-color');
     const barcodeEl = document.getElementById('product-barcode');
+    const currencyEl = document.getElementById('product-currency');
 
     const data = {
       modelCode: document.getElementById('product-code').value.trim(),
@@ -244,6 +253,7 @@ const Products = {
       leatherUpper: document.getElementById('product-leather-upper').value.trim(),
       leatherType: document.getElementById('product-leather-type').value.trim(),
       price: parseFloat(document.getElementById('product-price').value) || 0,
+      currency: currencyEl ? currencyEl.value : 'TRY',
       barcode: barcodeEl ? barcodeEl.value.trim() : '',
       photo,
       accessoryPhoto

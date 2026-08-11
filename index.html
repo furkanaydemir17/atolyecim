@@ -222,6 +222,14 @@
             <span id="sidebar-incoming-badge" style="background: var(--color-danger); color: #fff; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 10px; display: none; line-height: 1.1; margin-right: 12px;">0</span>
           </li>
         </ul>
+        <li class="nav-item" data-page="contractors" role="menuitem" tabindex="0" aria-label="Fason Takip">
+          <span class="sidebar-icon">🧵</span>
+          <span>Fason Takip</span>
+        </li>
+        <li class="nav-item" data-page="assortments" role="menuitem" tabindex="0" aria-label="Asorti Şablonları">
+          <span class="sidebar-icon">📦</span>
+          <span>Asorti Şablonları</span>
+        </li>
         <li class="nav-item" data-page="barcode" role="menuitem" tabindex="0" aria-label="Barkod Okutma">
           <span class="sidebar-icon">🔍</span>
           <span>Barkod Okutma</span>
@@ -1030,6 +1038,94 @@
         </div>
       </section>
 
+      <!-- ============ ASSORTMENTS PAGE ============ -->
+      <section id="page-assortments" class="page">
+        <div class="page-header" style="margin-bottom: 20px;">
+          <div>
+            <h1 style="display: flex; align-items: center; gap: 10px;">
+              <span>📦</span> Asorti Şablonları Yönetimi
+            </h1>
+            <p class="page-desc">Sipariş girişlerinde hızlı numara adet dağılımı yapmak için standart koli asorti şablonları oluşturun.</p>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 24px;">
+          <form id="assortment-form" style="background: rgba(255,255,255,0.01); border: 1px solid var(--border-card); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h4 style="margin-top:0; margin-bottom: 12px; font-size: 0.95rem; color: var(--text-accent);">Yeni Asorti Şablonu Tanımla</h4>
+            <div class="form-row" style="margin-bottom: 15px;">
+              <div class="form-group" style="flex: 2;">
+                <label for="as-name">Şablon Adı</label>
+                <input type="text" id="as-name" placeholder="Örn: Erkek 12li Standart" required>
+              </div>
+            </div>
+            <label style="font-weight: 600; font-size: 0.82rem; margin-bottom: 8px; display: block; text-transform: uppercase;">Numara Adet Dağılımı</label>
+            <div style="display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-bottom: 18px;" id="as-sizes-grid">
+              <div>
+                <label style="font-size: 11px; text-align: center; display: block; margin-bottom: 2px;">36</label>
+                <input type="number" class="as-size-qty" data-size="36" min="0" value="0">
+              </div>
+              <div>
+                <label style="font-size: 11px; text-align: center; display: block; margin-bottom: 2px;">37</label>
+                <input type="number" class="as-size-qty" data-size="37" min="0" value="0">
+              </div>
+              <div>
+                <label style="font-size: 11px; text-align: center; display: block; margin-bottom: 2px;">38</label>
+                <input type="number" class="as-size-qty" data-size="38" min="0" value="0">
+              </div>
+              <div>
+                <label style="font-size: 11px; text-align: center; display: block; margin-bottom: 2px;">39</label>
+                <input type="number" class="as-size-qty" data-size="39" min="0" value="0">
+              </div>
+              <div>
+                <label style="font-size: 11px; text-align: center; display: block; margin-bottom: 2px;">40</label>
+                <input type="number" class="as-size-qty" data-size="40" min="0" value="0">
+              </div>
+              <div>
+                <label style="font-size: 11px; text-align: center; display: block; margin-bottom: 2px;">41</label>
+                <input type="number" class="as-size-qty" data-size="41" min="0" value="0">
+              </div>
+              <div>
+                <label style="font-size: 11px; text-align: center; display: block; margin-bottom: 2px;">42</label>
+                <input type="number" class="as-size-qty" data-size="42" min="0" value="0">
+              </div>
+              <div>
+                <label style="font-size: 11px; text-align: center; display: block; margin-bottom: 2px;">43</label>
+                <input type="number" class="as-size-qty" data-size="43" min="0" value="0">
+              </div>
+              <div>
+                <label style="font-size: 11px; text-align: center; display: block; margin-bottom: 2px;">44</label>
+                <input type="number" class="as-size-qty" data-size="44" min="0" value="0">
+              </div>
+              <div>
+                <label style="font-size: 11px; text-align: center; display: block; margin-bottom: 2px;">45</label>
+                <input type="number" class="as-size-qty" data-size="45" min="0" value="0">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="font-weight: 600;">💾 Şablonu Kaydet</button>
+          </form>
+
+          <div class="table-container">
+            <table class="data-table" id="assortments-table">
+              <thead>
+                <tr>
+                  <th>ŞABLON ADI</th>
+                  <th>NUMARA ADET DAĞILIMI</th>
+                  <th>TOPLAM ÇİFT</th>
+                  <th style="width: 80px; text-align: center;">İŞLEM</th>
+                </tr>
+              </thead>
+              <tbody id="assortments-tbody">
+              </tbody>
+            </table>
+            <div class="empty-state" id="assortments-empty" style="display: block; padding: 40px 20px; text-align: center;">
+              <div style="font-size: 3rem; margin-bottom: 12px;">📦</div>
+              <h3 style="color: var(--text-primary); margin-bottom: 8px;">Henüz asorti şablonu tanımlanmamış</h3>
+              <p style="color: var(--text-muted); font-size: 0.9rem;">Yukarıdaki formu kullanarak ilk şablonunuzu oluşturun.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- ============ RECYCLE BIN PAGE ============ -->
       <section id="page-recycle" class="page">
         <div class="page-header">
@@ -1144,6 +1240,23 @@
           </div>
         </div>
 
+        <!-- Sistem Geneli Ayarlar -->
+        <div class="card" style="padding: 24px; margin-top: 24px;">
+          <h3 style="margin-top: 0; margin-bottom: 18px; color: var(--text-primary); display: flex; align-items: center; gap: 8px; font-size: 1.15rem;">
+            <span>⚙️</span> Sistem Geneli Global Ayarlar
+          </h3>
+          <div class="form-row" style="align-items: flex-end;">
+            <div class="form-group" style="flex: 2; margin-bottom: 0;">
+              <label for="admin-global-gemini-key" style="font-weight: 600; font-size: 13px; color: var(--text-accent);">Sistem Geneli (Master) Gemini API Key</label>
+              <input type="password" id="admin-global-gemini-key" placeholder="Ortak API Anahtarı girin (AIzaSy...)" style="width: 100%; height: 38px; border-radius: 6px; padding: 0 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-card); color: #fff;">
+              <p style="margin: 4px 0 0 0; font-size: 11px; color: var(--text-muted);">Müşteriler kendi anahtarlarını girmediklerinde bu ortak anahtar PDF ekstre okuma için otomatik kullanılır.</p>
+            </div>
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+              <button type="button" class="btn btn-primary" id="btn-admin-save-global" style="height: 38px; width: 100%; font-weight: 700; border-radius: 6px; background: var(--color-primary); color: #fff;">Ayarları Kaydet</button>
+            </div>
+          </div>
+        </div>
+
       </section>
 
       <!-- ======= AI ASSISTANT PAGE ======= -->
@@ -1201,6 +1314,49 @@
           </form>
         </div>
       </section>
+
+      <!-- ============ CONTRACTORS (FASON) PAGE ============ -->
+      <section id="page-contractors" class="page">
+        <div class="page-header" style="margin-bottom: 20px;">
+          <div>
+            <h1 style="display: flex; align-items: center; gap: 10px;">
+              <span>🧵</span> Fason ve İşçilik Takip Modülü
+            </h1>
+            <p class="page-desc">Saya dikiş, taban montaj ve kesim ustalarının iş yükü, hakediş ve ödeme hareketleri.</p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-primary" id="btn-add-contractor" style="font-weight: 600;">➕ Fason Usta Ekle</button>
+          </div>
+        </div>
+
+        <!-- Fason Ustaları Tablosu -->
+        <div class="card" style="padding: 24px;">
+          <div class="table-container">
+            <table class="data-table" id="contractors-table">
+              <thead>
+                <tr>
+                  <th>USTA / FASONCU</th>
+                  <th>USTALIK ALANI</th>
+                  <th>TELEFON</th>
+                  <th>TOPLAM HAKEDİŞ</th>
+                  <th>TOPLAM ÖDENEN</th>
+                  <th>BAKİYE DURUMU</th>
+                  <th style="width: 140px; text-align: center;">İŞLEMLER</th>
+                </tr>
+              </thead>
+              <tbody id="contractors-tbody">
+              </tbody>
+            </table>
+            <div class="empty-state" id="contractors-empty" style="display: block; padding: 40px 20px; text-align: center;">
+              <div style="font-size: 3rem; margin-bottom: 12px;">🧵</div>
+              <h3 style="color: var(--text-primary); margin-bottom: 8px;">Henüz fason usta kaydı yok</h3>
+              <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Saya dikişçi, montajcı veya kesimci ustalarınızı ekleyerek iş ve ödeme takibi yapabilirsiniz.</p>
+              <button class="btn btn-primary" onclick="document.getElementById('btn-add-contractor').click()" style="font-weight: 600;">➕ İlk Ustayı Ekle</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Global Notification Bell Panel (Floating Bottom Right) -->
       <div id="global-notification-bell-container" style="position: fixed; bottom: 25px; right: 36px; z-index: 10000;">
         <button id="btn-notification-bell" type="button" style="position: relative; background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 19px; cursor: pointer; color: var(--text-primary); transition: all 0.2s; box-shadow: 0 4px 15px rgba(99,102,241,0.25); outline: none;">
@@ -1408,9 +1564,19 @@
               <label for="product-leather-type">Deri Türü</label>
               <input type="text" id="product-leather-type" placeholder="Örn: Hakiki Deri (Manuel yazılabilir)">
             </div>
-            <div class="form-group">
-              <label for="product-price">Birim Satış Fiyatı (₺)</label>
-              <input type="number" id="product-price" step="0.01" min="0" placeholder="0.00" required>
+            <div class="form-group" style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+              <div>
+                <label for="product-price">Birim Satış Fiyatı</label>
+                <input type="number" id="product-price" step="0.01" min="0" placeholder="0.00" required style="width: 100%;">
+              </div>
+              <div>
+                <label for="product-currency">Para Birimi</label>
+                <select id="product-currency" required style="width: 100%;">
+                  <option value="TRY">₺ (TRY)</option>
+                  <option value="USD">$ (USD)</option>
+                  <option value="EUR">€ (EUR)</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -1480,6 +1646,13 @@
               <input type="text" id="contact-address" placeholder="Şehir / İlçe">
             </div>
           </div>
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="contact-discount-rate">B2B İskonto Oranı (%)</label>
+              <input type="number" id="contact-discount-rate" placeholder="0" min="0" max="100" value="0">
+            </div>
+            <div style="flex: 1;"></div>
+          </div>
           <div class="modal-actions">
             <button type="button" class="btn btn-ghost" data-modal="contact-modal">İptal</button>
             <button type="submit" class="btn btn-primary" id="contact-save-btn">Kaydet</button>
@@ -1510,9 +1683,19 @@
                 <option value="odeme">Ödeme (Ödeme Yapıldı)</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="tx-amount">Tutar (₺)</label>
-              <input type="number" id="tx-amount" step="0.01" min="0.01" placeholder="0.00" required>
+            <div class="form-group" style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+              <div>
+                <label for="tx-amount">Tutar</label>
+                <input type="number" id="tx-amount" step="0.01" min="0.01" placeholder="0.00" required style="width: 100%;">
+              </div>
+              <div>
+                <label for="tx-currency">Para Birimi</label>
+                <select id="tx-currency" required style="width: 100%;">
+                  <option value="TRY">₺ (TRY)</option>
+                  <option value="USD">$ (USD)</option>
+                  <option value="EUR">€ (EUR)</option>
+                </select>
+              </div>
             </div>
           </div>
           <div class="form-row">
@@ -1640,9 +1823,19 @@
           </div>
 
           <div class="form-row">
-            <div class="form-group">
-              <label for="order-price">Birim Fiyat (₺)</label>
-              <input type="number" id="order-price" step="0.01" min="0" placeholder="0.00" required>
+            <div class="form-group" style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+              <div>
+                <label for="order-price">Birim Fiyat</label>
+                <input type="number" id="order-price" step="0.01" min="0" placeholder="0.00" required style="width: 100%;">
+              </div>
+              <div>
+                <label for="order-currency">Döviz</label>
+                <select id="order-currency" required style="width: 100%;">
+                  <option value="TRY">₺ (TRY)</option>
+                  <option value="USD">$ (USD)</option>
+                  <option value="EUR">€ (EUR)</option>
+                </select>
+              </div>
             </div>
             <div class="form-group">
               <label for="order-deadline">Termin Tarihi</label>
@@ -1838,6 +2031,25 @@
           </div>
         </div>
 
+        <!-- B2B Özel Katalog Alanı -->
+        <div id="ledger-b2b-container" style="background: rgba(99,102,241,0.06); border: 1px dashed rgba(99,102,241,0.25); border-radius: 8px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h4 style="margin: 0; font-size: 0.9rem; font-weight: 700; color: var(--text-accent); display: flex; align-items: center; gap: 6px;">
+              <span>🌐 Müşteriye Özel B2B Sipariş Portalı</span>
+              <span id="ledger-b2b-discount-badge" class="category-badge badge-musteri" style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 10px; padding: 2px 6px;">%0 İndirimli</span>
+            </h4>
+            <p style="margin: 4px 0 0 0; font-size: 0.75rem; color: var(--text-muted);">Müşteri bu katalog linkiyle güncel fiyatları kendi iskontosuyla görür ve doğrudan sipariş verebilir.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-secondary" id="btn-ledger-copy-b2b" style="height: 34px; padding: 0 12px; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+              📋 Linki Kopyala
+            </button>
+            <button type="button" class="btn btn-success" id="btn-ledger-share-b2b" style="height: 34px; padding: 0 12px; font-size: 12px; display: flex; align-items: center; gap: 6px; background: #25d366; border-color: #25d366; color: #fff;">
+              💬 WhatsApp'ta Paylaş
+            </button>
+          </div>
+        </div>
+
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
           <h4 style="font-weight: 700; margin-bottom: 0; color: var(--text-accent); text-transform: uppercase; letter-spacing: 0.5px;">📋 Hesap Ekstresi</h4>
           <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
@@ -1850,6 +2062,10 @@
             <button type="button" class="btn btn-primary" id="btn-ledger-export" style="height: 36px; padding: 0 16px; font-size: 13px; display: flex; align-items: center; gap: 6px; border-radius: 6px;">
               📄 Excel (CSV) Olarak İndir
             </button>
+            <button type="button" class="btn btn-success" id="btn-ledger-import-pdf" style="height: 36px; padding: 0 14px; font-size: 13px; display: flex; align-items: center; gap: 6px; border-radius: 6px; background: #8b5cf6; border-color: #8b5cf6; color: #fff;">
+              📥 PDF Ekstre Yükle
+            </button>
+            <input type="file" id="ledger-pdf-file-input" accept="application/pdf" style="display: none;">
           </div>
         </div>
 
@@ -1908,6 +2124,53 @@
           <button type="button" class="btn btn-primary" id="btn-ledger-share-whatsapp" style="background: #25d366; border-color: #25d366; color: #fff; font-weight: 700; display: flex; align-items: center; gap: 8px;">
             💬 WhatsApp ile Paylaş
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PDF IMPORT REVIEW MODAL ============ -->
+  <div class="modal-overlay" id="pdf-import-review-modal" style="z-index: 10060;">
+    <div class="modal-card modal-lg" style="max-width: 800px; width: 95%;">
+      <div class="modal-header">
+        <h2>📥 PDF Ekstre Analiz Sonuçları</h2>
+        <button class="modal-close" data-modal="pdf-import-review-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <div style="background: rgba(139, 92, 246, 0.05); border: 1px dashed rgba(139, 92, 246, 0.25); border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+          <h4 style="margin: 0; font-size: 0.9rem; font-weight: 700; color: var(--text-accent); display: flex; align-items: center; gap: 8px;">
+            <span>🤖 Yapay Zeka Ekstre Analiz Motoru</span>
+          </h4>
+          <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: var(--text-muted);">
+            PDF belgesi başarıyla okundu. Yapay zeka ile ayrıştırılan işlem satırları aşağıdadır. Kaydetmek istediğiniz satırları seçip onaylayabilirsiniz.
+          </p>
+        </div>
+        
+        <div class="table-container" style="border: 1px solid var(--border-card); border-radius: 8px; max-height: 350px; overflow-y: auto;">
+          <table class="data-table">
+            <thead>
+              <tr class="excel-header">
+                <th style="width: 5%; text-align: center;"><input type="checkbox" id="chk-pdf-select-all" checked></th>
+                <th style="width: 15%;">TARİH</th>
+                <th style="width: 45%;">AÇIKLAMA</th>
+                <th style="width: 15%;">TÜR</th>
+                <th style="width: 10%;">PARA BİRİMİ</th>
+                <th style="width: 10%; text-align: right;">TUTAR</th>
+              </tr>
+            </thead>
+            <tbody id="pdf-import-review-tbody">
+              <!-- Dynamically generated rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-actions" style="display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid var(--border-card); margin-top: 15px;">
+        <div style="font-size: 0.85rem; color: var(--text-muted);">
+          Toplam Seçilen: <strong id="lbl-pdf-import-count" style="color: var(--text-accent);">0</strong> satır
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn btn-ghost" data-modal="pdf-import-review-modal">İptal</button>
+          <button type="button" class="btn btn-primary" id="btn-pdf-import-submit" style="background: var(--color-primary); color: #fff;">Onayla ve Kaydet</button>
         </div>
       </div>
     </div>
@@ -2395,16 +2658,27 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px;">
             <div class="form-group">
               <label for="quick-order-color" style="font-weight: 600; display: block; margin-bottom: 6px;">Renk</label>
               <input type="text" id="quick-order-color" placeholder="Örn: Siyah" required style="width: 100%;" list="quick-colors-list">
               <datalist id="quick-colors-list"></datalist>
             </div>
-            <div class="form-group">
-              <label for="quick-order-price" style="font-weight: 600; display: block; margin-bottom: 6px;">Birim Fiyat (₺)</label>
-              <input type="number" id="quick-order-price" min="0.01" step="0.01" placeholder="0.00" required style="width: 100%;">
+            <div class="form-group" style="grid-column: span 2; display: grid; grid-template-columns: 2fr 1.2fr; gap: 8px;">
+              <div>
+                <label for="quick-order-price" style="font-weight: 600; display: block; margin-bottom: 6px;">Birim Fiyat</label>
+                <input type="number" id="quick-order-price" min="0.01" step="0.01" placeholder="0.00" required style="width: 100%;">
+              </div>
+              <div>
+                <label for="quick-order-currency" style="font-weight: 600; display: block; margin-bottom: 6px;">Para Birimi</label>
+                <select id="quick-order-currency" required style="width: 100%;">
+                  <option value="TRY">₺ (TRY)</option>
+                  <option value="USD">$ (USD)</option>
+                  <option value="EUR">€ (EUR)</option>
+                </select>
+              </div>
             </div>
+
             <div class="form-group">
               <label for="quick-order-deadline" style="font-weight: 600; display: block; margin-bottom: 6px;">Termin Tarihi</label>
               <input type="date" id="quick-order-deadline" required style="width: 100%;">
@@ -2413,9 +2687,19 @@
 
           <!-- Numara Matrisi (36 - 45) -->
           <div class="form-group" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-card); border-radius: var(--radius-md); padding: 14px;">
-            <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-accent); display: block; margin-bottom: 10px; text-transform: uppercase;">
-              Numara Adet Dağılımı
-            </label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+              <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-accent); margin-bottom: 0; text-transform: uppercase;">
+                Numara Adet Dağılımı
+              </label>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">⚡ ASORTİ:</span>
+                <select id="quick-order-asorti-select" style="padding: 4px 6px; font-size: 11px; border-radius: 4px; height: 28px; width: 130px; margin-bottom: 0;">
+                  <option value="">Şablon Seçin</option>
+                </select>
+                <input type="number" id="quick-order-asorti-qty" value="1" min="1" placeholder="Koli" style="width: 50px; padding: 4px 6px; font-size: 11px; text-align: center; border-radius: 4px; height: 28px; margin-bottom: 0;">
+                <button type="button" id="btn-quick-apply-asorti" class="btn btn-sm" style="padding: 4px 8px; font-size: 11px; height: 28px; font-weight: 600; background: var(--accent-primary); border-color: var(--accent-primary);">Doldur</button>
+              </div>
+            </div>
             <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;" id="quick-order-matrix">
               <!-- 36 - 45 sizes inputs -->
               <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
@@ -2487,6 +2771,184 @@
     </div>
   </div>
 
+  <!-- ============ CONTRACTOR MODAL ============ -->
+  <div class="modal-overlay" id="contractor-modal">
+    <div class="modal-card" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2 id="contractor-modal-title">Fason Usta Ekle</h2>
+        <button type="button" class="modal-close" data-modal="contractor-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="contractor-form">
+          <input type="hidden" id="contractor-id">
+          <div class="form-group">
+            <label for="contractor-name">Usta Ad Soyad / Firma</label>
+            <input type="text" id="contractor-name" placeholder="Örn: Ahmet Usta (Saya)" required>
+          </div>
+          <div class="form-group">
+            <label for="contractor-role">Ustalık Alanı / Rol</label>
+            <select id="contractor-role" required>
+              <option value="sayaci">Sayacı (Dikiş)</option>
+              <option value="montajci">Montajcı (Taban/Kalıp)</option>
+              <option value="kesimci">Kesimci (Deri Kesim)</option>
+              <option value="fason_paket">Paketleme/Temizlik</option>
+              <option value="diger">Diğer</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="contractor-phone">Telefon Numarası</label>
+            <input type="text" id="contractor-phone" placeholder="Örn: 0505 123 45 67">
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-modal="contractor-modal">İptal</button>
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CONTRACTOR JOB MODAL ============ -->
+  <div class="modal-overlay" id="contractor-job-modal">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h2 id="contractor-job-title">Fason İş Ver / Hakediş Yaz</h2>
+        <button type="button" class="modal-close" data-modal="contractor-job-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="contractor-job-form">
+          <input type="hidden" id="job-contractor-id">
+          <div class="form-group">
+            <label for="job-model-code">Model Kodu</label>
+            <input type="text" id="job-model-code" placeholder="Örn: A-102" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="job-qty">Adet (Çift)</label>
+              <input type="number" id="job-qty" min="1" placeholder="Miktar" required>
+            </div>
+            <div class="form-group" style="display: grid; grid-template-columns: 2fr 1.2fr; gap: 8px;">
+              <div>
+                <label for="job-price">Birim İşçilik</label>
+                <input type="number" id="job-price" min="0.01" step="0.01" placeholder="0.00" required style="width: 100%;">
+              </div>
+              <div>
+                <label for="job-currency">Döviz</label>
+                <select id="job-currency" required style="width: 100%;">
+                  <option value="TRY">₺ (TRY)</option>
+                  <option value="USD">$ (USD)</option>
+                  <option value="EUR">€ (EUR)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="job-description">Açıklama (Opsiyonel)</label>
+            <input type="text" id="job-description" placeholder="Örn: Saya dikişi için teslim edildi">
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-modal="contractor-job-modal">İptal</button>
+            <button type="submit" class="btn btn-primary">İş Kaydet (Alacaklandır)</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CONTRACTOR PAYMENT MODAL ============ -->
+  <div class="modal-overlay" id="contractor-payment-modal">
+    <div class="modal-card" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2 id="contractor-payment-title">Fasoncuya Ödeme Yap</h2>
+        <button type="button" class="modal-close" data-modal="contractor-payment-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="contractor-payment-form">
+          <input type="hidden" id="payment-contractor-id">
+          <div class="form-row">
+            <div class="form-group" style="display: grid; grid-template-columns: 2fr 1.2fr; gap: 8px;">
+              <div>
+                <label for="payment-amount">Ödenen Tutar</label>
+                <input type="number" id="payment-amount" min="0.01" step="0.01" placeholder="0.00" required style="width: 100%;">
+              </div>
+              <div>
+                <label for="payment-currency">Para Birimi</label>
+                <select id="payment-currency" required style="width: 100%;">
+                  <option value="TRY">₺ (TRY)</option>
+                  <option value="USD">$ (USD)</option>
+                  <option value="EUR">€ (EUR)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="payment-description">Ödeme Detayı / Makbuz No</label>
+            <input type="text" id="payment-description" placeholder="Örn: Elden teslimat / Avans" required>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-modal="contractor-payment-modal">İptal</button>
+            <button type="submit" class="btn btn-primary" style="background: #10b981; border-color: #10b981; color: #fff;">Ödemeyi Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CONTRACTOR LEDGER MODAL ============ -->
+  <div class="modal-overlay" id="contractor-ledger-modal">
+    <div class="modal-card" style="max-width: 750px; width: 90%;">
+      <div class="modal-header">
+        <h2 id="contractor-ledger-title">Usta Ekstresi</h2>
+        <button type="button" class="modal-close" data-modal="contractor-ledger-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Fasoncu Bilgi Kartı -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; background: rgba(99,102,241,0.05); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-card);">
+          <div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Toplam Hakediş</div>
+            <div style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary);" id="c-ledger-total-hakedis">₺0,00</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Toplam Ödenen</div>
+            <div style="font-size: 1.25rem; font-weight: 800; color: #10b981;" id="c-ledger-total-odenen">₺0,00</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Kalan Alacak</div>
+            <div style="font-size: 1.25rem; font-weight: 800; color: #ef4444;" id="c-ledger-balance">₺0,00</div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="font-size: 0.95rem; color: var(--text-accent); margin: 0;">İŞÇİLİK VE ÖDEME HAREKETLERİ</h3>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-sm btn-secondary" id="btn-c-ledger-add-job">+ İş / Hakediş Ekle</button>
+            <button type="button" class="btn btn-sm btn-primary" id="btn-c-ledger-add-pay" style="background: #10b981; border-color: #10b981; color: #fff;">+ Ödeme Yap</button>
+          </div>
+        </div>
+
+        <div class="table-container" style="max-height: 320px; overflow-y: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>TARİH</th>
+                <th>AÇIKLAMA</th>
+                <th style="text-align: right;">HAKEDİŞ</th>
+                <th style="text-align: right;">ÖDENEN</th>
+                <th style="text-align: right;">BAKİYE</th>
+                <th style="width: 44px; text-align: center;">SİL</th>
+              </tr>
+            </thead>
+            <tbody id="c-ledger-tbody">
+            </tbody>
+          </table>
+          <div class="empty-state" id="c-ledger-empty">İşlem geçmişi bulunmuyor.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- ============ TOAST NOTIFICATION ============ -->
   <div id="toast-container"></div>
 
@@ -2499,6 +2961,7 @@
   <script src="contacts.js" type="module"></script>
   <script src="stocks.js" type="module"></script>
   <script src="orders.js" type="module"></script>
+  <script src="contractors.js" type="module"></script>
   <script src="barcode.js" type="module"></script>
   <script src="ai-assistant.js" type="module"></script>
   <script src="app.js" type="module"></script>
