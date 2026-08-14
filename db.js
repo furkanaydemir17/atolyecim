@@ -305,6 +305,20 @@ function initDB() {
 
 /* --- Database CRUD Handlers (Multi-Tenant Scoped) --- */
 
+const memoryCache = {}; // { [storeName]: { data: any[], timestamp: number } }
+const pendingQueries = {}; // { [storeName]: Promise<any[]> }
+const CACHE_TTL_MS = 6000; // 6 seconds TTL for cache
+
+function invalidateCache(storeName) {
+  if (memoryCache[storeName]) {
+    delete memoryCache[storeName];
+  }
+}
+
+// Bind to window for debugging or manual cache bust
+window.dbMemoryCache = memoryCache;
+window.invalidateDbCache = invalidateCache;
+
 function getCurrentTenantCompany() {
   return localStorage.getItem('atolyecim_auth_company') || 'Atölyecim Master';
 }
@@ -320,6 +334,7 @@ function filterByTenant(storeName, items) {
 }
 
 async function dbAdd(storeName, data) {
+  invalidateCache(storeName);
   data._ownerCompany = data._ownerCompany || getCurrentTenantCompany();
 
   if (useSupabase) {
@@ -388,36 +403,94 @@ async function dbAdd(storeName, data) {
 }
 
 async function dbGetAll(storeName) {
-  let allItems = [];
-
-  if (useSupabase) {
-    const currentCompany = getCurrentTenantCompany();
-    let query = supabaseClient.from(storeName).select('*')
-      .eq('data->>_ownerCompany', currentCompany);
-    
-    const { data: rows, error } = await query;
-
-    if (error) {
-      console.error(`Supabase dbGetAll error in ${storeName}:`, error);
-      throw error;
-    }
-
-    allItems = (rows || []).map(row => mapFromSupabase(storeName, row));
-  } else {
-    // Local IndexedDB
-    allItems = await new Promise((resolve, reject) => {
-      const tx = db.transaction(storeName, 'readonly');
-      const store = tx.objectStore(storeName);
-      const req = store.getAll();
-      req.onsuccess = () => resolve(req.result || []);
-      req.onerror = () => reject(req.error);
-    });
+  const now = Date.now();
+  
+  // 1. Check if cache is valid
+  if (memoryCache[storeName] && (now - memoryCache[storeName].timestamp) < CACHE_TTL_MS) {
+    return JSON.parse(JSON.stringify(memoryCache[storeName].data));
   }
 
-  return filterByTenant(storeName, allItems);
+  // 2. Check if there is a pending query for this store
+  if (pendingQueries[storeName]) {
+    await pendingQueries[storeName];
+    if (memoryCache[storeName]) {
+      return JSON.parse(JSON.stringify(memoryCache[storeName].data));
+    }
+  }
+
+  // 3. Create a new query promise
+  const queryPromise = (async () => {
+    let allItems = [];
+
+    if (useSupabase) {
+      const currentCompany = getCurrentTenantCompany();
+      let query = supabaseClient.from(storeName).select('*')
+        .eq('data->>_ownerCompany', currentCompany);
+      
+      const { data: rows, error } = await query;
+
+      if (error) {
+        console.error(`Supabase dbGetAll error in ${storeName}:`, error);
+        throw error;
+      }
+
+      allItems = (rows || []).map(row => mapFromSupabase(storeName, row));
+    } else {
+      // Local IndexedDB
+      allItems = await new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    const filtered = filterByTenant(storeName, allItems);
+    
+    // Populate cache
+    memoryCache[storeName] = {
+      data: JSON.parse(JSON.stringify(filtered)),
+      timestamp: Date.now()
+    };
+
+    return filtered;
+  })();
+
+  pendingQueries[storeName] = queryPromise;
+
+  try {
+    await queryPromise;
+  } finally {
+    delete pendingQueries[storeName];
+  }
+
+  return JSON.parse(JSON.stringify(memoryCache[storeName].data));
 }
 
 async function dbGet(storeName, id) {
+  const keyField = getKeyField(storeName);
+  const now = Date.now();
+
+  // Try to return from cache if valid
+  if (memoryCache[storeName] && (now - memoryCache[storeName].timestamp) < CACHE_TTL_MS) {
+    const cachedItem = memoryCache[storeName].data.find(item => String(item[keyField]) === String(id));
+    if (cachedItem) {
+      return JSON.parse(JSON.stringify(cachedItem));
+    }
+  }
+
+  // If there's a pending query, await it and try cache again
+  if (pendingQueries[storeName]) {
+    await pendingQueries[storeName];
+    if (memoryCache[storeName]) {
+      const cachedItem = memoryCache[storeName].data.find(item => String(item[keyField]) === String(id));
+      if (cachedItem) {
+        return JSON.parse(JSON.stringify(cachedItem));
+      }
+    }
+  }
+
   let item = null;
 
   if (useSupabase) {
@@ -451,6 +524,7 @@ async function dbGet(storeName, id) {
 }
 
 async function dbUpdate(storeName, data) {
+  invalidateCache(storeName);
   data._ownerCompany = data._ownerCompany || getCurrentTenantCompany();
 
   let resultId;
@@ -517,6 +591,7 @@ async function dbUpdate(storeName, data) {
 }
 
 async function dbDelete(storeName, id) {
+  invalidateCache(storeName);
   // If deleting from operational stores, move to recycle_bin first!
   if (['orders', 'products', 'stocks', 'contacts'].includes(storeName)) {
     try {
@@ -567,6 +642,7 @@ async function dbGetByIndex(storeName, indexName, value) {
 }
 
 async function dbClearStore(storeName) {
+  invalidateCache(storeName);
   if (useSupabase) {
     const currentCompany = getCurrentTenantCompany();
     let query = supabaseClient.from(storeName).delete();

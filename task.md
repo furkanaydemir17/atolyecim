@@ -59,3 +59,13 @@ Tüm planlanan geliştirme ve entegrasyon süreçleri başarıyla tamamlanmışt
 - **Durum:** Tamamlandı ✅
 - **Detaylar:**
   - `@media print` ve kurumsal tasarım sistemine tam uyumlu, PDF çıktısı alınabilir HTML tanıtım broşürü (`atolyecim_brochure.html`) ve Markdown sürümü (`atolyecim_brochure.md`) oluşturuldu.
+
+---
+
+## 📌 8. Performans Optimizasyonu (Bellek Önbelleği & İstek Tekilleştirme) [x]
+- **Durum:** Tamamlandı ✅
+- **Detaylar:**
+  - db.js veritabanı okuma işlemleri 6 saniye süreyle bellek önbelleğine (Memory Cache) alındı.
+  - Paralel tetiklenen ağ isteklerini tek bir Supabase sorgusunda birleştiren tekilleştirme (De-duplication) yapıldı.
+  - Ekleme/güncelleme/silme gibi tüm yazma işlemlerinde önbelleğin anında geçersiz kılınması sağlandı.
+  - Sayfa yükleme gecikmeleri 1 saniyenin üzerinden milisaniyeler seviyesine düşürüldü.
