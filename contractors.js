@@ -43,9 +43,29 @@ const Contractors = {
     tableBody.innerHTML = '';
 
     try {
-      const contractors = await window.dbGetAll('contractors');
+      let contractors = await window.dbGetAll('contractors');
       const jobs = await window.dbGetAll('contractor_jobs');
       const txs = await window.dbGetAll('contractor_transactions');
+
+      const searchVal = document.getElementById('search-contractors')?.value?.toLowerCase().trim() || '';
+      if (searchVal) {
+        contractors = contractors.filter(c => {
+          const roleNames = {
+            sayaci: 'Sayacı (Dikiş)',
+            montajci: 'Montajcı (Taban/Kalıp)',
+            kesimci: 'Kesimci (Kesim)',
+            fason_kesim: 'Fason Kesim Atölyesi',
+            fason_saya: 'Fason Saya Atölyesi',
+            fason_taban: 'Fason Taban/Montaj Atölyesi',
+            fason_paket: 'Paketleme/Temizlik'
+          };
+          const roleName = (roleNames[c.role] || c.role || '').toLowerCase();
+          
+          return (c.name || '').toLowerCase().includes(searchVal) ||
+                 (c.phone || '').toLowerCase().includes(searchVal) ||
+                 roleName.includes(searchVal);
+        });
+      }
 
       if (!contractors || contractors.length === 0) {
         if (emptyState) emptyState.style.display = 'block';
@@ -598,6 +618,14 @@ Contractors.bindEvents = function() {
       if (Contractors.activeContractorId) {
         Contractors.openPaymentModal(Contractors.activeContractorId);
       }
+    });
+  }
+
+  // Bind Search Input
+  const searchInput = document.getElementById('search-contractors');
+  if (searchInput) {
+    bindOnce(searchInput, 'input', () => {
+      Contractors.loadContractors();
     });
   }
 };

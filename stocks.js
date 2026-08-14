@@ -42,6 +42,15 @@ const Stocks = {
       addSoleSizeBtn.addEventListener('click', () => this.addSoleSizeRow());
     }
 
+    // Bind Search Input for current stock type
+    const searchInput = document.getElementById(`search-stock-${this.currentType}`);
+    if (searchInput && !searchInput._bound) {
+      searchInput._bound = true;
+      searchInput.addEventListener('input', () => {
+        this.loadStocks();
+      });
+    }
+
     // Form submit
     const form = document.getElementById('stock-form');
     if (form && !form._bound) {
@@ -72,7 +81,19 @@ const Stocks = {
 
   async loadStocks() {
     const type = this.currentType;
-    const stocks = await dbGetByIndex('stocks', 'type', type);
+    let stocks = await dbGetByIndex('stocks', 'type', type);
+
+    const searchInputId = `search-stock-${type}`;
+    const searchVal = document.getElementById(searchInputId)?.value?.toLowerCase().trim() || '';
+    if (searchVal) {
+      stocks = stocks.filter(s => 
+        (s.name || '').toLowerCase().includes(searchVal) ||
+        (s.code || '').toLowerCase().includes(searchVal) ||
+        (s.color || '').toLowerCase().includes(searchVal) ||
+        (s.size || '').toLowerCase().includes(searchVal) ||
+        (s.supplier || '').toLowerCase().includes(searchVal)
+      );
+    }
 
     const tbody = document.getElementById(`stock-${type}-tbody`);
     const emptyState = document.getElementById(`stock-${type}-empty`);

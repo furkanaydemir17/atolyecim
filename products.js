@@ -47,6 +47,15 @@ const Products = {
       });
     }
 
+    // Search Input
+    const searchInput = document.getElementById('search-products');
+    if (searchInput && !searchInput._bound) {
+      searchInput._bound = true;
+      searchInput.addEventListener('input', () => {
+        this.loadProducts();
+      });
+    }
+
     // File inputs preview binding
     const photoInput = document.getElementById('product-photo');
     if (photoInput && !photoInput._bound) {
@@ -90,6 +99,17 @@ const Products = {
 
     if (this.currentFilter !== 'all') {
       products = products.filter(p => p.category === this.currentFilter);
+    }
+
+    const searchVal = document.getElementById('search-products')?.value?.toLowerCase().trim() || '';
+    if (searchVal) {
+      products = products.filter(p => 
+        (p.modelCode || '').toLowerCase().includes(searchVal) ||
+        (p.category || '').toLowerCase().includes(searchVal) ||
+        (p.barcode || '').toLowerCase().includes(searchVal) ||
+        (p.leatherUpper || '').toLowerCase().includes(searchVal) ||
+        (p.leatherLining || '').toLowerCase().includes(searchVal)
+      );
     }
 
     const tbody = document.getElementById('products-tbody');

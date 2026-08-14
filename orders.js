@@ -149,6 +149,15 @@ const Orders = {
       quickOrderBtn.addEventListener('click', () => this.openQuickOrderModal());
     }
 
+    // Search Input
+    const searchInput = document.getElementById('search-orders');
+    if (searchInput && !searchInput._bound) {
+      searchInput._bound = true;
+      searchInput.addEventListener('input', () => {
+        this.loadOrders();
+      });
+    }
+
     // Order form submit
     const form = document.getElementById('order-form');
     if (form && !form._bound) {
@@ -469,8 +478,26 @@ const Orders = {
     contacts.forEach(c => contactMap[c.id] = c.name);
 
     // 1. Separate Active and Incoming Orders
-    const activeOrders = orders.filter(o => o.status !== 'gelen');
-    const incomingOrders = orders.filter(o => o.status === 'gelen');
+    let filteredOrders = orders;
+    const searchVal = document.getElementById('search-orders')?.value?.toLowerCase().trim() || '';
+    if (searchVal) {
+      filteredOrders = orders.filter(o => {
+        const customerName = (contactMap[o.contactId] || '').toLowerCase();
+        const modelCode = (o.modelCode || '').toLowerCase();
+        const invoiceNo = (o.invoiceNo || '').toLowerCase();
+        const idStr = String(o.id || '').toLowerCase();
+        const colors = (o.colors || []).map(c => (c.color || '').toLowerCase()).join(' ');
+        
+        return customerName.includes(searchVal) ||
+               modelCode.includes(searchVal) ||
+               invoiceNo.includes(searchVal) ||
+               idStr.includes(searchVal) ||
+               colors.includes(searchVal);
+      });
+    }
+
+    const activeOrders = filteredOrders.filter(o => o.status !== 'gelen');
+    const incomingOrders = filteredOrders.filter(o => o.status === 'gelen');
 
     // 2. Update Incoming Orders tab badge and sidebar badge
     const badge = document.getElementById('incoming-orders-badge');

@@ -73,6 +73,15 @@ const Contacts = {
       });
     }
 
+    // Search Input
+    const searchInput = document.getElementById('search-contacts');
+    if (searchInput && !searchInput._bound) {
+      searchInput._bound = true;
+      searchInput.addEventListener('input', () => {
+        this.loadContacts();
+      });
+    }
+
     // PDF Import bindings
     const btnImportPdf = document.getElementById('btn-ledger-import-pdf');
     const fileInputPdf = document.getElementById('ledger-pdf-file-input');
@@ -125,6 +134,16 @@ const Contacts = {
 
     if (this.currentFilter !== 'all') {
       contacts = contacts.filter(c => c.type === this.currentFilter || c.type === 'ikisi');
+    }
+
+    const searchVal = document.getElementById('search-contacts')?.value?.toLowerCase().trim() || '';
+    if (searchVal) {
+      contacts = contacts.filter(c => 
+        (c.name || '').toLowerCase().includes(searchVal) ||
+        (c.phone || '').toLowerCase().includes(searchVal) ||
+        (c.company || '').toLowerCase().includes(searchVal) ||
+        (c.address || '').toLowerCase().includes(searchVal)
+      );
     }
 
     // Calculate balances grouped by contact and currency
