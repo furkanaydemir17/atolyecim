@@ -2056,9 +2056,6 @@
             <button type="button" class="btn btn-primary" id="btn-ledger-add-tx" style="height: 36px; padding: 0 14px; font-size: 13px; display: flex; align-items: center; gap: 6px; border-radius: 6px; background: var(--color-primary); color: #fff;">
               💰 İşlem Ekle
             </button>
-            <button type="button" class="btn btn-success" id="btn-ledger-import-pdf" style="height: 36px; padding: 0 14px; font-size: 13px; display: flex; align-items: center; gap: 6px; border-radius: 6px; background: #8b5cf6; border-color: #8b5cf6; color: #fff;">
-              📥 PDF Ekstre Yükle
-            </button>
             <input type="file" id="ledger-pdf-file-input" accept="application/pdf" style="display: none;">
           </div>
         </div>
@@ -2111,10 +2108,10 @@
         </div>
 
         <div class="modal-actions" style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <!-- Sol taraf (Yönetim & Dışa Aktar) -->
+          <!-- Sol taraf (Dışa Aktar & İçe Aktar) -->
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button type="button" class="btn btn-secondary" id="btn-ledger-footer-edit-contact" style="font-weight: 700; display: flex; align-items: center; gap: 6px; height: 38px;">
-              ✏️ Cari Bilgilerini Düzenle
+            <button type="button" class="btn btn-success" id="btn-ledger-import-pdf" style="font-weight: 700; display: flex; align-items: center; gap: 6px; height: 38px; background: #8b5cf6; border-color: #8b5cf6; color: #fff;">
+              📥 PDF Ekstre Yükle
             </button>
             <button type="button" class="btn btn-secondary" id="btn-ledger-export" style="font-weight: 700; display: flex; align-items: center; gap: 6px; height: 38px;">
               📄 Excel (CSV) İndir
