@@ -271,7 +271,13 @@ const Contractors = {
         }, 'btn_delete_l_' + btn.dataset.type + '_' + btn.dataset.id);
       });
 
-
+      // Bind Print Button
+      const printBtn = document.getElementById('btn-c-ledger-print');
+      if (printBtn) {
+        printBtn.onclick = () => {
+          this.printLedger(c, ledgerEntries);
+        };
+      }
 
       modal.style.display = 'flex';
       requestAnimationFrame(() => modal.classList.add('show'));
@@ -280,6 +286,132 @@ const Contractors = {
       console.error(err);
       window.showToast('Ekstre yüklenirken hata oluştu.', 'error');
     }
+  },
+
+  printLedger(c, entries) {
+    const printArea = document.getElementById('ledger-print-area');
+    if (!printArea) return;
+
+    const companyName = localStorage.getItem('atolyecim_auth_company') || 'Atölyecim Master';
+    const dateStr = new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    // Calculate totals
+    const totalHakedis = {};
+    const totalOdenen = {};
+    const balance = {};
+
+    const rowHtml = entries.map(entry => {
+      const curr = entry.currency || 'TRY';
+      totalHakedis[curr] = (totalHakedis[curr] || 0) + entry.hakedis;
+      totalOdenen[curr] = (totalOdenen[curr] || 0) + entry.odenen;
+      balance[curr] = (balance[curr] || 0) + entry.hakedis - entry.odenen;
+
+      const dateFormatted = entry.date.split('-').reverse().join('.');
+      const hakedisStr = entry.hakedis > 0 ? '₺' + entry.hakedis.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '-';
+      const odenenStr = entry.odenen > 0 ? '₺' + entry.odenen.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '-';
+      const balanceStr = '₺' + balance[curr].toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+
+      return `
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 8px 5px; text-align: left;">${dateFormatted}</td>
+          <td style="padding: 8px 5px; text-align: left; max-width: 300px; word-wrap: break-word;">${escapeHtml(entry.description)}</td>
+          <td style="padding: 8px 5px; text-align: right; font-weight: 600;">${hakedisStr}</td>
+          <td style="padding: 8px 5px; text-align: right; font-weight: 600; color: #10b981;">${odenenStr}</td>
+          <td style="padding: 8px 5px; text-align: right; font-weight: 700; color: ${balance[curr] >= 0 ? '#ef4444' : '#10b981'}">${balanceStr}</td>
+        </tr>
+      `;
+    }).join('');
+
+    // Format summary balances
+    const formatCurrenciesSummary = (obj) => {
+      const parts = [];
+      const symbols = { TRY: '₺', USD: '$', EUR: '€' };
+      for (const [code, val] of Object.entries(obj)) {
+        if (val !== 0) {
+          parts.push(`${symbols[code] || code}${val.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`);
+        }
+      }
+      return parts.length > 0 ? parts.join(' | ') : '₺0,00';
+    };
+
+    const totalHakedisStr = formatCurrenciesSummary(totalHakedis);
+    const totalOdenenStr = formatCurrenciesSummary(totalOdenen);
+    const totalBalanceStr = formatCurrenciesSummary(balance);
+
+    printArea.innerHTML = `
+      <div style="padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 20px;">
+          <div>
+            <h2 style="font-weight: 800; font-size: 1.4rem; color: #0f172a; margin: 0 0 6px 0;">${escapeHtml(companyName)}</h2>
+            <p style="font-size: 11px; color: #475569; margin: 0;">Ayakkabı İmalat & Fason İşçilik Cari Ekstresi</p>
+          </div>
+          <div style="text-align: right;">
+            <h1 style="font-weight: 800; font-size: 1.5rem; color: #0284c7; margin: 0 0 6px 0;">FASON HESAP EKSTRESİ</h1>
+            <p style="font-size: 11px; margin: 0; color: #64748b;"><strong>Yazdırma Tarihi:</strong> ${dateStr}</p>
+          </div>
+        </div>
+
+        <!-- Subcontractor Section -->
+        <div style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+          <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 12px; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; font-weight: 700; text-transform: uppercase;">Fason Usta / Firma Bilgileri</h3>
+          <p style="font-size: 13px; font-weight: 700; margin: 0 0 4px 0;">${escapeHtml(c.name)}</p>
+          <p style="margin: 0; font-size: 11px; color: #475569;"><strong>Ustalık Alanı:</strong> ${escapeHtml(c.role || '-')}</p>
+          <p style="margin: 4px 0 0 0; font-size: 11px; color: #475569;"><strong>Telefon:</strong> ${escapeHtml(c.phone || 'Kayıtlı Değil')}</p>
+        </div>
+
+        <!-- Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 11px;">
+          <thead>
+            <tr style="border-bottom: 2px solid #0f172a; text-align: left; font-weight: 700; background: #f1f5f9;">
+              <th style="padding: 8px 5px; width: 15%;">Tarih</th>
+              <th style="padding: 8px 5px; width: 45%;">İş Açıklaması / Ödeme Detayı</th>
+              <th style="padding: 8px 5px; width: 13%; text-align: right;">Hakediş (Alacak)</th>
+              <th style="padding: 8px 5px; width: 13%; text-align: right;">Ödenen (Borç)</th>
+              <th style="padding: 8px 5px; width: 14%; text-align: right;">Kalan Bakiye</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowHtml}
+          </tbody>
+        </table>
+
+        <!-- Summary & Balance -->
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 40px;">
+          <div style="width: 350px; font-size: 12px; background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #475569;">
+              <span>Toplam Hakediş (Usta Alacağı):</span>
+              <span style="font-weight: 600;">${totalHakedisStr}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #475569; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+              <span>Toplam Ödenen (Bizim):</span>
+              <span style="font-weight: 600; color: #10b981;">${totalOdenenStr}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; color: #0f172a;">
+              <span>Kalan Usta Alacağı:</span>
+              <span style="color: #ef4444;">${totalBalanceStr}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Signature Section -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; text-align: center; font-size: 11px;">
+          <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin: 0 40px;">
+            <p style="font-weight: 700; margin: 0 0 4px 0;">Yetkili İmza</p>
+            <p style="color: #64748b; margin: 0;">${escapeHtml(companyName)}</p>
+          </div>
+          <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin: 0 40px;">
+            <p style="font-weight: 700; margin: 0 0 4px 0;">Fason Usta / Firma</p>
+            <p style="color: #64748b; margin: 0;">İmza / Kaşe</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Trigger Print Dialog
+    document.body.classList.add('printing-ledger');
+    window.print();
+    document.body.classList.remove('printing-ledger');
   },
 
   async deleteLedgerEntry(id, type) {
