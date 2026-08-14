@@ -114,7 +114,7 @@ export function safeSub(a, b) {
  */
 export function formatMoney(amount, currency = '₺') {
   const num = parseFloat(amount || 0);
-  return `${currency}${num.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `${currency}${num.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
 // --- CSV Güvenli Çıktı (Y9) ---

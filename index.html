@@ -1542,45 +1542,32 @@
           <input type="hidden" id="product-id">
           
           <div class="form-row">
-            <div class="form-group">
+            <div class="form-group" style="flex: 1;">
               <label for="product-code">Model Kodu</label>
               <input type="text" id="product-code" placeholder="Örn: M-420" required>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="display: none;">
               <label for="product-category">Kategori</label>
-              <select id="product-category" required>
-                <option value="">Seçiniz</option>
-                <option value="Sandalet">Sandalet</option>
-                <option value="Terlik">Terlik</option>
-                <option value="Babet">Babet</option>
-                <option value="Ayakkabı">Ayakkabı</option>
-                <option value="Espadril">Espadril</option>
-                <option value="Bot">Bot</option>
+              <select id="product-category">
+                <option value="Ayakkabı" selected>Ayakkabı</option>
               </select>
             </div>
           </div>
 
-          <div class="form-row">
+          <div class="form-row" style="display: none;">
             <div class="form-group">
               <label for="product-color">Ürün Rengi</label>
               <input type="text" id="product-color" placeholder="Örn: Siyah, Taba, Beyaz, Bordo">
             </div>
             <div class="form-group">
               <label for="product-sole-material">Taban Malzemesi</label>
-              <select id="product-sole-material" required>
-                <option value="">Seçiniz</option>
-                <option value="TPU">TPU</option>
-                <option value="Termo">Termo</option>
-                <option value="Poliüretan">Poliüretan</option>
-                <option value="Kauçuk">Kauçuk</option>
-                <option value="Kösele">Kösele</option>
-                <option value="EVA">EVA</option>
-                <option value="Mantar">Mantar</option>
+              <select id="product-sole-material">
+                <option value="TPU" selected>TPU</option>
               </select>
             </div>
           </div>
 
-          <div class="form-row">
+          <div class="form-row" style="display: none;">
             <div class="form-group">
               <label for="product-leather-lining">Astar Derisi</label>
               <input type="text" id="product-leather-lining" placeholder="Örn: Koyun Astar (Manuel doldurulabilir)">
@@ -1591,7 +1578,7 @@
             </div>
           </div>
 
-          <div class="form-row">
+          <div class="form-row" style="display: none;">
             <div class="form-group">
               <label for="product-leather-type">Deri Türü</label>
               <input type="text" id="product-leather-type" placeholder="Örn: Hakiki Deri (Manuel yazılabilir)">
@@ -1599,14 +1586,12 @@
             <div class="form-group" style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
               <div>
                 <label for="product-price">Birim Satış Fiyatı</label>
-                <input type="number" id="product-price" step="0.01" min="0" placeholder="0.00" required style="width: 100%;">
+                <input type="number" id="product-price" step="0.01" min="0" placeholder="0.00" value="1">
               </div>
               <div>
                 <label for="product-currency">Para Birimi</label>
-                <select id="product-currency" required style="width: 100%;">
-                  <option value="TRY">₺ (TRY)</option>
-                  <option value="USD">$ (USD)</option>
-                  <option value="EUR">€ (EUR)</option>
+                <select id="product-currency">
+                  <option value="TRY" selected>₺ (TRY)</option>
                 </select>
               </div>
             </div>
@@ -1620,7 +1605,6 @@
                 <div class="image-preview-box" id="product-photo-preview-box">
                   <span class="placeholder">📸</span>
                 </div>
-              </div>
               </div>
             </div>
             <div class="form-group">

@@ -327,9 +327,9 @@ const Contractors = {
       balance[curr] = (balance[curr] || 0) + entry.hakedis - entry.odenen;
 
       const dateFormatted = entry.date.split('-').reverse().join('.');
-      const hakedisStr = entry.hakedis > 0 ? '₺' + entry.hakedis.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '-';
-      const odenenStr = entry.odenen > 0 ? '₺' + entry.odenen.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '-';
-      const balanceStr = '₺' + balance[curr].toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+      const hakedisStr = entry.hakedis > 0 ? '₺' + entry.hakedis.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '-';
+      const odenenStr = entry.odenen > 0 ? '₺' + entry.odenen.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '-';
+      const balanceStr = '₺' + balance[curr].toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
       return `
         <tr style="border-bottom: 1px solid #e2e8f0;">
@@ -348,7 +348,7 @@ const Contractors = {
       const symbols = { TRY: '₺', USD: '$', EUR: '€' };
       for (const [code, val] of Object.entries(obj)) {
         if (val !== 0) {
-          parts.push(`${symbols[code] || code}${val.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`);
+          parts.push(`${symbols[code] || code}${val.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`);
         }
       }
       return parts.length > 0 ? parts.join(' | ') : '₺0,00';

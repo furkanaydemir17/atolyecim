@@ -198,7 +198,7 @@ const Contacts = {
 
           if (amt !== 0) {
             const sym = symbols[code] || code;
-            parts.push(`<div style="white-space: nowrap;">${sym}${amt.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</div>`);
+            parts.push(`<div style="white-space: nowrap;">${sym}${amt.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</div>`);
           }
         }
         return parts.length > 0 ? parts.join('') : '<div>₺0,00</div>';
@@ -547,7 +547,7 @@ const Contacts = {
         for (const [code, val] of Object.entries(currencyTotals)) {
           const amt = val[field];
           if (amt !== 0) {
-            parts.push(`${symbols[code] || code}${amt.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`);
+            parts.push(`${symbols[code] || code}${amt.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`);
           }
         }
         return parts.length > 0 ? parts.join(' | ') : '₺0,00';
@@ -561,7 +561,7 @@ const Contacts = {
             let suffix = '';
             if (net > 0) suffix = ' (Alacaklıyız)';
             else if (net < 0) suffix = ' (Borçluyuz)';
-            parts.push(`${symbols[code] || code}${Math.abs(net).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}${suffix}`);
+            parts.push(`${symbols[code] || code}${Math.abs(net).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}${suffix}`);
           }
         }
         return parts.length > 0 ? parts.join(' | ') : '₺0,00 (Dengede)';
@@ -611,20 +611,20 @@ const Contacts = {
           cumulativeBalances[curr] += (debit - credit);
           const balanceForThisRow = cumulativeBalances[curr];
 
-          const debitStr = debit > 0 ? `${txSymbol}${debit.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` : '';
-          const creditStr = credit > 0 ? `${txSymbol}${credit.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` : '';
+          const debitStr = debit > 0 ? `${txSymbol}${debit.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` : '';
+          const creditStr = credit > 0 ? `${txSymbol}${credit.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` : '';
 
           let bakiyeBorcStr = '';
           let bakiyeAlacakStr = '';
           let cellStyleClass = '';
 
           if (balanceForThisRow > 0) {
-            bakiyeBorcStr = `${txSymbol}${balanceForThisRow.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+            bakiyeBorcStr = `${txSymbol}${balanceForThisRow.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
             if (idx === totalRows - 1) {
               cellStyleClass = 'final-debit-cell';
             }
           } else if (balanceForThisRow < 0) {
-            bakiyeAlacakStr = `${txSymbol}${Math.abs(balanceForThisRow).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+            bakiyeAlacakStr = `${txSymbol}${Math.abs(balanceForThisRow).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
             if (idx === totalRows - 1) {
               cellStyleClass = 'final-credit-cell';
             }
@@ -665,7 +665,7 @@ const Contacts = {
             <tr>
               <td>${dateStr}</td>
               <td style="font-weight: 500;">${this.escape(tx.description || '-')}</td>
-              <td style="text-align: right; font-weight: 700; color: var(--text-primary);">${txSymbol}${tx.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+              <td style="text-align: right; font-weight: 700; color: var(--text-primary);">${txSymbol}${tx.amount.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
               <td style="text-align: center; white-space: nowrap;">
                 <button class="btn-icon info" title="İşlemi Düzenle" onclick="Contacts.openTransactionModal(${contactId}, ${tx.id})">✏️</button>
                 <button class="btn-icon danger" title="İşlemi Sil" onclick="Contacts.deleteTransaction(${tx.id}, ${contactId})">🗑️</button>
@@ -755,11 +755,11 @@ const Contacts = {
       }
 
       const dateFormated = new Date(tx.date).toLocaleDateString('tr-TR');
-      const debitStr = debit > 0 ? '₺' + debit.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '-';
-      const creditStr = credit > 0 ? '₺' + credit.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '-';
+      const debitStr = debit > 0 ? '₺' + debit.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '-';
+      const creditStr = credit > 0 ? '₺' + credit.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '-';
       
       const balanceType = balance >= 0 ? '(A)' : '(B)';
-      const balanceStr = '₺' + Math.abs(balance).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + ' ' + balanceType;
+      const balanceStr = '₺' + Math.abs(balance).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' ' + balanceType;
 
       return `
         <tr style="border-bottom: 1px solid #e2e8f0;">
@@ -774,7 +774,7 @@ const Contacts = {
 
     const netBalance = totalCredit - totalDebit;
     const netBalanceType = netBalance >= 0 ? 'Alacaklı' : 'Borçlu';
-    const netBalanceStr = '₺' + Math.abs(netBalance).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + ' (' + netBalanceType + ')';
+    const netBalanceStr = '₺' + Math.abs(netBalance).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' (' + netBalanceType + ')';
 
     printArea.innerHTML = `
       <div style="padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
@@ -818,11 +818,11 @@ const Contacts = {
           <div style="width: 300px; font-size: 12px; background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #475569;">
               <span>Toplam Borç (Bizim):</span>
-              <span>₺${totalDebit.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+              <span>₺${totalDebit.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
             </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #475569; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
               <span>Toplam Alacak (Müşteri):</span>
-              <span>₺${totalCredit.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+              <span>₺${totalCredit.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
             </div>
             <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; color: #0f172a;">
               <span>Net Bakiye:</span>
@@ -897,11 +897,11 @@ const Contacts = {
       const sym = symbols[code] || code;
       const net = val.debit - val.credit;
       
-      if (val.debit > 0) debitParts.push(`${sym}${val.debit.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`);
-      if (val.credit > 0) creditParts.push(`${sym}${val.credit.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`);
+      if (val.debit > 0) debitParts.push(`${sym}${val.debit.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`);
+      if (val.credit > 0) creditParts.push(`${sym}${val.credit.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`);
       if (net !== 0) {
         let suffix = net > 0 ? ' Alacaklıyız (Borcunuz)' : ' Borçluyuz (Alacağınız)';
-        netParts.push(`${sym}${Math.abs(net).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}${suffix}`);
+        netParts.push(`${sym}${Math.abs(net).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}${suffix}`);
       }
     }
 
@@ -920,7 +920,7 @@ const Contacts = {
       else if (tx.type === 'odeme') typeLabel = 'Ödeme 💳';
 
       const desc = tx.description ? ` (${tx.description})` : '';
-      return `• ${txDate} | ${typeLabel}${desc}: ${sym}${tx.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+      return `• ${txDate} | ${typeLabel}${desc}: ${sym}${tx.amount.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
     }).join('\n');
 
     const msg = `*📂 CARİ HESAP EKSTRESİ — ${contact.name.toUpperCase()}*

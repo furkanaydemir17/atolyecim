@@ -169,7 +169,7 @@ const Products = {
           <td><span style="background: rgba(99,102,241,0.06); padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;">${this.escape(p.soleMaterial || '-')}</span></td>
           <td style="font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${this.escape(leatherText)}">${this.escape(leatherText)}</td>
           <td>${accPhotoHtml}</td>
-          <td>${sym}${Number(p.price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+          <td>${sym}${Number(p.price).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
           <td>
             <div class="actions-cell">
               <button class="btn-icon warning" title="Reçete (BOM)" onclick="Recipes.openModal(${p.id})">🛠️</button>
@@ -265,14 +265,14 @@ const Products = {
 
     const data = {
       modelCode: document.getElementById('product-code').value.trim(),
-      category: document.getElementById('product-category').value,
+      category: document.getElementById('product-category').value || 'Ayakkabı',
       size: sizeEl ? sizeEl.value.trim() : '',
       color: colorEl ? colorEl.value.trim() : '',
-      soleMaterial: document.getElementById('product-sole-material').value,
+      soleMaterial: document.getElementById('product-sole-material').value || 'TPU',
       leatherLining: document.getElementById('product-leather-lining').value.trim(),
       leatherUpper: document.getElementById('product-leather-upper').value.trim(),
       leatherType: document.getElementById('product-leather-type').value.trim(),
-      price: parseFloat(document.getElementById('product-price').value) || 0,
+      price: parseFloat(document.getElementById('product-price').value) || 1,
       currency: currencyEl ? currencyEl.value : 'TRY',
       barcode: barcodeEl ? barcodeEl.value.trim() : '',
       photo,
@@ -280,15 +280,11 @@ const Products = {
     };
 
     if (!data.modelCode || !data.category) {
-      showToast('Model kodu ve kategori zorunludur!', 'error');
+      showToast('Model kodu zorunludur!', 'error');
       return;
     }
 
-    // O1 Düzeltme: Fiyat kontrolü
-    if (data.price <= 0) {
-      showToast('Ürün fiyatı sıfır veya negatif olamaz!', 'error');
-      return;
-    }
+    // O1 Düzeltme: Ürün şablon fiyat kontrolü kaldırıldı (Fiyat sipariş girerken girilecek)
 
     // Y6 Düzeltme: Barkod benzersizlik kontrolü
     if (data.barcode) {

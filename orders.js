@@ -582,8 +582,8 @@ const Orders = {
                 <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">${this.escape(detailsText)}</div>
               </td>
               <td><strong>${o.qty} Çift</strong></td>
-              <td>${sym}${o.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
-              <td><strong>${sym}${totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</strong></td>
+              <td>${sym}${o.price.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+              <td><strong>${sym}${totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</strong></td>
               <td>
                 <div style="font-size: 12px; font-weight: 500;">Sip: ${orderDate}</div>
                 <div style="font-size: 12px; font-weight: 600; color: var(--color-warning); margin-top: 2px;">Ter: ${deadlineDate}</div>
@@ -640,7 +640,7 @@ const Orders = {
                 <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;">${colorBadges}</div>
               </td>
               <td><strong>${o.qty} Çift</strong></td>
-              <td>₺${(o.price || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+              <td>₺${(o.price || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
               <td style="font-size: 12.5px; color: var(--text-secondary); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${this.escape(o.note || '-')}">${this.escape(o.note || '-')}</td>
               <td>
                 <div class="actions-cell">
@@ -1291,8 +1291,8 @@ const Orders = {
             <td style="padding: 10px 5px;"><strong>${this.escape(order.modelCode)}</strong></td>
             <td style="padding: 10px 5px; color: #475569;">${this.escape(c.color)} ${sizeDetail ? `(${sizeDetail})` : ''}</td>
             <td style="padding: 10px 5px; text-align: right;">${c.qty} Çift</td>
-            <td style="padding: 10px 5px; text-align: right;">${sym}${order.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
-            <td style="padding: 10px 5px; text-align: right; font-weight: 600;">${sym}${rowSubtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+            <td style="padding: 10px 5px; text-align: right;">${sym}${order.price.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+            <td style="padding: 10px 5px; text-align: right; font-weight: 600;">${sym}${rowSubtotal.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
           `;
           tbody.appendChild(tr);
         });
@@ -1306,8 +1306,8 @@ const Orders = {
           <td style="padding: 10px 5px;"><strong>${this.escape(order.modelCode)}</strong></td>
           <td style="padding: 10px 5px; color: #475569;">Standart Dağılım</td>
           <td style="padding: 10px 5px; text-align: right;">${order.qty} Çift</td>
-          <td style="padding: 10px 5px; text-align: right;">${sym}${order.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
-          <td style="padding: 10px 5px; text-align: right; font-weight: 600;">${sym}${rowSubtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+          <td style="padding: 10px 5px; text-align: right;">${sym}${order.price.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+          <td style="padding: 10px 5px; text-align: right; font-weight: 600;">${sym}${rowSubtotal.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
         `;
         tbody.appendChild(tr);
       }
@@ -1318,10 +1318,10 @@ const Orders = {
         const kdvAmount = (subtotal * kdvPercent) / 100;
         const grandtotal = subtotal + kdvAmount;
 
-        document.getElementById('inv-sum-subtotal').textContent = `${sym}${subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+        document.getElementById('inv-sum-subtotal').textContent = `${sym}${subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
         document.getElementById('inv-sum-kdv-percent').textContent = `%${kdvPercent}`;
-        document.getElementById('inv-sum-kdv-amount').textContent = `${sym}${kdvAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
-        document.getElementById('inv-sum-grandtotal').textContent = `${sym}${grandtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+        document.getElementById('inv-sum-kdv-amount').textContent = `${sym}${kdvAmount.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+        document.getElementById('inv-sum-grandtotal').textContent = `${sym}${grandtotal.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
       };
 
       recalcTotals();
