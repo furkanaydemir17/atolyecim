@@ -438,7 +438,7 @@ const Contacts = {
         if (contact.type === 'tedarikci') {
           b2bPanel.style.display = 'none';
         } else {
-          b2bPanel.style.display = 'flex';
+          b2bPanel.style.display = 'none'; // Hidden by user request
           
           const discountRate = contact.discountRate || 0;
           const discountBadge = document.getElementById('ledger-b2b-discount-badge');

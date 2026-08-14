@@ -1,26 +1,27 @@
-# 🚀 PERFORMANS OPTİMİZASYONU WALKTHROUGH
+# 🚀 PERFORMANS OPTİMİZASYONU VE ARAYÜZ SADELEŞTİRME WALKTHROUGH
 
-Atölyecim ERP sisteminde sayfa yükleme ve algılama hızlarını artırmak amacıyla veritabanı katmanında (Supabase) gerçekleştirilen bellek önbelleği ve istek tekilleştirme katmanları başarıyla uygulanmıştır.
+Atölyecim ERP sisteminde performans artırıcı geliştirmeler yapılmış ve kullanıcının talepleri doğrultusunda Cari hesap modülündeki bazı gereksiz alanlar arayüzden gizlenmiştir.
 
 ---
 
 ## 🛠️ Yapılan Değişiklikler
 
-### 1. Bellek Önbelleği (Memory Cache Layer)
-- **[db.js](file:///C:/Users/FURKAN AYDEMİR/Desktop/Atölyecim_Proje/db.js)** içinde `memoryCache` yapısı oluşturuldu.
-- `dbGetAll` metodu artık her seferinde ağ isteği yapmak yerine verileri **6 saniye** boyunca bellekte tutar ve oradan döner.
-- `dbGet` metodu, önbellekte veri varsa Supabase'e gitmeden doğrudan bellekteki listeden arama yaparak sonucu mikrosaniyeler içinde döner.
+### 1. Performans İyileştirmeleri (Bellek Önbelleği & İstek Tekilleştirme)
+- **[db.js](file:///C:/Users/FURKAN AYDEMİR/Desktop/Atölyecim_Proje/db.js)** içinde veritabanı okuma işlemleri (`dbGetAll` ve `dbGet`) **6 saniye** süreyle önbelleğe alındı.
+- Aynı anda tetiklenen mükerrer ağ istekleri tek sorguda birleştirilerek veritabanı trafiği ve arayüz tepki süreleri iyileştirildi (algılama süresi milisaniyeler seviyesine indirildi).
+- Veri güncelleme/silme/ekleme durumlarında önbelleklerin anında geçersiz kılınması (invalidation) sağlandı.
 
-### 2. İstek Tekilleştirme (Request De-duplication)
-- **[db.js](file:///C:/Users/FURKAN AYDEMİR/Desktop/Atölyecim_Proje/db.js)** içinde `pendingQueries` yapısı uygulandı.
-- Aynı anda tetiklenen mükerrer ağ istekleri (örneğin Dashboard yüklendiğinde arka arkaya tetiklenen `dbGetAll('orders')` çağrıları) tekilleştirilerek **tek bir Supabase sorgusuna** indirgendi. Sorgu tamamlandığında bekleyen tüm çağrılar tek seferde çözümlenir.
-
-### 3. Anlık Önbellek Geçersiz Kılma (Write-through Invalidation)
-- Veri ekleme (`dbAdd`), güncelleme (`dbUpdate`), silme (`dbDelete`) ve temizleme (`dbClearStore`) işlemlerinde ilgili tablonun önbelleği anında temizlenir. Böylece kullanıcının yaptığı değişiklikler anında ekrana yansır.
+### 2. Arayüz Sadeleştirmeleri (B2B ve Kutu/Koli Alanları)
+- **Cari Ledger Modalındaki B2B Alanının Gizlenmesi:**
+  - `contacts.js` ve `index.html` üzerinde yapılan güncellemeyle, Cari detaylarına basıldığında üst kısımda çıkan "Müşteriye Özel B2B Sipariş Portalı" (Link Kopyalama ve WhatsApp Paylaşım paneli) kaldırıldı.
+- **Kutu & Koli Takibinin Kaldırılması:**
+  - Cari detay modalının altındaki "Kutu & Koli Takip Detayları" tablosu ve boş durum alanları arayüzden gizlendi.
+  - Cari Hareket Ekleme modalında bulunan "Kutu / Koli İşlemidir" onay kutusu (checkbox) kullanıcıya gösterilmeyecek şekilde gizlendi.
+  - Geliştirmeler yapılırken Javascript kodlarının stabilitesini bozmamak (null pointer hatası almamak) için DOM elemanları tamamen silinmek yerine CSS ile (`display: none`) güvenli bir şekilde gizlendi.
 
 ---
 
 ## 🧪 Test ve Doğrulama Sonuçları
-- **Sayfa Yükleme Hızı:** Dashboard, Siparişler ve Cari sayfaları arasındaki geçiş süresi **~1200ms** gecikmeden **anlık (<50ms)** tepki süresine düştü.
-- **Ağ İsteklerinin Azalması:** Sayfa geçişlerinde Supabase'e giden mükerrer ağ istekleri **%92 oranında azaldı**.
-- **Canlı Dağıtım:** Güncellemeler başarıyla derlendi ve [https://atolyecim.vercel.app](https://atolyecim.vercel.app) adresinde canlıya alındı.
+- Arayüz kontrollerinde Cari listesinden bir müşteriye tıklandığında artık B2B katalog linki alanı ve alt kısımdaki kutu/koli tablosu gösterilmemektedir.
+- Cari ekleme veya hareket ekleme esnasında herhangi bir kod hatası (JS crash) yaşanmadığı doğrulanmıştır.
+- Güncellemeler [https://atolyecim.vercel.app](https://atolyecim.vercel.app) adresinde canlıya alınmıştır.
