@@ -682,6 +682,14 @@ const Contacts = {
         });
       }
 
+      // Bind Print Button
+      const printBtn = document.getElementById('btn-ledger-print');
+      if (printBtn) {
+        printBtn.onclick = () => {
+          this.printLedger(contact, standardTx);
+        };
+      }
+
       // Bind WhatsApp Share Button
       const shareBtn = document.getElementById('btn-ledger-share-whatsapp');
       if (shareBtn) {
@@ -694,6 +702,134 @@ const Contacts = {
     } catch (err) {
       showToast('Ekstre yüklenemedi: ' + err.message, 'error');
     }
+  },
+
+  printLedger(contact, transactions) {
+    const printArea = document.getElementById('ledger-print-area');
+    if (!printArea) return;
+
+    const companyName = localStorage.getItem('atolyecim_auth_company') || 'Atölyecim Master';
+    const dateStr = new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    // Calculate totals
+    let totalDebit = 0;
+    let totalCredit = 0;
+    
+    // Sort transactions by date ascending for chronological order in print
+    const sortedTxs = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    let balance = 0;
+    const rowHtml = sortedTxs.map(tx => {
+      const amount = Number(tx.amount) || 0;
+      
+      let debit = 0;
+      let credit = 0;
+      
+      if (tx.type === 'borc' || tx.type === 'odeme') {
+        debit = amount;
+        totalDebit += amount;
+        balance -= amount;
+      } else if (tx.type === 'alacak' || tx.type === 'tahsilat') {
+        credit = amount;
+        totalCredit += amount;
+        balance += amount;
+      }
+
+      const dateFormated = new Date(tx.date).toLocaleDateString('tr-TR');
+      const debitStr = debit > 0 ? '₺' + debit.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '-';
+      const creditStr = credit > 0 ? '₺' + credit.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '-';
+      
+      const balanceType = balance >= 0 ? '(A)' : '(B)';
+      const balanceStr = '₺' + Math.abs(balance).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + ' ' + balanceType;
+
+      return `
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 8px 5px; text-align: left;">${dateFormated}</td>
+          <td style="padding: 8px 5px; text-align: left; max-width: 300px; word-wrap: break-word;">${this.escape(tx.description || '')}</td>
+          <td style="padding: 8px 5px; text-align: right;">${debitStr}</td>
+          <td style="padding: 8px 5px; text-align: right;">${creditStr}</td>
+          <td style="padding: 8px 5px; text-align: right; font-weight: 600;">${balanceStr}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const netBalance = totalCredit - totalDebit;
+    const netBalanceType = netBalance >= 0 ? 'Alacaklı' : 'Borçlu';
+    const netBalanceStr = '₺' + Math.abs(netBalance).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + ' (' + netBalanceType + ')';
+
+    printArea.innerHTML = `
+      <div style="padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 20px;">
+          <div>
+            <h2 style="font-weight: 800; font-size: 1.4rem; color: #0f172a; margin: 0 0 6px 0;">${this.escape(companyName)}</h2>
+            <p style="font-size: 11px; color: #475569; margin: 0;">Ayakkabı İmalat & Toptan Satış Cari Ekstresi</p>
+          </div>
+          <div style="text-align: right;">
+            <h1 style="font-weight: 800; font-size: 1.5rem; color: #0284c7; margin: 0 0 6px 0;">HESAP EKSTRESİ</h1>
+            <p style="font-size: 11px; margin: 0; color: #64748b;"><strong>Yazdırma Tarihi:</strong> ${dateStr}</p>
+          </div>
+        </div>
+
+        <!-- Customer Section -->
+        <div style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+          <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 12px; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; font-weight: 700; text-transform: uppercase;">Müşteri / Cari Bilgileri</h3>
+          <p style="font-size: 13px; font-weight: 700; margin: 0 0 4px 0;">${this.escape(contact.name)}</p>
+          <p style="margin: 0; font-size: 11px; color: #475569;"><strong>Telefon:</strong> ${this.escape(contact.phone || 'Kayıtlı Değil')}</p>
+        </div>
+
+        <!-- Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 11px;">
+          <thead>
+            <tr style="border-bottom: 2px solid #0f172a; text-align: left; font-weight: 700; background: #f1f5f9;">
+              <th style="padding: 8px 5px; width: 15%;">Tarih</th>
+              <th style="padding: 8px 5px; width: 45%;">Açıklama</th>
+              <th style="padding: 8px 5px; width: 13%; text-align: right;">Borç (Ödeme)</th>
+              <th style="padding: 8px 5px; width: 13%; text-align: right;">Alacak (Satış)</th>
+              <th style="padding: 8px 5px; width: 14%; text-align: right;">Bakiye</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowHtml}
+          </tbody>
+        </table>
+
+        <!-- Summary & Balance -->
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 40px;">
+          <div style="width: 300px; font-size: 12px; background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #475569;">
+              <span>Toplam Borç (Bizim):</span>
+              <span>₺${totalDebit.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #475569; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+              <span>Toplam Alacak (Müşteri):</span>
+              <span>₺${totalCredit.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; color: #0f172a;">
+              <span>Net Bakiye:</span>
+              <span style="color: ${netBalance >= 0 ? '#10b981' : '#ef4444'};">${netBalanceStr}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Signature Section -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; text-align: center; font-size: 11px;">
+          <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin: 0 40px;">
+            <p style="font-weight: 700; margin: 0 0 4px 0;">Yetkili İmza</p>
+            <p style="color: #64748b; margin: 0;">${this.escape(companyName)}</p>
+          </div>
+          <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin: 0 40px;">
+            <p style="font-weight: 700; margin: 0 0 4px 0;">Müşteri / Temsilci</p>
+            <p style="color: #64748b; margin: 0;">İmza / Kaşe</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Trigger Print Dialog
+    document.body.classList.add('printing-ledger');
+    window.print();
+    document.body.classList.remove('printing-ledger');
   },
 
   async deleteTransaction(txId, contactId) {

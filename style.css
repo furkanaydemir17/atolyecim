@@ -1909,9 +1909,13 @@ body::before {
     visibility: hidden;
   }
 
-  /* Y15 Düzeltme: Fatura ve etiket basımı çakışmalarını önleme */
+  /* Y15 Düzeltme: Fatura, etiket ve ekstre basımı çakışmalarını önleme */
   body.printing-invoice #label-print-area { display: none !important; }
+  body.printing-invoice #ledger-print-area { display: none !important; }
   body.printing-label #invoice-print-area { display: none !important; }
+  body.printing-label #ledger-print-area { display: none !important; }
+  body.printing-ledger #invoice-print-area { display: none !important; }
+  body.printing-ledger #label-print-area { display: none !important; }
   
   /* Invoice printing */
   #invoice-print-area, #invoice-print-area * {
@@ -1928,6 +1932,27 @@ body::before {
     box-shadow: none !important;
     background: #fff !important;
     color: #000 !important;
+  }
+
+  /* Ledger printing */
+  body.printing-ledger #ledger-print-area, body.printing-ledger #ledger-print-area * {
+    visibility: visible;
+  }
+  body.printing-ledger #ledger-print-area {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0 !important;
+    padding: 30px !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    color: #000 !important;
+    font-family: 'Segoe UI', Arial, sans-serif !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
   }
 
   /* Thermal label printing */
