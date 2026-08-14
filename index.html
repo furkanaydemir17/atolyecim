@@ -1546,15 +1546,20 @@
               <label for="product-code">Model Kodu</label>
               <input type="text" id="product-code" placeholder="Örn: M-420" required>
             </div>
-            <div class="form-group" style="display: none;">
+            <div class="form-group product-detail-field" style="display: none;">
               <label for="product-category">Kategori</label>
               <select id="product-category">
                 <option value="Ayakkabı" selected>Ayakkabı</option>
+                <option value="Sandalet">Sandalet</option>
+                <option value="Terlik">Terlik</option>
+                <option value="Babet">Babet</option>
+                <option value="Espadril">Espadril</option>
+                <option value="Bot">Bot</option>
               </select>
             </div>
           </div>
 
-          <div class="form-row" style="display: none;">
+          <div class="form-row product-detail-field" style="display: none;">
             <div class="form-group">
               <label for="product-color">Ürün Rengi</label>
               <input type="text" id="product-color" placeholder="Örn: Siyah, Taba, Beyaz, Bordo">
@@ -1563,11 +1568,17 @@
               <label for="product-sole-material">Taban Malzemesi</label>
               <select id="product-sole-material">
                 <option value="TPU" selected>TPU</option>
+                <option value="Termo">Termo</option>
+                <option value="Poliüretan">Poliüretan</option>
+                <option value="Kauçuk">Kauçuk</option>
+                <option value="Kösele">Kösele</option>
+                <option value="EVA">EVA</option>
+                <option value="Mantar">Mantar</option>
               </select>
             </div>
           </div>
 
-          <div class="form-row" style="display: none;">
+          <div class="form-row product-detail-field" style="display: none;">
             <div class="form-group">
               <label for="product-leather-lining">Astar Derisi</label>
               <input type="text" id="product-leather-lining" placeholder="Örn: Koyun Astar (Manuel doldurulabilir)">
@@ -1578,7 +1589,7 @@
             </div>
           </div>
 
-          <div class="form-row" style="display: none;">
+          <div class="form-row product-detail-field" style="display: none;">
             <div class="form-group">
               <label for="product-leather-type">Deri Türü</label>
               <input type="text" id="product-leather-type" placeholder="Örn: Hakiki Deri (Manuel yazılabilir)">
@@ -1592,6 +1603,8 @@
                 <label for="product-currency">Para Birimi</label>
                 <select id="product-currency">
                   <option value="TRY" selected>₺ (TRY)</option>
+                  <option value="USD">$ (USD)</option>
+                  <option value="EUR">€ (EUR)</option>
                 </select>
               </div>
             </div>
