@@ -266,10 +266,22 @@ function initLogin() {
     const nameEl = document.getElementById('sidebar-user-name');
     const roleEl = document.getElementById('sidebar-user-role');
     const adminNavItem = document.getElementById('nav-item-admin');
+    const brandEl = document.getElementById('sidebar-brand-name');
 
     if (avatarEl) avatarEl.textContent = company.charAt(0).toUpperCase();
     if (nameEl) nameEl.textContent = company;
     if (roleEl) roleEl.textContent = isAdmin ? '👑 Süper Admin (Platform)' : '🏢 Üye Atölye';
+
+    if (brandEl) {
+      brandEl.textContent = company;
+      if (company.length > 12) {
+        brandEl.style.fontSize = '14px';
+        brandEl.style.letterSpacing = '0px';
+      } else {
+        brandEl.style.fontSize = '1.2rem';
+        brandEl.style.letterSpacing = '1px';
+      }
+    }
 
     if (adminNavItem) {
       adminNavItem.style.display = isAdmin ? 'flex' : 'none';
