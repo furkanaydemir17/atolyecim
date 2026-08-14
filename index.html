@@ -2053,14 +2053,8 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
           <h4 style="font-weight: 700; margin-bottom: 0; color: var(--text-accent); text-transform: uppercase; letter-spacing: 0.5px;">📋 Hesap Ekstresi</h4>
           <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-            <button type="button" class="btn btn-secondary" id="btn-ledger-edit-contact" style="height: 36px; padding: 0 14px; font-size: 13px; display: flex; align-items: center; gap: 6px; border-radius: 6px;">
-              ✏️ Cariyi Düzenle
-            </button>
             <button type="button" class="btn btn-primary" id="btn-ledger-add-tx" style="height: 36px; padding: 0 14px; font-size: 13px; display: flex; align-items: center; gap: 6px; border-radius: 6px; background: var(--color-primary); color: #fff;">
               💰 İşlem Ekle
-            </button>
-            <button type="button" class="btn btn-primary" id="btn-ledger-export" style="height: 36px; padding: 0 16px; font-size: 13px; display: flex; align-items: center; gap: 6px; border-radius: 6px;">
-              📄 Excel (CSV) Olarak İndir
             </button>
             <button type="button" class="btn btn-success" id="btn-ledger-import-pdf" style="height: 36px; padding: 0 14px; font-size: 13px; display: flex; align-items: center; gap: 6px; border-radius: 6px; background: #8b5cf6; border-color: #8b5cf6; color: #fff;">
               📥 PDF Ekstre Yükle
@@ -2116,14 +2110,23 @@
           </div>
         </div>
 
-        <div class="modal-actions" style="margin-top: 24px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
-          <button type="button" class="btn btn-ghost" data-modal="contact-ledger-modal">Kapat</button>
-          <button type="button" class="btn btn-secondary" id="btn-ledger-footer-edit-contact" style="font-weight: 700; display: flex; align-items: center; gap: 6px;">
-            ✏️ Cari Bilgilerini Düzenle
-          </button>
-          <button type="button" class="btn btn-primary" id="btn-ledger-share-whatsapp" style="background: #25d366; border-color: #25d366; color: #fff; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-            💬 WhatsApp ile Paylaş
-          </button>
+        <div class="modal-actions" style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <!-- Sol taraf (Yönetim & Dışa Aktar) -->
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary" id="btn-ledger-footer-edit-contact" style="font-weight: 700; display: flex; align-items: center; gap: 6px; height: 38px;">
+              ✏️ Cari Bilgilerini Düzenle
+            </button>
+            <button type="button" class="btn btn-secondary" id="btn-ledger-export" style="font-weight: 700; display: flex; align-items: center; gap: 6px; height: 38px;">
+              📄 Excel (CSV) İndir
+            </button>
+          </div>
+          <!-- Sağ taraf (İletişim & Kapat) -->
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary" id="btn-ledger-share-whatsapp" style="background: #25d366; border-color: #25d366; color: #fff; font-weight: 700; display: flex; align-items: center; gap: 8px; height: 38px;">
+              💬 WhatsApp ile Paylaş
+            </button>
+            <button type="button" class="btn btn-ghost" data-modal="contact-ledger-modal" style="height: 38px;">Kapat</button>
+          </div>
         </div>
       </div>
     </div>
