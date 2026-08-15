@@ -874,16 +874,20 @@ const Contacts = {
               subtotal += total;
 
               return `
-                <tr style="border-bottom: 1px dashed var(--border-card);">
-                  <td style="padding: 6px;">${escapeHtml(item.stokCode || '-')}</td>
-                  <td style="padding: 6px;">${escapeHtml(item.name || '-')}</td>
-                  <td style="padding: 6px;">${escapeHtml(item.color || '-')}</td>
-                  <td style="padding: 6px; text-align: right; font-weight: 600;">${qty}</td>
-                  <td style="padding: 6px;">${escapeHtml(item.unit || 'Çift')}</td>
-                  <td style="padding: 6px; text-align: right;">${txSymbol}${price.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
-                  <td style="padding: 6px; text-align: right;">%${discount}</td>
-                  <td style="padding: 6px; text-align: right;">${txSymbol}${netPrice.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
-                  <td style="padding: 6px; text-align: right; font-weight: 600; color: var(--text-primary);">${txSymbol}${total.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
+                <tr style="border-bottom: 1px solid rgba(99,102,241,0.2); transition: background 0.15s;">
+                  <td style="padding: 7px 10px; color: #94a3b8; font-family: monospace; font-size: 0.8rem; border-right: 1px solid rgba(99,102,241,0.15);">${escapeHtml(item.stokCode || '-')}</td>
+                  <td style="padding: 7px 10px; color: #e2e8f0; font-weight: 600; border-right: 1px solid rgba(99,102,241,0.15);">${escapeHtml(item.name || '-')}</td>
+                  <td style="padding: 7px 10px; border-right: 1px solid rgba(99,102,241,0.15);">
+                    <span style="background: rgba(99,102,241,0.2); color: #a78bfa; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">${escapeHtml(item.color || '-')}</span>
+                  </td>
+                  <td style="padding: 7px 10px; text-align: right; font-weight: 700; color: #f1f5f9; font-size: 0.9rem; border-right: 1px solid rgba(99,102,241,0.15);">${qty}</td>
+                  <td style="padding: 7px 10px; color: #94a3b8; font-size: 0.78rem; border-right: 1px solid rgba(99,102,241,0.15);">${escapeHtml(item.unit || 'Çift')}</td>
+                  <td style="padding: 7px 10px; text-align: right; color: #cbd5e1; border-right: 1px solid rgba(99,102,241,0.15);">${txSymbol}${price.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
+                  <td style="padding: 7px 10px; text-align: right; border-right: 1px solid rgba(99,102,241,0.15);">
+                    ${discount > 0 ? `<span style="background: rgba(239,68,68,0.15); color: #f87171; padding: 2px 6px; border-radius: 10px; font-size: 0.75rem; font-weight: 600;">%${discount}</span>` : `<span style="color: #52525b;">-</span>`}
+                  </td>
+                  <td style="padding: 7px 10px; text-align: right; color: #cbd5e1; border-right: 1px solid rgba(99,102,241,0.15);">${txSymbol}${netPrice.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
+                  <td style="padding: 7px 10px; text-align: right; font-weight: 700; color: #818cf8; font-size: 0.88rem;">${txSymbol}${total.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
                 </tr>
               `;
             }).join('');
@@ -893,42 +897,45 @@ const Contacts = {
             const grandTotal = subtotal + kdvAmount;
 
             itemsHtml = `
-              <div style="padding: 12px 15px; background: rgba(0, 0, 0, 0.25); border-radius: 6px; border: 1px solid var(--border-card); overflow-x: auto; margin-top: 5px; margin-bottom: 5px;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left; color: var(--text-secondary);">
+              <div style="padding: 14px 16px; background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.08) 100%); border-radius: 8px; border: 1px solid rgba(99,102,241,0.35); border-left: 4px solid #6366f1; overflow-x: auto; margin-top: 6px; margin-bottom: 6px; box-shadow: 0 2px 12px rgba(99,102,241,0.1);">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                  <span style="font-size: 0.75rem; font-weight: 700; color: #a78bfa; text-transform: uppercase; letter-spacing: 1px;">📋 Fiş Detayları</span>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left; min-width: 700px;">
                   <thead>
-                    <tr style="border-bottom: 1px solid var(--border-card); font-weight: bold; color: var(--text-primary);">
-                      <th style="padding: 6px;">Stok</th>
-                      <th style="padding: 6px;">Tanım</th>
-                      <th style="padding: 6px;">Renk</th>
-                      <th style="padding: 6px; text-align: right;">Miktar</th>
-                      <th style="padding: 6px;">Birim</th>
-                      <th style="padding: 6px; text-align: right;">Fiyat Kur</th>
-                      <th style="padding: 6px; text-align: right;">İskonto</th>
-                      <th style="padding: 6px; text-align: right;">Net Fiyat</th>
-                      <th style="padding: 6px; text-align: right;">Tutar</th>
+                    <tr style="background: rgba(99,102,241,0.2); border-bottom: 2px solid rgba(99,102,241,0.4);">
+                      <th style="padding: 8px 10px; color: #c4b5fd; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-right: 1px solid rgba(99,102,241,0.2);">Stok Kodu</th>
+                      <th style="padding: 8px 10px; color: #c4b5fd; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-right: 1px solid rgba(99,102,241,0.2);">Ürün Tanımı</th>
+                      <th style="padding: 8px 10px; color: #c4b5fd; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-right: 1px solid rgba(99,102,241,0.2);">Renk</th>
+                      <th style="padding: 8px 10px; color: #c4b5fd; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; text-align: right; border-right: 1px solid rgba(99,102,241,0.2);">Miktar</th>
+                      <th style="padding: 8px 10px; color: #c4b5fd; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-right: 1px solid rgba(99,102,241,0.2);">Birim</th>
+                      <th style="padding: 8px 10px; color: #c4b5fd; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; text-align: right; border-right: 1px solid rgba(99,102,241,0.2);">Fiyat</th>
+                      <th style="padding: 8px 10px; color: #c4b5fd; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; text-align: right; border-right: 1px solid rgba(99,102,241,0.2);">İskonto</th>
+                      <th style="padding: 8px 10px; color: #c4b5fd; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; text-align: right; border-right: 1px solid rgba(99,102,241,0.2);">Net Fiyat</th>
+                      <th style="padding: 8px 10px; color: #c4b5fd; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; text-align: right;">Tutar</th>
                     </tr>
                   </thead>
                   <tbody>
                     ${itemsRows}
                   </tbody>
                 </table>
-                <div style="display: flex; justify-content: flex-end; margin-top: 10px; font-size: 0.8rem;">
-                  <div style="width: 220px; border-top: 1px solid var(--border-card); padding-top: 6px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
+                  <div style="background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); border-radius: 8px; padding: 10px 14px; min-width: 230px; font-size: 0.8rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #a1a1aa;">
                       <span>Miktar Toplamları:</span>
-                      <span style="font-weight: bold; color: var(--text-primary);">${totalQty}</span>
+                      <span style="font-weight: 700; color: #e4e4e7;">${totalQty} adet</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #a1a1aa;">
                       <span>Fiş Toplamı:</span>
-                      <span style="font-weight: bold; color: var(--text-primary);">${txSymbol}${subtotal.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</span>
+                      <span style="font-weight: 700; color: #e4e4e7;">${txSymbol}${subtotal.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                      <span>KDV Toplamı (${kdvRate}%):</span>
-                      <span style="font-weight: bold; color: var(--text-primary);">${txSymbol}${kdvAmount.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</span>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #a1a1aa; padding-bottom: 8px; border-bottom: 1px dashed rgba(99,102,241,0.4);">
+                      <span>KDV Toplamı (%${kdvRate}):</span>
+                      <span style="font-weight: 700; color: #e4e4e7;">${txSymbol}${kdvAmount.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; font-weight: bold; color: var(--text-accent); font-size: 0.85rem; margin-top: 4px; border-top: 1px dashed var(--border-card); padding-top: 4px;">
-                      <span>Genel Toplam:</span>
-                      <span>${txSymbol}${grandTotal.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</span>
+                    <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.9rem;">
+                      <span style="color: #a78bfa;">Genel Toplam:</span>
+                      <span style="color: #818cf8;">${txSymbol}${grandTotal.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</span>
                     </div>
                   </div>
                 </div>
