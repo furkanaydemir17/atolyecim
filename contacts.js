@@ -126,6 +126,23 @@ const Contacts = {
         }
       });
     }
+
+    // Dynamic Item Row Button and KDV rate changes
+    const btnAddRow = document.getElementById('btn-tx-add-item-row');
+    if (btnAddRow && !btnAddRow._bound) {
+      btnAddRow._bound = true;
+      btnAddRow.addEventListener('click', () => {
+        this.addTxItemRow();
+      });
+    }
+
+    const kdvRateSelect = document.getElementById('tx-kdv-rate');
+    if (kdvRateSelect && !kdvRateSelect._bound) {
+      kdvRateSelect._bound = true;
+      kdvRateSelect.addEventListener('change', () => {
+        this.calculateTxTotals();
+      });
+    }
   },
 
   async loadContacts() {
@@ -325,6 +342,20 @@ const Contacts = {
     document.getElementById('tx-is-packaging').checked = false;
     document.getElementById('tx-currency').value = 'TRY';
 
+    const tbody = document.getElementById('tx-items-tbody');
+    if (tbody) tbody.innerHTML = '';
+    
+    const kdvSelect = document.getElementById('tx-kdv-rate');
+    if (kdvSelect) kdvSelect.value = '10';
+
+    const invoiceNoInput = document.getElementById('tx-invoice-no');
+    if (invoiceNoInput) invoiceNoInput.value = '';
+
+    const subtotalEl = document.getElementById('tx-subtotal-display');
+    const grandtotalEl = document.getElementById('tx-grandtotal-display');
+    if (subtotalEl) subtotalEl.textContent = '0.00';
+    if (grandtotalEl) grandtotalEl.textContent = '0.00';
+
     const titleEl = document.getElementById('transaction-modal-title');
     const submitBtn = form.querySelector('button[type="submit"]');
 
@@ -340,6 +371,15 @@ const Contacts = {
           document.getElementById('tx-date').value = tx.date ? tx.date.split('T')[0] : new Date().toISOString().split('T')[0];
           document.getElementById('tx-is-packaging').checked = !!tx.isPackaging;
           document.getElementById('tx-currency').value = tx.currency || 'TRY';
+
+          if (invoiceNoInput) invoiceNoInput.value = tx.invoiceNo || '';
+          if (kdvSelect) kdvSelect.value = tx.kdvRate !== undefined ? tx.kdvRate.toString() : '10';
+
+          if (tx.items && tx.items.length > 0) {
+            tx.items.forEach(item => {
+              this.addTxItemRow(item);
+            });
+          }
         }
       });
     } else {
@@ -360,6 +400,36 @@ const Contacts = {
     const contactId = parseInt(document.getElementById('tx-contact-id').value);
     const txId = document.getElementById('tx-id').value;
     const dateInput = document.getElementById('tx-date').value;
+    
+    // Collect dynamic item rows
+    const items = [];
+    const tbody = document.getElementById('tx-items-tbody');
+    if (tbody) {
+      tbody.querySelectorAll('tr').forEach(row => {
+        const stok = row.querySelector('.tx-item-stok')?.value.trim() || '';
+        const name = row.querySelector('.tx-item-name')?.value.trim() || '';
+        const color = row.querySelector('.tx-item-color')?.value.trim() || '';
+        const qty = parseFloat(row.querySelector('.tx-item-qty')?.value) || 0;
+        const unit = row.querySelector('.tx-item-unit')?.value.trim() || '';
+        const price = parseFloat(row.querySelector('.tx-item-price')?.value) || 0;
+        const discount = parseFloat(row.querySelector('.tx-item-discount')?.value) || 0;
+        const total = qty * price * (1 - discount / 100);
+
+        if (stok || name || color || qty > 0) {
+          items.push({
+            stokCode: stok,
+            name,
+            color,
+            qty,
+            unit,
+            price,
+            discount,
+            total
+          });
+        }
+      });
+    }
+
     const data = {
       contactId: contactId,
       type: document.getElementById('tx-type').value,
@@ -367,7 +437,11 @@ const Contacts = {
       currency: document.getElementById('tx-currency').value || 'TRY',
       description: document.getElementById('tx-description').value.trim(),
       date: dateInput ? new Date(dateInput).toISOString() : new Date().toISOString(),
-      isPackaging: document.getElementById('tx-is-packaging').checked
+      isPackaging: document.getElementById('tx-is-packaging').checked,
+      
+      invoiceNo: document.getElementById('tx-invoice-no')?.value.trim() || '',
+      items,
+      kdvRate: parseFloat(document.getElementById('tx-kdv-rate')?.value) || 0
     };
 
     if (!data.amount || data.amount <= 0) {
@@ -387,7 +461,7 @@ const Contacts = {
         showToast('İşlem kaydı güncellendi!', 'success');
       } else {
         await dbAdd('transactions', data);
-        const typeLabels = { alacak: 'Alacak', borc: 'Borç', tahsilat: 'Tahsilat', odeme: 'Ödeme' };
+        const typeLabels = { alacak: 'Satış Faturası', borc: 'Alış Faturası', tahsilat: 'Tahsilat', odeme: 'Ödeme' };
         showToast(`${typeLabels[data.type]} kaydı eklendi!`, 'success');
       }
 
@@ -401,6 +475,141 @@ const Contacts = {
       }
     } catch (err) {
       showToast('Hata: ' + err.message, 'error');
+    }
+  },
+
+  // Helper Methods for Transaction Detailed Items
+  addTxItemRow(item = {}) {
+    const tbody = document.getElementById('tx-items-tbody');
+    if (!tbody) return;
+
+    const rowId = 'tx-item-row-' + Math.random().toString(36).substr(2, 9);
+    
+    // Default values
+    const stok = item.stokCode || '';
+    const tanim = item.name || '';
+    const renk = item.color || '';
+    const miktar = item.qty !== undefined ? item.qty : 1;
+    const birim = item.unit || 'Çift';
+    const fiyat = item.price !== undefined ? item.price : 0;
+    const iskonto = item.discount !== undefined ? item.discount : 0;
+    const total = item.total !== undefined ? item.total : (miktar * fiyat * (1 - iskonto / 100));
+
+    const html = `
+      <tr id="${rowId}" style="border-bottom: 1px solid var(--border-card);">
+        <td style="padding: 4px;"><input type="text" class="tx-inline-input tx-item-stok" value="${escapeHtml(stok)}" placeholder="Stok No"></td>
+        <td style="padding: 4px;"><input type="text" class="tx-inline-input tx-item-name" value="${escapeHtml(tanim)}" placeholder="Ürün Tanımı"></td>
+        <td style="padding: 4px;"><input type="text" class="tx-inline-input tx-item-color" value="${escapeHtml(renk)}" placeholder="Renk"></td>
+        <td style="padding: 4px;"><input type="number" class="tx-inline-input tx-item-qty" value="${miktar}" style="text-align: right;" min="0.0001" step="any" placeholder="0"></td>
+        <td style="padding: 4px;"><input type="text" class="tx-inline-input tx-item-unit" value="${escapeHtml(birim)}" placeholder="Birim"></td>
+        <td style="padding: 4px;"><input type="number" class="tx-inline-input tx-item-price" value="${fiyat}" style="text-align: right;" min="0" step="0.0001" placeholder="0.00"></td>
+        <td style="padding: 4px;"><input type="number" class="tx-inline-input tx-item-discount" value="${iskonto}" style="text-align: right;" min="0" max="100" step="any" placeholder="0"></td>
+        <td style="padding: 4px; text-align: right; font-weight: 600; color: var(--text-primary);" class="tx-item-total-cell">${total.toFixed(2)}</td>
+        <td style="padding: 4px; text-align: center;">
+          <button type="button" class="btn-icon danger" onclick="Contacts.removeTxItemRow('${rowId}')" style="font-size: 1.1rem; border: none; background: transparent; cursor: pointer; color: var(--color-danger); line-height: 1; padding: 2px;">&times;</button>
+        </td>
+      </tr>
+    `;
+    tbody.insertAdjacentHTML('beforeend', html);
+    
+    // Add input event listeners to input elements in this row
+    const row = document.getElementById(rowId);
+    if (row) {
+      row.querySelectorAll('.tx-inline-input').forEach(input => {
+        input.addEventListener('input', () => this.calculateTxTotals());
+      });
+    }
+    
+    this.calculateTxTotals();
+  },
+
+  removeTxItemRow(rowId) {
+    const row = document.getElementById(rowId);
+    if (row) {
+      row.remove();
+    }
+    this.calculateTxTotals();
+  },
+
+  calculateTxTotals() {
+    const tbody = document.getElementById('tx-items-tbody');
+    if (!tbody) return;
+
+    let totalQty = 0;
+    let subtotal = 0;
+
+    tbody.querySelectorAll('tr').forEach(row => {
+      const qtyInput = row.querySelector('.tx-item-qty');
+      const priceInput = row.querySelector('.tx-item-price');
+      const discInput = row.querySelector('.tx-item-discount');
+      const totalCell = row.querySelector('.tx-item-total-cell');
+
+      const qty = parseFloat(qtyInput?.value) || 0;
+      const price = parseFloat(priceInput?.value) || 0;
+      const disc = parseFloat(discInput?.value) || 0;
+
+      const netPrice = price * (1 - disc / 100);
+      const total = qty * netPrice;
+
+      totalQty += qty;
+      subtotal += total;
+
+      if (totalCell) {
+        totalCell.textContent = total.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+    });
+
+    const kdvRate = parseFloat(document.getElementById('tx-kdv-rate')?.value) || 0;
+    const kdvAmount = subtotal * (kdvRate / 100);
+    const grandTotal = subtotal + kdvAmount;
+
+    const subtotalEl = document.getElementById('tx-subtotal-display');
+    const grandtotalEl = document.getElementById('tx-grandtotal-display');
+    const amountInput = document.getElementById('tx-amount');
+
+    if (subtotalEl) subtotalEl.textContent = subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (grandtotalEl) grandtotalEl.textContent = grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    
+    if (grandTotal > 0 && amountInput) {
+      amountInput.value = grandTotal.toFixed(2);
+    }
+  },
+
+  resolveTxItems(tx, ordersMap) {
+    if (tx.items && tx.items.length > 0) {
+      return tx.items;
+    }
+    if (tx.orderId && ordersMap && ordersMap[tx.orderId]) {
+      const order = ordersMap[tx.orderId];
+      if (order.colors && order.colors.length > 0) {
+        const resolved = [];
+        order.colors.forEach(cg => {
+          let sizeDetail = '';
+          if (cg.sizes && cg.sizes.length > 0) {
+            sizeDetail = cg.sizes.map(s => `${s.size} Nmr: ${s.qty} Ad.`).join(', ');
+          }
+          resolved.push({
+            stokCode: order.modelCode || '-',
+            name: order.modelCode + (sizeDetail ? ` (${sizeDetail})` : ''),
+            color: cg.color || '-',
+            qty: cg.qty || 0,
+            unit: 'Çift',
+            price: order.price || 0,
+            discount: 0,
+            total: cg.qty * order.price
+          });
+        });
+        return resolved;
+      }
+    }
+    return null;
+  },
+
+  toggleTxDetailRow(txId) {
+    const el = document.getElementById(`tx-detail-row-${txId}`);
+    if (el) {
+      const isHidden = el.style.display === 'none';
+      el.style.display = isHidden ? 'table-row' : 'none';
     }
   },
 
@@ -450,6 +659,12 @@ const Contacts = {
         showToast('Cari bulunamadı!', 'error');
         return;
       }
+
+      const allOrders = await dbGetAll('orders');
+      const ordersMap = {};
+      allOrders.forEach(o => {
+        ordersMap[o.id] = o;
+      });
 
       // Configure B2B Panel visibility and actions
       const b2bPanel = document.getElementById('ledger-b2b-container');
@@ -632,17 +847,119 @@ const Contacts = {
 
           const isLastRow = idx === totalRows - 1 ? 'class="final-balance-row"' : '';
 
+          // Fiş tipi etiketleri
+          const typeLabels = {
+            alacak: 'Satış Faturası',
+            borc: 'Alış Faturası',
+            tahsilat: 'Tahsilat',
+            odeme: 'Ödeme'
+          };
+          const typeLabel = typeLabels[tx.type] || tx.type;
+          const invoiceNo = tx.invoiceNo || '-';
+
+          // Resolve sub-table items
+          const txItems = this.resolveTxItems(tx, ordersMap);
+          let itemsHtml = '';
+          if (txItems && txItems.length > 0) {
+            let totalQty = 0;
+            let subtotal = 0;
+            const itemsRows = txItems.map(item => {
+              const qty = Number(item.qty) || 0;
+              const price = Number(item.price) || 0;
+              const discount = Number(item.discount) || 0;
+              const netPrice = price * (1 - discount / 100);
+              const total = qty * netPrice;
+              
+              totalQty += qty;
+              subtotal += total;
+
+              return `
+                <tr style="border-bottom: 1px dashed var(--border-card);">
+                  <td style="padding: 6px;">${escapeHtml(item.stokCode || '-')}</td>
+                  <td style="padding: 6px;">${escapeHtml(item.name || '-')}</td>
+                  <td style="padding: 6px;">${escapeHtml(item.color || '-')}</td>
+                  <td style="padding: 6px; text-align: right; font-weight: 600;">${qty}</td>
+                  <td style="padding: 6px;">${escapeHtml(item.unit || 'Çift')}</td>
+                  <td style="padding: 6px; text-align: right;">${txSymbol}${price.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
+                  <td style="padding: 6px; text-align: right;">%${discount}</td>
+                  <td style="padding: 6px; text-align: right;">${txSymbol}${netPrice.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
+                  <td style="padding: 6px; text-align: right; font-weight: 600; color: var(--text-primary);">${txSymbol}${total.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
+                </tr>
+              `;
+            }).join('');
+
+            const kdvRate = tx.kdvRate !== undefined ? tx.kdvRate : 10;
+            const kdvAmount = subtotal * (kdvRate / 100);
+            const grandTotal = subtotal + kdvAmount;
+
+            itemsHtml = `
+              <div style="padding: 12px 15px; background: rgba(0, 0, 0, 0.25); border-radius: 6px; border: 1px solid var(--border-card); overflow-x: auto; margin-top: 5px; margin-bottom: 5px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left; color: var(--text-secondary);">
+                  <thead>
+                    <tr style="border-bottom: 1px solid var(--border-card); font-weight: bold; color: var(--text-primary);">
+                      <th style="padding: 6px;">Stok</th>
+                      <th style="padding: 6px;">Tanım</th>
+                      <th style="padding: 6px;">Renk</th>
+                      <th style="padding: 6px; text-align: right;">Miktar</th>
+                      <th style="padding: 6px;">Birim</th>
+                      <th style="padding: 6px; text-align: right;">Fiyat Kur</th>
+                      <th style="padding: 6px; text-align: right;">İskonto</th>
+                      <th style="padding: 6px; text-align: right;">Net Fiyat</th>
+                      <th style="padding: 6px; text-align: right;">Tutar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${itemsRows}
+                  </tbody>
+                </table>
+                <div style="display: flex; justify-content: flex-end; margin-top: 10px; font-size: 0.8rem;">
+                  <div style="width: 220px; border-top: 1px solid var(--border-card); padding-top: 6px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                      <span>Miktar Toplamları:</span>
+                      <span style="font-weight: bold; color: var(--text-primary);">${totalQty}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                      <span>Fiş Toplamı:</span>
+                      <span style="font-weight: bold; color: var(--text-primary);">${txSymbol}${subtotal.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                      <span>KDV Toplamı (${kdvRate}%):</span>
+                      <span style="font-weight: bold; color: var(--text-primary);">${txSymbol}${kdvAmount.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; color: var(--text-accent); font-size: 0.85rem; margin-top: 4px; border-top: 1px dashed var(--border-card); padding-top: 4px;">
+                      <span>Genel Toplam:</span>
+                      <span>${txSymbol}${grandTotal.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          } else {
+            itemsHtml = `
+              <div style="padding: 10px 15px; background: rgba(0, 0, 0, 0.15); border-radius: 6px; border: 1px solid var(--border-card); font-size: 0.85rem; color: var(--text-muted); word-break: break-word; white-space: normal; margin-top: 5px; margin-bottom: 5px;">
+                <strong>Genel Açıklama:</strong> ${escapeHtml(tx.description || 'Herhangi bir detay veya genel açıklama girilmemiş.')}
+              </div>
+            `;
+          }
+
           return `
-            <tr ${isLastRow}>
+            <tr ${isLastRow} onclick="Contacts.toggleTxDetailRow(${tx.id})" style="cursor: pointer;">
               <td>${dateStr}</td>
-              <td style="font-weight: 500;">${this.escape(tx.description || '-')}</td>
+              <td style="font-weight: 700; color: var(--text-accent);">${escapeHtml(invoiceNo)}</td>
+              <td>${typeLabel}</td>
+              <td style="font-weight: 500; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${this.escape(tx.description || '')}">${this.escape(tx.description || '-')}</td>
               <td style="text-align: right; font-weight: 600;">${debitStr}</td>
               <td style="text-align: right; font-weight: 600;">${creditStr}</td>
               <td class="${cellStyleClass}" style="text-align: right; font-weight: 700; color: #ef4444;">${bakiyeBorcStr}</td>
               <td class="${cellStyleClass}" style="text-align: right; font-weight: 700; color: #10b981;">${bakiyeAlacakStr}</td>
-              <td style="text-align: center; white-space: nowrap;">
+              <td style="text-align: center; white-space: nowrap;" onclick="event.stopPropagation();">
                 <button class="btn-icon info" title="İşlemi Düzenle" onclick="Contacts.openTransactionModal(${contactId}, ${tx.id})">✏️</button>
                 <button class="btn-icon danger" title="İşlemi Sil" onclick="Contacts.deleteTransaction(${tx.id}, ${contactId})">🗑️</button>
+              </td>
+            </tr>
+            <tr id="tx-detail-row-${tx.id}" style="display: none; background: rgba(255, 255, 255, 0.015);">
+              <td colspan="9" style="padding: 10px 15px;">
+                ${itemsHtml}
               </td>
             </tr>
           `;
@@ -704,8 +1021,8 @@ const Contacts = {
       // Bind Print Button
       const printBtn = document.getElementById('btn-ledger-print');
       if (printBtn) {
-        printBtn.onclick = () => {
-          this.printLedger(contact, standardTx);
+        printBtn.onclick = async () => {
+          await this.printLedger(contact, standardTx);
         };
       }
 
@@ -723,12 +1040,23 @@ const Contacts = {
     }
   },
 
-  printLedger(contact, transactions) {
+  async printLedger(contact, transactions) {
     const printArea = document.getElementById('ledger-print-area');
     if (!printArea) return;
 
     const companyName = localStorage.getItem('atolyecim_auth_company') || 'Atölyecim Master';
     const dateStr = new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    let allOrders = [];
+    try {
+      allOrders = await dbGetAll('orders');
+    } catch (e) {
+      console.warn('Orders could not be fetched for print:', e);
+    }
+    const ordersMap = {};
+    allOrders.forEach(o => {
+      ordersMap[o.id] = o;
+    });
 
     // Calculate totals
     let totalDebit = 0;
@@ -737,44 +1065,145 @@ const Contacts = {
     // Sort transactions by date ascending for chronological order in print
     const sortedTxs = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
 
+    const symbols = { TRY: '₺', USD: '$', EUR: '€' };
+
     let balance = 0;
-    const rowHtml = sortedTxs.map(tx => {
+    const rows = [];
+
+    for (const tx of sortedTxs) {
       const amount = Number(tx.amount) || 0;
+      const curr = tx.currency || 'TRY';
+      const txSymbol = symbols[curr] || '₺';
       
       let debit = 0;
       let credit = 0;
       
-      if (tx.type === 'borc' || tx.type === 'odeme') {
+      if (tx.type === 'alacak' || tx.type === 'odeme') {
         debit = amount;
         totalDebit += amount;
-        balance -= amount;
-      } else if (tx.type === 'alacak' || tx.type === 'tahsilat') {
+      } else if (tx.type === 'tahsilat' || tx.type === 'borc') {
         credit = amount;
         totalCredit += amount;
-        balance += amount;
       }
 
+      balance += (debit - credit);
+
       const dateFormated = new Date(tx.date).toLocaleDateString('tr-TR');
-      const debitStr = debit > 0 ? '₺' + debit.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '-';
-      const creditStr = credit > 0 ? '₺' + credit.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '-';
+      const debitStr = debit > 0 ? txSymbol + debit.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
+      const creditStr = credit > 0 ? txSymbol + credit.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
       
-      const balanceType = balance >= 0 ? '(A)' : '(B)';
-      const balanceStr = '₺' + Math.abs(balance).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' ' + balanceType;
+      const balanceType = balance >= 0 ? '(B)' : '(A)';
+      const balanceStr = txSymbol + Math.abs(balance).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + balanceType;
 
-      return `
-        <tr style="border-bottom: 1px solid #e2e8f0;">
+      const typeLabels = {
+        alacak: 'Satış Faturası',
+        borc: 'Alış Faturası',
+        tahsilat: 'Tahsilat',
+        odeme: 'Ödeme'
+      };
+      const typeLabel = typeLabels[tx.type] || tx.type;
+      const invoiceNo = tx.invoiceNo || '-';
+
+      // Render main transaction row
+      rows.push(`
+        <tr style="border-bottom: 1px solid #cbd5e1; font-weight: 500;">
           <td style="padding: 8px 5px; text-align: left;">${dateFormated}</td>
-          <td style="padding: 8px 5px; text-align: left; max-width: 300px; word-wrap: break-word;">${this.escape(tx.description || '')}</td>
-          <td style="padding: 8px 5px; text-align: right;">${debitStr}</td>
-          <td style="padding: 8px 5px; text-align: right;">${creditStr}</td>
-          <td style="padding: 8px 5px; text-align: right; font-weight: 600;">${balanceStr}</td>
+          <td style="padding: 8px 5px; text-align: left; font-weight: bold; color: #1e293b;">${escapeHtml(invoiceNo)}</td>
+          <td style="padding: 8px 5px; text-align: left; color: #475569;">${typeLabel}</td>
+          <td style="padding: 8px 5px; text-align: left; color: #475569; max-width: 250px; word-wrap: break-word;">${this.escape(tx.description || '')}</td>
+          <td style="padding: 8px 5px; text-align: right; font-weight: bold; color: #1e293b;">${debitStr}</td>
+          <td style="padding: 8px 5px; text-align: right; font-weight: bold; color: #1e293b;">${creditStr}</td>
+          <td style="padding: 8px 5px; text-align: right; font-weight: bold; color: #0f172a;">${balanceStr}</td>
         </tr>
-      `;
-    }).join('');
+      `);
 
-    const netBalance = totalCredit - totalDebit;
-    const netBalanceType = netBalance >= 0 ? 'Alacaklı' : 'Borçlu';
-    const netBalanceStr = '₺' + Math.abs(netBalance).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' (' + netBalanceType + ')';
+      // Render details sub-table if there are items
+      const txItems = this.resolveTxItems(tx, ordersMap);
+      if (txItems && txItems.length > 0) {
+        let totalQty = 0;
+        let subtotal = 0;
+
+        const detailRows = txItems.map(item => {
+          const qty = Number(item.qty) || 0;
+          const price = Number(item.price) || 0;
+          const discount = Number(item.discount) || 0;
+          const netPrice = price * (1 - discount / 100);
+          const total = qty * netPrice;
+          
+          totalQty += qty;
+          subtotal += total;
+
+          return `
+            <tr style="border-bottom: 1px dashed #cbd5e1;">
+              <td style="padding: 4px;">${escapeHtml(item.stokCode || '-')}</td>
+              <td style="padding: 4px;">${escapeHtml(item.name || '-')}</td>
+              <td style="padding: 4px;">${escapeHtml(item.color || '-')}</td>
+              <td style="padding: 4px; text-align: right; font-weight: bold; color: #1e293b;">${qty}</td>
+              <td style="padding: 4px;">${escapeHtml(item.unit || 'Çift')}</td>
+              <td style="padding: 4px; text-align: right;">${txSymbol}${price.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
+              <td style="padding: 4px; text-align: right;">%${discount}</td>
+              <td style="padding: 4px; text-align: right;">${txSymbol}${netPrice.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
+              <td style="padding: 4px; text-align: right; font-weight: bold; color: #0f172a;">${txSymbol}${total.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
+            </tr>
+          `;
+        }).join('');
+
+        const kdvRate = tx.kdvRate !== undefined ? tx.kdvRate : 10;
+        const kdvAmount = subtotal * (kdvRate / 100);
+        const grandTotal = subtotal + kdvAmount;
+
+        rows.push(`
+          <tr style="background: #f8fafc; font-size: 10px;">
+            <td colspan="7" style="padding: 6px 15px; border-left: 3px solid #6366f1;">
+              <table style="width: 100%; border-collapse: collapse; margin: 5px 0; color: #475569;">
+                <thead>
+                  <tr style="border-bottom: 1px solid #cbd5e1; font-weight: bold; color: #0f172a; text-align: left;">
+                    <th style="padding: 4px;">Stok</th>
+                    <th style="padding: 4px;">Tanım</th>
+                    <th style="padding: 4px;">Renk</th>
+                    <th style="padding: 4px; text-align: right;">Miktar</th>
+                    <th style="padding: 4px;">Birim</th>
+                    <th style="padding: 4px; text-align: right;">Fiyat Kur</th>
+                    <th style="padding: 4px; text-align: right;">İskonto</th>
+                    <th style="padding: 4px; text-align: right;">Net Fiyat</th>
+                    <th style="padding: 4px; text-align: right;">Tutar</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${detailRows}
+                </tbody>
+              </table>
+              <div style="display: flex; justify-content: flex-end; margin-top: 5px; font-size: 10px;">
+                <div style="width: 180px; border-top: 1px solid #cbd5e1; padding-top: 4px; color: #475569;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                    <span>Miktar Toplamı:</span>
+                    <span style="font-weight: bold; color: #0f172a;">${totalQty}</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                    <span>Fiş Toplamı:</span>
+                    <span style="font-weight: bold; color: #0f172a;">${txSymbol}${subtotal.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                    <span>KDV Toplamı (${kdvRate}%):</span>
+                    <span style="font-weight: bold; color: #0f172a;">${txSymbol}${kdvAmount.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-weight: bold; color: #0284c7; margin-top: 3px; border-top: 1px dashed #cbd5e1; padding-top: 3px;">
+                    <span>Genel Toplam:</span>
+                    <span>${txSymbol}${grandTotal.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</span>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        `);
+      }
+    }
+
+    const rowHtml = rows.join('');
+
+    const netBalance = totalDebit - totalCredit;
+    const netBalanceType = netBalance >= 0 ? 'Borçlu (B)' : 'Alacaklı (A)';
+    const netBalanceStr = '₺' + Math.abs(netBalance).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' (' + netBalanceType + ')';
 
     printArea.innerHTML = `
       <div style="padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
@@ -791,21 +1220,30 @@ const Contacts = {
         </div>
 
         <!-- Customer Section -->
-        <div style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-          <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 12px; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; font-weight: 700; text-transform: uppercase;">Müşteri / Cari Bilgileri</h3>
-          <p style="font-size: 13px; font-weight: 700; margin: 0 0 4px 0;">${this.escape(contact.name)}</p>
-          <p style="margin: 0; font-size: 11px; color: #475569;"><strong>Telefon:</strong> ${this.escape(contact.phone || 'Kayıtlı Değil')}</p>
+        <div style="display: flex; justify-content: space-between; background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 20px; font-size: 12px; color: #0f172a;">
+          <div>
+            <h3 style="margin-top: 0; margin-bottom: 6px; font-size: 11px; color: #475569; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; font-weight: 700; text-transform: uppercase;">Cari Tanım</h3>
+            <p style="font-size: 14px; font-weight: 800; margin: 0 0 4px 0;">${this.escape(contact.name)}</p>
+            <p style="margin: 0;"><strong>Telefon:</strong> ${this.escape(contact.phone || 'Kayıtlı Değil')}</p>
+          </div>
+          <div style="text-align: right;">
+            <h3 style="margin-top: 0; margin-bottom: 6px; font-size: 11px; color: #475569; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; font-weight: 700; text-transform: uppercase;">Özet</h3>
+            <p style="margin: 0 0 4px 0;"><strong>Döviz Cinsi:</strong> TRY (₺)</p>
+            <p style="margin: 0; font-size: 13px; font-weight: 800; color: ${netBalance >= 0 ? '#ef4444' : '#10b981'};"><strong>Bakiye:</strong> ${netBalanceStr}</p>
+          </div>
         </div>
 
         <!-- Table -->
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 11px;">
           <thead>
             <tr style="border-bottom: 2px solid #0f172a; text-align: left; font-weight: 700; background: #f1f5f9;">
-              <th style="padding: 8px 5px; width: 15%;">Tarih</th>
-              <th style="padding: 8px 5px; width: 45%;">Açıklama</th>
-              <th style="padding: 8px 5px; width: 13%; text-align: right;">Borç (Ödeme)</th>
-              <th style="padding: 8px 5px; width: 13%; text-align: right;">Alacak (Satış)</th>
-              <th style="padding: 8px 5px; width: 14%; text-align: right;">Bakiye</th>
+              <th style="padding: 8px 5px; width: 12%; color: #0f172a;">Tarih</th>
+              <th style="padding: 8px 5px; width: 12%; color: #0f172a;">Evrak No</th>
+              <th style="padding: 8px 5px; width: 14%; color: #0f172a;">Tip</th>
+              <th style="padding: 8px 5px; width: 26%; color: #0f172a;">Açıklama</th>
+              <th style="padding: 8px 5px; width: 12%; text-align: right; color: #0f172a;">Borç</th>
+              <th style="padding: 8px 5px; width: 12%; text-align: right; color: #0f172a;">Alacak</th>
+              <th style="padding: 8px 5px; width: 12%; text-align: right; color: #0f172a;">Bakiye</th>
             </tr>
           </thead>
           <tbody>
@@ -817,38 +1255,39 @@ const Contacts = {
         <div style="display: flex; justify-content: flex-end; margin-bottom: 40px;">
           <div style="width: 300px; font-size: 12px; background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #475569;">
-              <span>Toplam Borç (Bizim):</span>
-              <span>₺${totalDebit.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+              <span>Toplam Borç (Satış/Ödeme):</span>
+              <span style="font-weight: 700; color: #0f172a;">₺${totalDebit.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #475569; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
-              <span>Toplam Alacak (Müşteri):</span>
-              <span>₺${totalCredit.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #475569;">
+              <span>Toplam Alacak (Tahsilat/Alış):</span>
+              <span style="font-weight: 700; color: #0f172a;">₺${totalCredit.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; color: #0f172a;">
-              <span>Net Bakiye:</span>
-              <span style="color: ${netBalance >= 0 ? '#10b981' : '#ef4444'};">${netBalanceStr}</span>
+            <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 14px; border-top: 2px solid #cbd5e1; padding-top: 8px; margin-top: 8px; color: ${netBalance >= 0 ? '#ef4444' : '#10b981'};">
+              <span>Bakiye:</span>
+              <span>${netBalanceStr}</span>
             </div>
           </div>
         </div>
 
-        <!-- Signature Section -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; text-align: center; font-size: 11px;">
-          <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin: 0 40px;">
-            <p style="font-weight: 700; margin: 0 0 4px 0;">Yetkili İmza</p>
-            <p style="color: #64748b; margin: 0;">${this.escape(companyName)}</p>
+        <!-- Footer -->
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #64748b; margin-top: 40px; border-top: 1px solid #cbd5e1; padding-top: 15px;">
+          <div>
+            <p style="margin: 0 0 4px 0;"><strong>Düzenleyen Yetkili</strong></p>
+            <p style="margin: 0; font-size: 12px; color: #0f172a; font-weight: 700;">${this.escape(companyName)}</p>
           </div>
-          <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin: 0 40px;">
-            <p style="font-weight: 700; margin: 0 0 4px 0;">Müşteri / Temsilci</p>
-            <p style="color: #64748b; margin: 0;">İmza / Kaşe</p>
+          <div style="text-align: right;">
+            <p style="margin: 0 0 4px 0;"><strong>Teslim Alan / Cari</strong></p>
+            <p style="margin: 0; font-size: 12px; color: #0f172a; font-weight: 700;">${this.escape(contact.name)}</p>
           </div>
         </div>
       </div>
     `;
 
-    // Trigger Print Dialog
     document.body.classList.add('printing-ledger');
-    window.print();
-    document.body.classList.remove('printing-ledger');
+    setTimeout(() => {
+      window.print();
+      document.body.classList.remove('printing-ledger');
+    }, 300);
   },
 
   async deleteTransaction(txId, contactId) {

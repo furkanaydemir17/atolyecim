@@ -1085,7 +1085,8 @@ const Orders = {
           if (action === 'restore') {
             stock.qty = safeAdd(stock.qty, amt);
           } else {
-            stock.qty = safeSub(stock.qty, amt);
+            // M3 Düzeltme: restore dışında (düşüm) miktar en az 0 olabilir
+            stock.qty = Math.max(0, safeSub(stock.qty, amt));
           }
           await dbUpdate('stocks', stock);
         }

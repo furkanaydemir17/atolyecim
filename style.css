@@ -2518,5 +2518,30 @@ body::before {
   z-index: 200 !important;
 }
 
+/* Fiş Detay Kalemleri Düzenleme ve Tablo İçi Estetik Inputlar */
+.tx-inline-input {
+  width: 100%;
+  padding: 5px 8px;
+  background: var(--bg-input, rgba(15, 23, 42, 0.6)) !important;
+  border: 1px solid var(--border-input, rgba(255, 255, 255, 0.08)) !important;
+  border-radius: 4px;
+  color: var(--text-primary, #f8fafc) !important;
+  font-size: 0.8rem !important;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.tx-inline-input:focus {
+  border-color: var(--color-primary, #6366f1) !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.tx-item-total-cell {
+  color: var(--text-primary);
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
 
 

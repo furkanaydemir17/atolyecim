@@ -5,8 +5,11 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase Configuration
-const DEFAULT_SUPABASE_URL = 'https://eojfpequxoxunmxejquy.supabase.co';
-const DEFAULT_SUPABASE_KEY = 'sb_publishable_4ZGyINuBEt8X5TMYtRgqyg_Qy8O6IZG';
+// ⚠️ GÜVENLİK: Bu değerleri doğrudan buraya yazmayın!
+// Supabase URL ve Anahtar bilgilerini Yönetici Paneli → Ayarlar bölümüne girin.
+// Uygulama localStorage'daki değerleri veya .env dosyasındaki VITE_ değişkenlerini kullanır.
+const DEFAULT_SUPABASE_URL = '';
+const DEFAULT_SUPABASE_KEY = '';
 
 let supabaseClient = null;
 let useSupabase = false;

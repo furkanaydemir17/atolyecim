@@ -407,11 +407,11 @@ function initLogin() {
       companyName = 'Atölyecim Master';
       isAdmin = true;
     } else {
-      // Check registered workshops list (K2 Şifre Depolama Düzeltmesi)
+      // Check registered workshops list (K2: Sadece SHA-256 hash karşılaştırılır, düz metin desteği kaldırıldı)
       const workshops = getWorkshops();
       const found = workshops.find(w => 
         (w.email.toLowerCase() === usernameInput.toLowerCase() || w.company.toLowerCase() === usernameInput.toLowerCase()) && 
-        (w.password === pHash || w.password === passwordInput) // Geriye dönük uyumluluk için düz metin desteği de ekli
+        w.password === pHash // Sadece hash karşılaştırması (C3 Gizlilik Düzeltmesi)
       );
       
       if (found) {
@@ -595,6 +595,11 @@ function initLogin() {
       window.location.reload();
     };
 
+    if (window._pollingIntervalId) {
+      clearInterval(window._pollingIntervalId);
+      window._pollingIntervalId = null;
+    }
+
     if (window.dbClearLocalData) {
       window.dbClearLocalData().then(finalizeLogout).catch(finalizeLogout);
     } else {
@@ -644,7 +649,8 @@ async function loadApp() {
     }, 2000);
 
     // Set up real-time polling fallback (every 10 seconds) for incoming orders
-    setInterval(async () => {
+    // H3 Düzeltme: interval ID saklanıyor — logout'ta temizlenebilsin
+    window._pollingIntervalId = setInterval(async () => {
       try {
         const activePage = document.querySelector('.page.active');
         if (activePage && (activePage.id === 'page-orders' || activePage.id === 'page-dashboard')) {
@@ -1462,9 +1468,9 @@ async function initAdminPage() {
 
     if (emptyState) emptyState.style.display = 'none';
     tbody.innerHTML = workshops.map(w => {
-      const companyEsc = (w.company || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-      const emailEsc = (w.email || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-      const planEsc = (w.plan || 'Standard').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const companyEsc = (w.company || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const emailEsc = (w.email || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const planEsc = (w.plan || 'Standard').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
       const isBlocked = !!w.blocked;
 
       return `
@@ -1487,7 +1493,7 @@ async function initAdminPage() {
               <button type="button" class="btn btn-ghost btn-sm" onclick="window.openWorkshopModulesModal('${companyEsc}', '${emailEsc}')" style="color: #6366f1; font-weight: 600;" title="Sekme ve Modül İzinlerini Yönet">
                 ⚙️ Modüller
               </button>
-              <button type="button" class="btn btn-ghost btn-sm" onclick="window.toggleBlockWorkshop('${emailEsc}')" style="color: ${isBlocked ? '#10b981' : '#f59e0b'};" title="${isBlocked ? 'Blokeyi Kaldır' : 'Üyeyi Bloke Et'}">
+              <button type="button" class="btn btn-ghost btn-sm" onclick="window.toggleBlockWorkshop('${emailEsc}')" style="color: ${isBlocked ? '#10b981' : '#f59e0b'};" title="${isBlocked ? 'Blokei Kaldır' : 'Üyeyi Bloke Et'}">
                 ${isBlocked ? '✅ Blokeyi Kaldır' : '🚫 Bloke Et'}
               </button>
               <button type="button" class="btn btn-ghost btn-sm" onclick="window.deleteWorkshop('${emailEsc}')" style="color: #ef4444;" title="Üyeyi Kalıcı Sil">
@@ -1652,7 +1658,7 @@ function initRecycleBinPage() {
       titleDetail = `Sipariş #${item.id} (${item.modelCode || ''} - ${item.customerName || ''})`;
     }
 
-    const deletedAtEsc = (item.deletedAt || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const deletedAtEsc = (item.deletedAt || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
     return `
       <tr>

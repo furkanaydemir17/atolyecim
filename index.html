@@ -1693,7 +1693,7 @@
 
   <!-- ============ TRANSACTION MODAL ============ -->
   <div class="modal-overlay" id="transaction-modal" style="z-index: 10050;">
-    <div class="modal-card">
+    <div class="modal-card modal-lg">
       <div class="modal-header">
         <h2 id="transaction-modal-title">İşlem Ekle</h2>
         <button class="modal-close" data-modal="transaction-modal">&times;</button>
@@ -1706,8 +1706,8 @@
             <div class="form-group">
               <label for="tx-type">İşlem Türü</label>
               <select id="tx-type" required>
-                <option value="alacak">Alacak (Müşteriden)</option>
-                <option value="borc">Borç (Tedarikçiye)</option>
+                <option value="alacak">Alacak (Satış Faturası)</option>
+                <option value="borc">Borç (Alış Faturası / Gider)</option>
                 <option value="tahsilat">Tahsilat (Ödeme Alındı)</option>
                 <option value="odeme">Ödeme (Ödeme Yapıldı)</option>
               </select>
@@ -1732,14 +1732,68 @@
               <label for="tx-date">İşlem Tarihi</label>
               <input type="date" id="tx-date" required>
             </div>
-            <div class="form-group" style="display: none; align-items: center; gap: 8px; padding-top: 24px;">
-              <input type="checkbox" id="tx-is-packaging" style="width: 20px; height: 20px; margin: 0; cursor: pointer;">
-              <label for="tx-is-packaging" style="margin: 0; cursor: pointer; text-transform: none; font-size: 0.9rem; font-weight: 600;">📦 Kutu / Koli İşlemidir</label>
+            <div class="form-group">
+              <label for="tx-invoice-no">Evrak / Fiş No</label>
+              <input type="text" id="tx-invoice-no" placeholder="Örn: A00, F-101 vb.">
             </div>
           </div>
+
+          <!-- Detailed Items Editor -->
+          <div style="margin-top: 15px; margin-bottom: 15px;">
+            <label style="font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-accent);">📦 Fiş Detay Kalemleri (İsteğe Bağlı)</label>
+            <div class="table-container" style="border: 1px solid var(--border-card); border-radius: 6px; overflow-x: auto; margin-bottom: 8px;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left;">
+                <thead style="background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border-card); color: var(--text-primary);">
+                  <tr>
+                    <th style="padding: 6px; min-width: 90px;">Stok Kodu</th>
+                    <th style="padding: 6px; min-width: 140px;">Tanım / Ürün</th>
+                    <th style="padding: 6px; min-width: 80px;">Renk</th>
+                    <th style="padding: 6px; min-width: 60px; text-align: right;">Miktar</th>
+                    <th style="padding: 6px; min-width: 60px;">Birim</th>
+                    <th style="padding: 6px; min-width: 75px; text-align: right;">B. Fiyat</th>
+                    <th style="padding: 6px; min-width: 60px; text-align: right;">İsk. %</th>
+                    <th style="padding: 6px; min-width: 85px; text-align: right;">Tutar</th>
+                    <th style="padding: 6px; width: 40px; text-align: center;"></th>
+                  </tr>
+                </thead>
+                <tbody id="tx-items-tbody">
+                  <!-- Dynamic rows go here -->
+                </tbody>
+              </table>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <button type="button" class="btn btn-secondary" id="btn-tx-add-item-row" style="padding: 6px 12px; font-size: 0.8rem; height: 30px; display: inline-flex; align-items: center; gap: 4px;">
+                ➕ Satır Ekle
+              </button>
+              
+              <div style="display: flex; align-items: center; gap: 15px; font-size: 0.85rem;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <label for="tx-kdv-rate" style="margin: 0; font-size: 0.8rem;">KDV %:</label>
+                  <select id="tx-kdv-rate" style="padding: 4px; font-size: 0.8rem; background: var(--bg-input); border: 1px solid var(--border-input); color: var(--text-primary); border-radius: 4px; height: 26px;">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                  </select>
+                </div>
+                <div style="color: var(--text-muted);">
+                  Ara Toplam: <span id="tx-subtotal-display" style="font-weight: 700; color: var(--text-primary);">0.00</span>
+                </div>
+                <div style="color: var(--text-muted);">
+                  Genel Toplam: <span id="tx-grandtotal-display" style="font-weight: 700; color: var(--text-accent);">0.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group" style="display: none;">
+            <input type="checkbox" id="tx-is-packaging">
+          </div>
+
           <div class="form-group">
-            <label for="tx-description">Açıklama</label>
-            <textarea id="tx-description" placeholder="Örn: 200 Çift A-102 Taban Bedeli veya Havale Ödemesi..." rows="3" style="resize: vertical; min-height: 80px;" maxlength="1000"></textarea>
+            <label for="tx-description">Genel Açıklama</label>
+            <textarea id="tx-description" placeholder="Örn: 200 Çift A-102 Taban Bedeli veya Havale Ödemesi..." rows="2" style="resize: vertical; min-height: 55px;" maxlength="1000"></textarea>
           </div>
           <div class="modal-actions">
             <button type="button" class="btn btn-ghost" data-modal="transaction-modal">İptal</button>
@@ -2089,17 +2143,19 @@
           </div>
         </div>
 
-        <div class="table-container" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border-card); border-radius: 8px; margin-bottom: 24px;">
+        <div class="table-container" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-card); border-radius: 8px; margin-bottom: 24px;">
           <table class="data-table ledger-data-table">
             <thead class="excel-header">
               <tr>
-                <th style="width: 12%;">TARİH</th>
-                <th style="width: 38%;">AÇIKLAMA</th>
-                <th style="width: 12%; text-align: right;">BORÇLU</th>
-                <th style="width: 12%; text-align: right;">ALACAKLI</th>
-                <th style="width: 12%; text-align: right; color: #ef4444 !important;">BAKİYE BORÇLU</th>
-                <th style="width: 12%; text-align: right; color: #10b981 !important;">BAKİYE ALACAKLI</th>
-                <th style="width: 6%; text-align: center;">İŞLEM</th>
+                <th style="width: 10%;">TARİH</th>
+                <th style="width: 12%;">EVRAK NO</th>
+                <th style="width: 13%;">TÜRÜ</th>
+                <th style="width: 25%;">AÇIKLAMA</th>
+                <th style="width: 10%; text-align: right;">BORÇLU</th>
+                <th style="width: 10%; text-align: right;">ALACAKLI</th>
+                <th style="width: 10%; text-align: right; color: #ef4444 !important;">B. BORÇLU</th>
+                <th style="width: 10%; text-align: right; color: #10b981 !important;">B. ALACAKLI</th>
+                <th style="width: 10%; text-align: center;">İŞLEM</th>
               </tr>
             </thead>
             <tbody id="ledger-tbody">
