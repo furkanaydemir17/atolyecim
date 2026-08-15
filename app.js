@@ -1505,6 +1505,9 @@ async function initAdminPage() {
               <button type="button" class="btn btn-ghost btn-sm" onclick="window.openWorkshopModulesModal('${companyEsc}', '${emailEsc}')" style="color: #6366f1; font-weight: 600;" title="Sekme ve Modül İzinlerini Yönet">
                 ⚙️ Modüller
               </button>
+              <button type="button" class="btn btn-ghost btn-sm" onclick="window.renameWorkshopPrompt('${emailEsc}')" style="color: #38bdf8;" title="Firma Adını Düzenle">
+                ✏️ Düzenle
+              </button>
               <button type="button" class="btn btn-ghost btn-sm" onclick="window.resetWorkshopPassword('${emailEsc}')" style="color: #a78bfa;" title="Şifre Sıfırla">
                 🔑 Şifre
               </button>
@@ -1667,6 +1670,62 @@ async function resetWorkshopPassword(email) {
   }
 
   showToast(`"${target.company}" atölyesinin şifresi başarıyla güncellendi! 🔑`, 'success');
+  initAdminPage();
+}
+
+async function renameWorkshopPrompt(email) {
+  let workshops = getWorkshops();
+  const target = workshops.find(w => w.email.toLowerCase() === email.toLowerCase());
+  if (!target) {
+    showToast('Atölye bulunamadı!', 'error');
+    return;
+  }
+
+  const newName = prompt('Yeni atölye / firma adını girin:', target.company);
+  if (!newName || newName.trim().length < 3) {
+    if (newName) showToast('Firma adı en az 3 karakter olmalıdır!', 'error');
+    return;
+  }
+
+  const newCompanyName = newName.trim();
+  const oldCompany = target.company;
+  if (oldCompany === newCompanyName) return;
+
+  target.company = newCompanyName;
+  saveWorkshops(workshops);
+
+  // Sync workshops list to Supabase settings
+  if (window.supabaseClient) {
+    try {
+      await window.dbUpdate('settings', {
+        key: 'saas_registered_workshops',
+        value: { workshops: workshops }
+      });
+    } catch (e) {
+      console.warn('Cloud sync rename warning:', e);
+    }
+  }
+
+  // Migrate all records associated with oldCompany to newCompanyName
+  if (window.showToast) window.showToast('Veriler yeni firma adına taşınıyor, lütfen bekleyin...', 'info');
+
+  const tables = ['orders', 'products', 'stocks', 'contacts', 'transactions', 'recipes'];
+  let migrationCount = 0;
+  for (const table of tables) {
+    try {
+      const allRows = await dbGetAllRaw(table);
+      const linkedRows = allRows.filter(row => row && row._ownerCompany === oldCompany);
+      for (const row of linkedRows) {
+        row._ownerCompany = newCompanyName;
+        await dbUpdate(table, row);
+        migrationCount++;
+      }
+    } catch (err) {
+      console.error(`Migration error on table ${table}:`, err);
+    }
+  }
+
+  showToast(`"${oldCompany}" başarıyla "${newCompanyName}" olarak güncellendi! (${migrationCount} kayıt taşındı) 🏢`, 'success');
   initAdminPage();
 }
 
@@ -1834,6 +1893,7 @@ window.openWorkshopModulesModal = openWorkshopModulesModal;
 window.toggleBlockWorkshop = toggleBlockWorkshop;
 window.deleteWorkshop = deleteWorkshop;
 window.resetWorkshopPassword = resetWorkshopPassword;
+window.renameWorkshopPrompt = renameWorkshopPrompt;
 window.initRecycleBinPage = initRecycleBinPage;
 window.restoreRecycleItem = restoreRecycleItem;
 window.permanentlyDeleteRecycleItem = permanentlyDeleteRecycleItem;
