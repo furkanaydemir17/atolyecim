@@ -1494,6 +1494,9 @@ async function initAdminPage() {
               <button type="button" class="btn btn-ghost btn-sm" onclick="window.openWorkshopModulesModal('${companyEsc}', '${emailEsc}')" style="color: #6366f1; font-weight: 600;" title="Sekme ve Modül İzinlerini Yönet">
                 ⚙️ Modüller
               </button>
+              <button type="button" class="btn btn-ghost btn-sm" onclick="window.resetWorkshopPassword('${emailEsc}')" style="color: #a78bfa;" title="Şifre Sıfırla">
+                🔑 Şifre
+              </button>
               <button type="button" class="btn btn-ghost btn-sm" onclick="window.toggleBlockWorkshop('${emailEsc}')" style="color: ${isBlocked ? '#10b981' : '#f59e0b'};" title="${isBlocked ? 'Blokei Kaldır' : 'Üyeyi Bloke Et'}">
                 ${isBlocked ? '✅ Blokeyi Kaldır' : '🚫 Bloke Et'}
               </button>
@@ -1619,6 +1622,40 @@ async function deleteWorkshop(email) {
   }
 
   showToast(`"${target.company}" üyelikten silindi!`, 'success');
+  initAdminPage();
+}
+
+async function resetWorkshopPassword(email) {
+  const newPass = prompt('Bu atölye için yeni şifreyi girin (En az 4 karakter):', '');
+  if (!newPass || newPass.trim().length < 4) {
+    if (newPass) showToast('Şifre en az 4 karakter olmalıdır!', 'error');
+    return;
+  }
+
+  let workshops = getWorkshops();
+  const target = workshops.find(w => w.email.toLowerCase() === email.toLowerCase());
+  if (!target) {
+    showToast('Atölye bulunamadı!', 'error');
+    return;
+  }
+
+  // Save the new password (both hashed and plaintext fallback supported)
+  const hashed = await sha256(newPass.trim());
+  target.password = hashed;
+  saveWorkshops(workshops);
+
+  if (window.supabaseClient) {
+    try {
+      await window.dbUpdate('settings', {
+        key: 'saas_registered_workshops',
+        value: { workshops: workshops }
+      });
+    } catch (e) {
+      console.warn('Cloud sync reset password warning:', e);
+    }
+  }
+
+  showToast(`"${target.company}" atölyesinin şifresi başarıyla güncellendi! 🔑`, 'success');
   initAdminPage();
 }
 
@@ -1785,6 +1822,7 @@ window.openWorkshopReport = openWorkshopReport;
 window.openWorkshopModulesModal = openWorkshopModulesModal;
 window.toggleBlockWorkshop = toggleBlockWorkshop;
 window.deleteWorkshop = deleteWorkshop;
+window.resetWorkshopPassword = resetWorkshopPassword;
 window.initRecycleBinPage = initRecycleBinPage;
 window.restoreRecycleItem = restoreRecycleItem;
 window.permanentlyDeleteRecycleItem = permanentlyDeleteRecycleItem;
