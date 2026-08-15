@@ -262,19 +262,30 @@ function initLogin() {
     const company = localStorage.getItem('atolyecim_auth_company') || (username.toLowerCase() === 'furkan' ? 'Atölyecim Master' : username + ' Atölyesi');
     const isAdmin = localStorage.getItem('atolyecim_is_admin') === 'true' || username.toLowerCase() === 'furkan';
 
+    let displayCompany = company;
+    if (displayCompany.includes('@')) {
+      const prefix = displayCompany.split('@')[0];
+      displayCompany = prefix
+        .replace(/[\._-]/g, ' ')
+        .split(' ')
+        .filter(word => word.length > 0)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ') + ' Atölyesi';
+    }
+
     const avatarEl = document.getElementById('sidebar-user-avatar');
     const nameEl = document.getElementById('sidebar-user-name');
     const roleEl = document.getElementById('sidebar-user-role');
     const adminNavItem = document.getElementById('nav-item-admin');
     const brandEl = document.getElementById('sidebar-brand-name');
 
-    if (avatarEl) avatarEl.textContent = company.charAt(0).toUpperCase();
-    if (nameEl) nameEl.textContent = company;
+    if (avatarEl) avatarEl.textContent = displayCompany.charAt(0).toUpperCase();
+    if (nameEl) nameEl.textContent = displayCompany;
     if (roleEl) roleEl.textContent = isAdmin ? '👑 Süper Admin (Platform)' : '🏢 Üye Atölye';
 
     if (brandEl) {
-      brandEl.textContent = company;
-      if (company.length > 12) {
+      brandEl.textContent = displayCompany;
+      if (displayCompany.length > 12) {
         brandEl.style.fontSize = '14px';
         brandEl.style.letterSpacing = '0px';
       } else {
