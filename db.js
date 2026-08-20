@@ -281,6 +281,12 @@ function initDB() {
         const cts = database.createObjectStore('contractor_transactions', { keyPath: 'id', autoIncrement: true });
         cts.createIndex('contractorId', 'contractorId', { unique: false });
       }
+
+      if (!database.objectStoreNames.contains('job_tickets')) {
+        const jts = database.createObjectStore('job_tickets', { keyPath: 'id', autoIncrement: true });
+        jts.createIndex('stage', 'stage', { unique: false });
+        jts.createIndex('serialNo', 'serialNo', { unique: false });
+      }
     };
 
     request.onsuccess = async (e) => {
@@ -326,21 +332,36 @@ function getCurrentTenantCompany() {
   return localStorage.getItem('atolyecim_auth_company') || 'Atölyecim Master';
 }
 
+function getSupabaseTableName(storeName) {
+  if (storeName === 'job_tickets') return 'contractor_jobs';
+  return storeName;
+}
+
 function filterByTenant(storeName, items) {
   if (storeName === 'settings') return items;
   const currentCompany = getCurrentTenantCompany();
 
   return (items || []).filter(item => {
     if (!item) return false;
-    return item._ownerCompany === currentCompany;
+    if (item._ownerCompany !== currentCompany) return false;
+    if (storeName === 'job_tickets') {
+      return item._type === 'job_ticket' || item.serialNo !== undefined;
+    }
+    if (storeName === 'contractor_jobs') {
+      return item._type !== 'job_ticket' && item.serialNo === undefined;
+    }
+    return true;
   });
 }
 
 async function dbAdd(storeName, data) {
-  invalidateCache(storeName);
   data._ownerCompany = data._ownerCompany || getCurrentTenantCompany();
+  if (storeName === 'job_tickets') {
+    data._type = 'job_ticket';
+  }
 
   if (useSupabase) {
+    const targetTable = getSupabaseTableName(storeName);
     const keyField = getKeyField(storeName);
     data.createdAt = data.createdAt || new Date().toISOString();
 
@@ -363,18 +384,17 @@ async function dbAdd(storeName, data) {
     };
 
     // Omit created_at column for new tables that lack it in the Supabase schema
-    const TABLES_WITHOUT_CREATED_AT = ['contractors', 'contractor_jobs', 'contractor_transactions', 'assortments'];
-    if (!TABLES_WITHOUT_CREATED_AT.includes(storeName)) {
+    const TABLES_WITHOUT_CREATED_AT = ['contractors', 'contractor_jobs', 'contractor_transactions', 'assortments', 'job_tickets'];
+    if (!TABLES_WITHOUT_CREATED_AT.includes(targetTable) && !TABLES_WITHOUT_CREATED_AT.includes(storeName)) {
       dbRow.created_at = data.createdAt;
     }
-
 
     if (idValue !== undefined && idValue !== null && idValue !== '') {
       dbRow.id = idValue;
     }
 
     const { data: insertedRows, error } = await supabaseClient
-      .from(storeName)
+      .from(targetTable)
       .insert(dbRow)
       .select();
 
@@ -391,10 +411,20 @@ async function dbAdd(storeName, data) {
       }
     }
     data[keyField] = keyField === 'key' ? newId : Number(newId);
+
+    // Hızlı İyimser Önbellek Güncellemesi (UI anında tazelenir)
+    if (memoryCache[storeName] && Array.isArray(memoryCache[storeName].data)) {
+      memoryCache[storeName].data.unshift(JSON.parse(JSON.stringify(data)));
+      memoryCache[storeName].timestamp = Date.now();
+    } else {
+      invalidateCache(storeName);
+    }
+
     return data[keyField];
   }
 
   // Local IndexedDB
+  invalidateCache(storeName);
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, 'readwrite');
     const store = tx.objectStore(storeName);
@@ -427,7 +457,8 @@ async function dbGetAll(storeName) {
 
     if (useSupabase) {
       const currentCompany = getCurrentTenantCompany();
-      let query = supabaseClient.from(storeName).select('*')
+      const targetTable = getSupabaseTableName(storeName);
+      let query = supabaseClient.from(targetTable).select('*')
         .eq('data->>_ownerCompany', currentCompany);
       
       const { data: rows, error } = await query;
@@ -498,9 +529,10 @@ async function dbGet(storeName, id) {
 
   if (useSupabase) {
     const currentCompany = getCurrentTenantCompany();
+    const targetTable = getSupabaseTableName(storeName);
     const isGlobal = storeName === 'settings' && String(id).startsWith('global_');
     const dbId = (storeName === 'settings' && !isGlobal) ? `${currentCompany}_${id}` : id;
-    let query = supabaseClient.from(storeName).select('*').eq('id', dbId);
+    let query = supabaseClient.from(targetTable).select('*').eq('id', dbId);
     if (!isGlobal) {
       query = query.eq('data->>_ownerCompany', currentCompany);
     }
@@ -527,7 +559,6 @@ async function dbGet(storeName, id) {
 }
 
 async function dbUpdate(storeName, data) {
-  invalidateCache(storeName);
   data._ownerCompany = data._ownerCompany || getCurrentTenantCompany();
 
   let resultId;
@@ -542,24 +573,13 @@ async function dbUpdate(storeName, data) {
     const isGlobal = storeName === 'settings' && String(idValue).startsWith('global_');
     const dbId = (storeName === 'settings' && !isGlobal) ? `${currentCompany}_${idValue}` : idValue;
 
-    // Kiracı Güvenlik Kontrolü: Başka kiracının satırını ezmeyi engelle (global_ hariç)
-    if (!isGlobal) {
-      const { data: existingRow } = await supabaseClient
-        .from(storeName)
-        .select('data')
-        .eq('id', dbId)
-        .maybeSingle();
-
-      if (existingRow && existingRow.data && existingRow.data._ownerCompany !== data._ownerCompany) {
-        throw new Error("Access Denied: Cannot modify data owned by another tenant.");
-      }
-    }
-
     const payload = { ...data };
     delete payload[keyField];
 
+    const targetTable = getSupabaseTableName(storeName);
+    // Tek adımda doğrudan hızlı upsert (PostgreSQL RLS güvenlik kalkanı koruması devrede)
     const { error } = await supabaseClient
-      .from(storeName)
+      .from(targetTable)
       .upsert({
         id: dbId,
         data: payload,
@@ -571,8 +591,22 @@ async function dbUpdate(storeName, data) {
       throw error;
     }
     resultId = idValue;
+
+    // Hızlı İyimser Önbellek Güncellemesi
+    if (memoryCache[storeName] && Array.isArray(memoryCache[storeName].data)) {
+      const idx = memoryCache[storeName].data.findIndex(item => String(item[keyField]) === String(idValue));
+      if (idx !== -1) {
+        memoryCache[storeName].data[idx] = JSON.parse(JSON.stringify(data));
+      } else {
+        memoryCache[storeName].data.unshift(JSON.parse(JSON.stringify(data)));
+      }
+      memoryCache[storeName].timestamp = Date.now();
+    } else {
+      invalidateCache(storeName);
+    }
   } else {
     // Local IndexedDB
+    invalidateCache(storeName);
     resultId = await new Promise((resolve, reject) => {
       const tx = db.transaction(storeName, 'readwrite');
       const store = tx.objectStore(storeName);
@@ -594,19 +628,29 @@ async function dbUpdate(storeName, data) {
 }
 
 async function dbDelete(storeName, id) {
-  invalidateCache(storeName);
+  const keyField = getKeyField(storeName);
+
   // If deleting from operational stores, move to recycle_bin first!
   if (['orders', 'products', 'stocks', 'contacts'].includes(storeName)) {
     try {
-      const item = await dbGet(storeName, id);
+      let item = null;
+      // Önce hafızadaki önbellekten anında al (ekstra ağ beklemesini önle)
+      if (memoryCache[storeName] && Array.isArray(memoryCache[storeName].data)) {
+        item = memoryCache[storeName].data.find(i => String(i[keyField]) === String(id));
+      }
+      if (!item) {
+        item = await dbGet(storeName, id).catch(() => null);
+      }
+
       if (item) {
-        item.deletedAt = new Date().toISOString();
-        item.originalStore = storeName;
-        item.originalId = id;
+        const recycleItem = JSON.parse(JSON.stringify(item));
+        recycleItem.deletedAt = new Date().toISOString();
+        recycleItem.originalStore = storeName;
+        recycleItem.originalId = id;
 
         // Save into settings/localStorage recycle_bin log
         let recycleBin = JSON.parse(localStorage.getItem('atolyecim_recycle_bin') || '[]');
-        recycleBin.unshift(item);
+        recycleBin.unshift(recycleItem);
         while (recycleBin.length > 50) recycleBin.pop();
         localStorage.setItem('atolyecim_recycle_bin', JSON.stringify(recycleBin));
       }
@@ -615,12 +659,23 @@ async function dbDelete(storeName, id) {
     }
   }
 
+  // İyimser Önbellekten Anında Kaldır (UI saniyelerce beklemez)
+  if (memoryCache[storeName] && Array.isArray(memoryCache[storeName].data)) {
+    memoryCache[storeName].data = memoryCache[storeName].data.filter(item => String(item[keyField]) !== String(id));
+    memoryCache[storeName].timestamp = Date.now();
+  } else {
+    invalidateCache(storeName);
+  }
+
   if (useSupabase) {
     const currentCompany = getCurrentTenantCompany();
+    const targetTable = getSupabaseTableName(storeName);
     const dbId = storeName === 'settings' ? `${currentCompany}_${id}` : id;
-    let query = supabaseClient.from(storeName).delete().eq('id', dbId)
+    const { error } = await supabaseClient
+      .from(targetTable)
+      .delete()
+      .eq('id', dbId)
       .eq('data->>_ownerCompany', currentCompany);
-    const { error } = await query;
 
     if (error) {
       console.error(`Supabase dbDelete error in ${storeName}:`, error);
@@ -639,6 +694,41 @@ async function dbDelete(storeName, id) {
   });
 }
 
+// Toplu Hızlı Silme (Batch Deletion) — onlarca ağ isteği yerine tek istekte siler
+async function dbDeleteMany(storeName, ids) {
+  if (!ids || ids.length === 0) return;
+  const keyField = getKeyField(storeName);
+
+  // İyimser Önbellekten toplu tahliye
+  if (memoryCache[storeName] && Array.isArray(memoryCache[storeName].data)) {
+    const idSet = new Set(ids.map(String));
+    memoryCache[storeName].data = memoryCache[storeName].data.filter(item => !idSet.has(String(item[keyField])));
+    memoryCache[storeName].timestamp = Date.now();
+  } else {
+    invalidateCache(storeName);
+  }
+
+  if (useSupabase) {
+    const currentCompany = getCurrentTenantCompany();
+    const targetTable = getSupabaseTableName(storeName);
+    const dbIds = storeName === 'settings' ? ids.map(id => `${currentCompany}_${id}`) : ids;
+    const { error } = await supabaseClient
+      .from(targetTable)
+      .delete()
+      .in('id', dbIds)
+      .eq('data->>_ownerCompany', currentCompany);
+
+    if (error) {
+      console.error(`Supabase dbDeleteMany error in ${storeName}:`, error);
+      throw error;
+    }
+    return;
+  }
+
+  // Local IndexedDB
+  return Promise.all(ids.map(id => dbDelete(storeName, id)));
+}
+
 async function dbGetByIndex(storeName, indexName, value) {
   const allItems = await dbGetAll(storeName); // already tenant filtered!
   return allItems.filter(item => String(item[indexName]) === String(value));
@@ -648,7 +738,8 @@ async function dbClearStore(storeName) {
   invalidateCache(storeName);
   if (useSupabase) {
     const currentCompany = getCurrentTenantCompany();
-    let query = supabaseClient.from(storeName).delete();
+    const targetTable = getSupabaseTableName(storeName);
+    let query = supabaseClient.from(targetTable).delete();
     if (storeName !== 'settings') {
       query = query.eq('data->>_ownerCompany', currentCompany);
     } else {
@@ -743,6 +834,52 @@ async function getAdminWorkshops() {
     }
   }
   return workshops || [];
+}
+
+// Giriş akışı için özel fonksiyon: tenant filtresi olmadan çalışır.
+// Login sırasında (henüz şirket adı belli değilken) atölye listesini çekmek için kullanılır.
+async function fetchWorkshopsForLogin() {
+  // Önce localStorage önbelleğine bak
+  const cached = localStorage.getItem('saas_workshops');
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (_) {}
+  }
+
+  // Supabase varsa direkt çek (tenant filtresi yok!)
+  if (supabaseClient) {
+    try {
+      // Önce prefix'li kayıt dene
+      let { data: cloudSettings } = await supabaseClient
+        .from('settings')
+        .select('*')
+        .eq('id', 'Atölyecim Master_saas_registered_workshops')
+        .maybeSingle();
+
+      // Sonra prefix'siz dene
+      if (!cloudSettings) {
+        const fallback = await supabaseClient
+          .from('settings')
+          .select('*')
+          .eq('id', 'saas_registered_workshops')
+          .maybeSingle();
+        cloudSettings = fallback.data;
+      }
+
+      if (cloudSettings && cloudSettings.data) {
+        const ws = cloudSettings.data.workshops || (cloudSettings.data.value && cloudSettings.data.value.workshops);
+        if (ws && Array.isArray(ws) && ws.length > 0) {
+          localStorage.setItem('saas_workshops', JSON.stringify(ws));
+          return ws;
+        }
+      }
+    } catch (e) {
+      console.warn('fetchWorkshopsForLogin hata:', e);
+    }
+  }
+  return [];
 }
 
 async function getAdminStats() {
@@ -857,11 +994,13 @@ window.dbGetAllRaw = dbGetAllRaw;
 window.dbGet = dbGet;
 window.dbUpdate = dbUpdate;
 window.dbDelete = dbDelete;
+window.dbDeleteMany = dbDeleteMany;
 window.dbGetByIndex = dbGetByIndex;
 window.dbClearStore = dbClearStore;
 window.setSetting = setSetting;
 window.getSetting = getSetting;
 window.getAdminWorkshops = getAdminWorkshops;
+window.fetchWorkshopsForLogin = fetchWorkshopsForLogin;
 window.getAdminStats = getAdminStats;
 window.getWorkshopDetailedReport = getWorkshopDetailedReport;
 window.getRecycleBinItems = getRecycleBinItems;

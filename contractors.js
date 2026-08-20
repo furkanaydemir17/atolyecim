@@ -127,7 +127,8 @@ const Contractors = {
             ${formatMultiCurrency(balances)}
           </td>
           <td>
-            <div style="display: flex; gap: 6px; justify-content: center;">
+            <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+              <button class="btn-icon success btn-c-wa" data-id="${c.id}" title="Ustayla WhatsApp'ta Görüş" style="color: #25d366; background: rgba(37,211,102,0.12); border: 1px solid rgba(37,211,102,0.25); cursor: pointer; padding: 4px 6px;">📲</button>
               <button class="btn btn-sm btn-secondary btn-c-ledger" data-id="${c.id}" style="padding: 4px 10px;">📊 Ekstre</button>
               <button class="btn btn-sm btn-ghost btn-c-delete" data-id="${c.id}" style="color: var(--color-danger); border-color: rgba(239,68,68,0.2); padding: 4px 8px;">Sil</button>
             </div>
@@ -149,7 +150,51 @@ const Contractors = {
     return Object.values(balances).some(v => v < -0.01);
   },
 
+  async calculateBalance(contractorId) {
+    const jobs = await window.dbGetAll('contractor_jobs');
+    const txs = await window.dbGetAll('contractor_transactions');
+    const cJobs = jobs.filter(j => j.contractorId === contractorId);
+    const cTxs = txs.filter(t => t.contractorId === contractorId);
+    
+    let total = 0;
+    cJobs.forEach(j => total += (parseFloat(j.qty || 0) * parseFloat(j.laborPrice || 0)));
+    cTxs.forEach(t => {
+      if (t.type === 'odeme') total -= parseFloat(t.amount || 0);
+      else if (t.type === 'hakedis') total += parseFloat(t.amount || 0);
+    });
+    return total;
+  },
+
   bindTableEvents() {
+    document.querySelectorAll('.btn-c-wa').forEach(btn => {
+      bindOnce(btn, 'click', async () => {
+        const id = parseInt(btn.dataset.id);
+        const cont = await window.dbGet('contractors', id);
+        if (cont && window.WhatsAppManager) {
+          const compName = window.WhatsAppManager.getCompanyName();
+          let balanceText = '';
+          if (this.calculateBalance) {
+            const bal = await this.calculateBalance(id);
+            balanceText = `\n📊 *Güncel Hakediş Bakiyesi:* ${bal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`;
+          }
+          const msg = `👞 *${compName.toUpperCase()} — FASON BİLGİLENDİRME*\n` +
+            `━━━━━━━━━━━━━━━━━━━━━\n` +
+            `👤 *Usta / Fasoncu:* ${cont.name}${balanceText}\n` +
+            `━━━━━━━━━━━━━━━━━━━━━\n` +
+            `_İyi çalışmalar dileriz._`;
+          window.WhatsAppManager.openModal({
+            title: '🧵 Fasoncu WhatsApp İletişim',
+            phone: cont.phone || '',
+            recipientName: cont.name,
+            defaultTemplateKey: 'cont_info',
+            templates: [{ key: 'cont_info', label: '💬 Genel Bilgi / Bakiye' }],
+            templateTexts: { cont_info: msg },
+            data: cont
+          });
+        }
+      }, 'btn_c_wa_' + btn.dataset.id);
+    });
+
     document.querySelectorAll('.btn-c-ledger').forEach(btn => {
       bindOnce(btn, 'click', () => {
         const id = parseInt(btn.dataset.id);
@@ -169,18 +214,20 @@ const Contractors = {
 
   async deleteContractor(id) {
     try {
-      await window.dbDelete('contractors', id);
+      // Cascade delete jobs and transactions in parallel
+      const [jobs, txs] = await Promise.all([
+        window.dbGetAll('contractor_jobs'),
+        window.dbGetAll('contractor_transactions')
+      ]);
 
-      // Cascade delete jobs and transactions
-      const jobs = await window.dbGetAll('contractor_jobs');
-      const txs = await window.dbGetAll('contractor_transactions');
+      const targetJobIds = jobs.filter(job => job.contractorId === id).map(j => j.id);
+      const targetTxIds = txs.filter(tx => tx.contractorId === id).map(t => t.id);
 
-      for (const j of jobs.filter(job => job.contractorId === id)) {
-        await window.dbDelete('contractor_jobs', j.id);
-      }
-      for (const t of txs.filter(tx => tx.contractorId === id)) {
-        await window.dbDelete('contractor_transactions', t.id);
-      }
+      await Promise.all([
+        window.dbDelete('contractors', id),
+        targetJobIds.length > 0 ? (window.dbDeleteMany ? window.dbDeleteMany('contractor_jobs', targetJobIds) : Promise.all(targetJobIds.map(jid => window.dbDelete('contractor_jobs', jid)))) : Promise.resolve(),
+        targetTxIds.length > 0 ? (window.dbDeleteMany ? window.dbDeleteMany('contractor_transactions', targetTxIds) : Promise.all(targetTxIds.map(tid => window.dbDelete('contractor_transactions', tid)))) : Promise.resolve()
+      ]);
 
       window.showToast('Fason usta ve tüm kayıtları silindi.', 'success');
       await this.loadContractors();
@@ -254,23 +301,35 @@ const Contractors = {
         emptyState.style.display = 'none';
 
         ledgerEntries.forEach(entry => {
-          const curr = entry.currency;
+          const curr = entry.currency || 'TRY';
           totalHakedis[curr] = (totalHakedis[curr] || 0) + entry.hakedis;
           totalOdenen[curr] = (totalOdenen[curr] || 0) + entry.odenen;
           
           runningBalance[curr] = (runningBalance[curr] || 0) + entry.hakedis - entry.odenen;
 
           const tr = document.createElement('tr');
+          const isPayment = entry.type === 'tx' && entry.odenen > 0;
+          const isJob = entry.type === 'job';
+
+          const dateFormatted = entry.date.split('-').reverse().join('.');
+          const hakedisStr = entry.hakedis > 0 ? formatMoney(entry.hakedis, curr) : '-';
+          const odenenStr = entry.odenen > 0 ? formatMoney(entry.odenen, curr) : '-';
+          const balanceStr = formatMoney(runningBalance[curr], curr);
+
           tr.innerHTML = `
-            <td>${entry.date.split('-').reverse().join('.')}</td>
-            <td>${escapeHtml(entry.description)}</td>
-            <td style="text-align: right; font-weight: 600;">${entry.hakedis > 0 ? formatMoney(entry.hakedis, symbols[curr] || curr) : '-'}</td>
-            <td style="text-align: right; font-weight: 600; color: var(--color-success);">${entry.odenen > 0 ? formatMoney(entry.odenen, symbols[curr] || curr) : '-'}</td>
+            <td>${dateFormatted}</td>
+            <td>
+              <div style="font-weight: 500; font-size: 0.9rem;">
+                ${isJob ? '📦 ' : '💵 '}${escapeHtml(entry.description)}
+              </div>
+            </td>
+            <td style="text-align: right; font-weight: 600;">${hakedisStr}</td>
+            <td style="text-align: right; font-weight: 600; color: var(--color-success);">${odenenStr}</td>
             <td style="text-align: right; font-weight: 700; color: ${runningBalance[curr] >= 0 ? 'var(--color-danger)' : 'var(--color-success)'};">
-              ${formatMoney(runningBalance[curr], symbols[curr] || curr)}
+              ${balanceStr}
             </td>
             <td style="text-align: center;">
-              <button type="button" class="btn-icon danger btn-delete-ledger-entry" data-id="${entry.id}" data-type="${entry.type}" style="width: 24px; height: 24px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 11px;">&times;</button>
+              <button class="btn-icon danger btn-delete-ledger-entry" data-id="${entry.id}" data-type="${entry.type}" title="Sil" style="font-size: 1rem; border: none; background: transparent; cursor: pointer; color: var(--color-danger);">&times;</button>
             </td>
           `;
           tbody.appendChild(tr);
@@ -296,6 +355,46 @@ const Contractors = {
       if (printBtn) {
         printBtn.onclick = () => {
           this.printLedger(c, ledgerEntries);
+        };
+      }
+
+      // Bind WhatsApp Share Button in Ledger Modal
+      const waBtn = document.getElementById('btn-c-ledger-whatsapp');
+      if (waBtn) {
+        waBtn.onclick = () => {
+          if (window.WhatsAppManager) {
+            const compName = window.WhatsAppManager.getCompanyName();
+            const formatCurrencies = (obj) => {
+              const parts = [];
+              const symbols = { TRY: '₺', USD: '$', EUR: '€' };
+              for (const [curr, amt] of Object.entries(obj)) {
+                if (amt !== 0) parts.push(`${symbols[curr] || curr}${amt.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+              }
+              return parts.length > 0 ? parts.join(' + ') : '₺0,00';
+            };
+            const totalHakedisStr = formatCurrencies(totalHakedis);
+            const totalOdenenStr = formatCurrencies(totalOdenen);
+            const balanceStr = formatCurrencies(runningBalance);
+
+            const msg = `📑 *${compName.toUpperCase()} — USTA HESAP EKSTRESİ*\n` +
+              `━━━━━━━━━━━━━━━━━━━━━\n` +
+              `👤 *Usta / Fasoncu:* ${c.name}\n` +
+              `📈 *Toplam Hakediş:* ${totalHakedisStr}\n` +
+              `💵 *Toplam Ödenen:* ${totalOdenenStr}\n` +
+              `📊 *Kalan Hakediş Bakiyesi:* ${balanceStr}\n` +
+              `━━━━━━━━━━━━━━━━━━━━━\n` +
+              `ℹ️ _Detaylı iş ve ödeme dökümü yukarıdaki gibidir. Hayırlı işler dileriz._`;
+
+            window.WhatsAppManager.openModal({
+              title: '📑 Fason Ekstre WhatsApp Bildirimi',
+              phone: c.phone || '',
+              recipientName: c.name,
+              defaultTemplateKey: 'ledger_summary',
+              templates: [{ key: 'ledger_summary', label: '📊 Ekstre Özeti' }],
+              templateTexts: { ledger_summary: msg },
+              data: c
+            });
+          }
         };
       }
 
@@ -359,36 +458,42 @@ const Contractors = {
     const totalBalanceStr = formatCurrenciesSummary(balance);
 
     printArea.innerHTML = `
-      <div style="padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+      <div style="padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; background: #fff;">
         <!-- Header -->
-        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 8px; margin-bottom: 12px;">
           <div>
-            <h2 style="font-weight: 800; font-size: 1.4rem; color: #0f172a; margin: 0 0 6px 0;">${escapeHtml(companyName)}</h2>
-            <p style="font-size: 11px; color: #475569; margin: 0;">Ayakkabı İmalat & Fason İşçilik Cari Ekstresi</p>
+            <h2 style="font-weight: 800; font-size: 1.15rem; color: #0f172a; margin: 0 0 3px 0;">${escapeHtml(companyName)}</h2>
+            <p style="font-size: 9.5px; color: #475569; margin: 0;">Ayakkabı İmalat & Fason İşçilik Ekstresi (A5)</p>
           </div>
           <div style="text-align: right;">
-            <h1 style="font-weight: 800; font-size: 1.5rem; color: #0284c7; margin: 0 0 6px 0;">FASON HESAP EKSTRESİ</h1>
-            <p style="font-size: 11px; margin: 0; color: #64748b;"><strong>Yazdırma Tarihi:</strong> ${dateStr}</p>
+            <h1 style="font-weight: 800; font-size: 1.15rem; color: #0284c7; margin: 0 0 3px 0;">FASON HESAP EKSTRESİ</h1>
+            <p style="font-size: 9.5px; margin: 0; color: #64748b;"><strong>Tarih:</strong> ${dateStr}</p>
           </div>
         </div>
 
         <!-- Subcontractor Section -->
-        <div style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-          <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 12px; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; font-weight: 700; text-transform: uppercase;">Fason Usta / Firma Bilgileri</h3>
-          <p style="font-size: 13px; font-weight: 700; margin: 0 0 4px 0;">${escapeHtml(c.name)}</p>
-          <p style="margin: 0; font-size: 11px; color: #475569;"><strong>Ustalık Alanı:</strong> ${escapeHtml(c.role || '-')}</p>
-          <p style="margin: 4px 0 0 0; font-size: 11px; color: #475569;"><strong>Telefon:</strong> ${escapeHtml(c.phone || 'Kayıtlı Değil')}</p>
+        <div style="background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <span style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase;">Fason Usta / Firma:</span>
+              <p style="font-size: 11.5px; font-weight: 700; color: #0f172a; margin: 2px 0 0 0;">${escapeHtml(c.name)}</p>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size: 9.5px; color: #475569;"><strong>Alan:</strong> ${escapeHtml(c.role || '-')}</span>
+              <span style="margin-left: 10px; font-size: 9.5px; color: #475569;"><strong>Tel:</strong> ${escapeHtml(c.phone || '-')}</span>
+            </div>
+          </div>
         </div>
 
         <!-- Table -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 11px;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 9.5px;">
           <thead>
-            <tr style="border-bottom: 2px solid #0f172a; text-align: left; font-weight: 700; background: #f1f5f9;">
-              <th style="padding: 8px 5px; width: 15%;">Tarih</th>
-              <th style="padding: 8px 5px; width: 45%;">İş Açıklaması / Ödeme Detayı</th>
-              <th style="padding: 8px 5px; width: 13%; text-align: right;">Hakediş (Alacak)</th>
-              <th style="padding: 8px 5px; width: 13%; text-align: right;">Ödenen (Borç)</th>
-              <th style="padding: 8px 5px; width: 14%; text-align: right;">Kalan Bakiye</th>
+            <tr style="border-bottom: 1.5px solid #0f172a; text-align: left; font-weight: 700; background: #f1f5f9;">
+              <th style="padding: 5px 4px; width: 16%;">Tarih</th>
+              <th style="padding: 5px 4px; width: 44%;">İş Açıklaması / Detay</th>
+              <th style="padding: 5px 4px; width: 14%; text-align: right;">Hakediş</th>
+              <th style="padding: 5px 4px; width: 13%; text-align: right;">Ödenen</th>
+              <th style="padding: 5px 4px; width: 13%; text-align: right;">Bakiye</th>
             </tr>
           </thead>
           <tbody>
@@ -397,31 +502,31 @@ const Contractors = {
         </table>
 
         <!-- Summary & Balance -->
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 40px;">
-          <div style="width: 350px; font-size: 12px; background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #475569;">
-              <span>Toplam Hakediş (Usta Alacağı):</span>
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+          <div style="width: 240px; font-size: 10px; background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #475569;">
+              <span>Toplam Hakediş:</span>
               <span style="font-weight: 600;">${totalHakedisStr}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #475569; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
-              <span>Toplam Ödenen (Bizim):</span>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #475569; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
+              <span>Toplam Ödenen:</span>
               <span style="font-weight: 600; color: #10b981;">${totalOdenenStr}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; color: #0f172a;">
-              <span>Kalan Usta Alacağı:</span>
+            <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 11px; color: #0f172a;">
+              <span>Kalan Alacak:</span>
               <span style="color: #ef4444;">${totalBalanceStr}</span>
             </div>
           </div>
         </div>
 
         <!-- Signature Section -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; text-align: center; font-size: 11px;">
-          <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin: 0 40px;">
-            <p style="font-weight: 700; margin: 0 0 4px 0;">Yetkili İmza</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px; text-align: center; font-size: 9.5px;">
+          <div style="border-top: 1px dashed #cbd5e1; padding-top: 6px; margin: 0 20px;">
+            <p style="font-weight: 700; margin: 0 0 2px 0;">Yetkili İmza</p>
             <p style="color: #64748b; margin: 0;">${escapeHtml(companyName)}</p>
           </div>
-          <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin: 0 40px;">
-            <p style="font-weight: 700; margin: 0 0 4px 0;">Fason Usta / Firma</p>
+          <div style="border-top: 1px dashed #cbd5e1; padding-top: 6px; margin: 0 20px;">
+            <p style="font-weight: 700; margin: 0 0 2px 0;">Fason Usta / Firma</p>
             <p style="color: #64748b; margin: 0;">İmza / Kaşe</p>
           </div>
         </div>
@@ -547,7 +652,7 @@ Contractors.bindEvents = function() {
       };
 
       try {
-        await window.dbAdd('contractor_jobs', jobData);
+        const addedJob = await window.dbAdd('contractor_jobs', jobData);
         window.showToast('İş ataması/hakediş başarıyla kaydedildi.', 'success');
         const modal = document.getElementById('contractor-job-modal');
         if (modal) {
@@ -557,6 +662,11 @@ Contractors.bindEvents = function() {
         // Refresh details modal & main table
         await Contractors.openLedgerModal(contractorId);
         await Contractors.loadContractors();
+
+        // Trigger WhatsApp notification modal
+        if (window.WhatsAppManager) {
+          window.WhatsAppManager.openForContractorJob(addedJob?.id || jobData.id);
+        }
       } catch (err) {
         console.error(err);
         window.showToast('Hakediş kaydedilemedi.', 'error');
@@ -586,7 +696,7 @@ Contractors.bindEvents = function() {
       };
 
       try {
-        await window.dbAdd('contractor_transactions', txData);
+        const addedTx = await window.dbAdd('contractor_transactions', txData);
         window.showToast('Ödeme kaydı başarıyla eklendi.', 'success');
         const modal = document.getElementById('contractor-payment-modal');
         if (modal) {
@@ -595,6 +705,11 @@ Contractors.bindEvents = function() {
         }
         await Contractors.openLedgerModal(contractorId);
         await Contractors.loadContractors();
+
+        // Trigger WhatsApp notification modal
+        if (window.WhatsAppManager) {
+          window.WhatsAppManager.openForContractorPayment(addedTx?.id || txData.id);
+        }
       } catch (err) {
         console.error(err);
         window.showToast('Ödeme kaydedilemedi.', 'error');

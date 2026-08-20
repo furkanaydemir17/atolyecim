@@ -409,10 +409,10 @@ const Contacts = {
         const stok = row.querySelector('.tx-item-stok')?.value.trim() || '';
         const name = row.querySelector('.tx-item-name')?.value.trim() || '';
         const color = row.querySelector('.tx-item-color')?.value.trim() || '';
-        const qty = parseFloat(row.querySelector('.tx-item-qty')?.value) || 0;
+        const qty = parseFloat(String(row.querySelector('.tx-item-qty')?.value || '0').replace(',', '.')) || 0;
         const unit = row.querySelector('.tx-item-unit')?.value.trim() || '';
-        const price = parseFloat(row.querySelector('.tx-item-price')?.value) || 0;
-        const discount = parseFloat(row.querySelector('.tx-item-discount')?.value) || 0;
+        const price = parseFloat(String(row.querySelector('.tx-item-price')?.value || '0').replace(',', '.')) || 0;
+        const discount = parseFloat(String(row.querySelector('.tx-item-discount')?.value || '0').replace(',', '.')) || 0;
         const total = qty * price * (1 - discount / 100);
 
         if (stok || name || color || qty > 0) {
@@ -489,22 +489,25 @@ const Contacts = {
     const stok = item.stokCode || '';
     const tanim = item.name || '';
     const renk = item.color || '';
-    const miktar = item.qty !== undefined ? item.qty : 1;
+    const miktar = item.qty !== undefined ? item.qty : '';
     const birim = item.unit || 'Çift';
-    const fiyat = item.price !== undefined ? item.price : 0;
+    const fiyat = item.price !== undefined ? item.price : '';
     const iskonto = item.discount !== undefined ? item.discount : 0;
-    const total = item.total !== undefined ? item.total : (miktar * fiyat * (1 - iskonto / 100));
+    const numMiktar = parseFloat(String(miktar).replace(',', '.')) || 0;
+    const numFiyat = parseFloat(String(fiyat).replace(',', '.')) || 0;
+    const numIskonto = parseFloat(String(iskonto).replace(',', '.')) || 0;
+    const total = item.total !== undefined ? item.total : (numMiktar * numFiyat * (1 - numIskonto / 100));
 
     const html = `
       <tr id="${rowId}" style="border-bottom: 1px solid var(--border-card);">
-        <td style="padding: 4px;"><input type="text" class="tx-inline-input tx-item-stok" value="${escapeHtml(stok)}" placeholder="Stok No"></td>
-        <td style="padding: 4px;"><input type="text" class="tx-inline-input tx-item-name" value="${escapeHtml(tanim)}" placeholder="Ürün Tanımı"></td>
-        <td style="padding: 4px;"><input type="text" class="tx-inline-input tx-item-color" value="${escapeHtml(renk)}" placeholder="Renk"></td>
-        <td style="padding: 4px;"><input type="number" class="tx-inline-input tx-item-qty" value="${miktar}" style="text-align: right;" min="0.0001" step="any" placeholder="0"></td>
-        <td style="padding: 4px;"><input type="text" class="tx-inline-input tx-item-unit" value="${escapeHtml(birim)}" placeholder="Birim"></td>
-        <td style="padding: 4px;"><input type="number" class="tx-inline-input tx-item-price" value="${fiyat}" style="text-align: right;" min="0" step="0.0001" placeholder="0.00"></td>
-        <td style="padding: 4px;"><input type="number" class="tx-inline-input tx-item-discount" value="${iskonto}" style="text-align: right;" min="0" max="100" step="any" placeholder="0"></td>
-        <td style="padding: 4px; text-align: right; font-weight: 600; color: var(--text-primary);" class="tx-item-total-cell">${total.toFixed(2)}</td>
+        <td style="padding: 4px;"><input type="text" class="tx-inline-input tx-item-stok" value="${escapeHtml(stok)}" placeholder=""></td>
+        <td style="padding: 4px;"><input type="text" class="tx-inline-input tx-item-name" value="${escapeHtml(tanim)}" placeholder=""></td>
+        <td style="padding: 4px;"><input type="text" class="tx-inline-input tx-item-color" value="${escapeHtml(renk)}" placeholder=""></td>
+        <td style="padding: 4px;"><input type="text" inputmode="decimal" class="tx-inline-input tx-item-qty" value="${miktar !== '' ? miktar : ''}" style="text-align: right;" placeholder=""></td>
+        <td style="padding: 4px;"><input type="text" class="tx-inline-input tx-item-unit" value="${escapeHtml(birim)}" placeholder=""></td>
+        <td style="padding: 4px;"><input type="text" inputmode="decimal" class="tx-inline-input tx-item-price" value="${fiyat !== '' ? fiyat : ''}" style="text-align: right;" placeholder=""></td>
+        <td style="padding: 4px;"><input type="text" inputmode="decimal" class="tx-inline-input tx-item-discount" value="${iskonto !== '' && iskonto !== 0 ? iskonto : ''}" style="text-align: right;" placeholder=""></td>
+        <td style="padding: 4px; text-align: right; font-weight: 600; color: var(--text-primary);" class="tx-item-total-cell">${Number(total || 0).toFixed(2)}</td>
         <td style="padding: 4px; text-align: center;">
           <button type="button" class="btn-icon danger" onclick="Contacts.removeTxItemRow('${rowId}')" style="font-size: 1.1rem; border: none; background: transparent; cursor: pointer; color: var(--color-danger); line-height: 1; padding: 2px;">&times;</button>
         </td>
@@ -544,9 +547,9 @@ const Contacts = {
       const discInput = row.querySelector('.tx-item-discount');
       const totalCell = row.querySelector('.tx-item-total-cell');
 
-      const qty = parseFloat(qtyInput?.value) || 0;
-      const price = parseFloat(priceInput?.value) || 0;
-      const disc = parseFloat(discInput?.value) || 0;
+      const qty = parseFloat(String(qtyInput?.value || '0').replace(',', '.')) || 0;
+      const price = parseFloat(String(priceInput?.value || '0').replace(',', '.')) || 0;
+      const disc = parseFloat(String(discInput?.value || '0').replace(',', '.')) || 0;
 
       const netPrice = price * (1 - disc / 100);
       const total = qty * netPrice;
@@ -628,16 +631,24 @@ const Contacts = {
               await window.Orders.adjustStockForColors(order.colors, 'restore');
             }
           }
-          await dbDelete('orders', order.id);
+        }
+        if (window.dbDeleteMany) {
+          await window.dbDeleteMany('orders', linkedOrders.map(o => o.id));
+        } else {
+          await Promise.all(linkedOrders.map(o => dbDelete('orders', o.id)));
         }
       } else {
         if (!confirm('Bu cari hesabı ve tüm işlem geçmişini silmek istediğinizden emin misiniz?')) return;
       }
 
-      // Delete related transactions
+      // Delete related transactions in parallel batch
       const transactions = await dbGetByIndex('transactions', 'contactId', id);
-      for (const tx of transactions) {
-        await dbDelete('transactions', tx.id);
+      if (transactions.length > 0) {
+        if (window.dbDeleteMany) {
+          await window.dbDeleteMany('transactions', transactions.map(t => t.id));
+        } else {
+          await Promise.all(transactions.map(tx => dbDelete('transactions', tx.id)));
+        }
       }
 
       await dbDelete('contacts', id);
@@ -1382,6 +1393,11 @@ ${recentTx ? `*📝 SON 5 İŞLEM HAREKETİ*\n${recentTx}\n` : ''}
 ----------------------------------------
 _Atölyecim ERP ile oluşturulmuştur._`;
 
+    if (window.WhatsAppManager) {
+      window.WhatsAppManager.openForContact(contact.id, msg);
+      return;
+    }
+
     let cleanPhone = (contact.phone || '').replace(/[^0-9]/g, '');
     if (cleanPhone.startsWith('0')) {
       cleanPhone = cleanPhone.substring(1);
@@ -1391,22 +1407,9 @@ _Atölyecim ERP ile oluşturulmuştur._`;
       formattedPhone = '90' + cleanPhone;
     }
 
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    let waUrl = '';
-
-    if (isMobile) {
-      if (formattedPhone) {
-        waUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
-      } else {
-        waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
-      }
-    } else {
-      if (formattedPhone) {
-        waUrl = `https://web.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(msg)}`;
-      } else {
-        waUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
-      }
-    }
+    const waUrl = formattedPhone 
+      ? `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(msg)}`
+      : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
     window.open(waUrl, '_blank');
   },
 

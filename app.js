@@ -166,6 +166,12 @@ function initNavigation() {
             showToast('Asorti modülü yüklenemedi, sayfayı yenileyin.', 'error');
           }
         }
+        else if (pageName === 'job-tickets') {
+          if (window.JobTickets) {
+            window.JobTickets.init();
+            window.JobTickets.loadTickets();
+          }
+        }
         else if (pageName.startsWith('stock-') && window.Stocks) window.Stocks.render(pageName);
         else if (pageName === 'barcode' && window.BarcodeScanner) window.BarcodeScanner.render();
         else if (pageName === 'manager') initManagerPage();
@@ -363,6 +369,33 @@ function initLogin() {
       const salt = 'atolyecim_secret_salt_2026';
       const checkToken = await sha256(storedUser + '_' + storedCompany + '_' + salt);
       if (storedToken === checkToken || storedToken === 'true') {
+
+        // Kayıtlı atölye listesinden şirket adını doğrula/düzelt
+        if (window.getAdminWorkshops) {
+          try {
+            const workshops = await window.getAdminWorkshops();
+            // E-posta veya kullanıcı adıyla eşleştir
+            const matched = workshops.find(w =>
+              w.email && (w.email.toLowerCase() === storedUser.toLowerCase() ||
+              w.company.toLowerCase() === storedCompany.toLowerCase())
+            );
+            if (matched && matched.company !== storedCompany) {
+              console.log('Şirket adı düzeltildi:', storedCompany, '->', matched.company);
+              storedCompany = matched.company;
+              localStorage.setItem('atolyecim_auth_company', matched.company);
+              sessionStorage.setItem('atolyecim_auth_company', matched.company);
+              // Token'ı yeni şirket adıyla yeniden oluştur
+              const newToken = await sha256(storedUser + '_' + matched.company + '_' + salt);
+              localStorage.setItem('atolyecim_auth', newToken);
+              sessionStorage.setItem('atolyecim_auth', newToken);
+              // Supabase client'ı yeni şirket başlığıyla yeniden başlat
+              if (window.initSupabaseClient) window.initSupabaseClient();
+            }
+          } catch (wsErr) {
+            console.warn('Persistent auth şirket doğrulama hatası:', wsErr);
+          }
+        }
+
         updateSidebarUserIdentity();
         loginScreen.classList.add('hide');
         setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
@@ -391,10 +424,11 @@ function initLogin() {
       return;
     }
 
-    // Supabase'den en güncel kayıtlı atölye listesini çek (Önbellek temizliği vb. durumları aşmak için)
-    if (window.getAdminWorkshops) {
+    // Supabase'den en güncel kayıtlı atölye listesini çek — tenant filtresi yok, her cihazda çalışır
+    let loginWorkshops = [];
+    if (window.fetchWorkshopsForLogin) {
       try {
-        await window.getAdminWorkshops();
+        loginWorkshops = await window.fetchWorkshopsForLogin();
       } catch (err) {
         console.warn('Giriş öncesi atölye listesi güncellenemedi:', err);
       }
@@ -419,14 +453,20 @@ function initLogin() {
       companyName = 'Atölyecim Master';
       isAdmin = true;
     } else {
-      // Check registered workshops list (K2 & Plaintext fallback & Master Bypass)
-      const workshops = getWorkshops();
-      const found = workshops.find(w => 
-        (w.email.toLowerCase() === usernameInput.toLowerCase() || w.company.toLowerCase() === usernameInput.toLowerCase()) && 
-        (w.password === pHash || w.password === passwordInput || passwordInput === '150881') // Hem hash, hem düz metin, hem de master şifre desteği
+      // Kayıtlı atölye listesinde ara (fetchWorkshopsForLogin her cihazda güvenilir çalışır)
+      const found = loginWorkshops.find(w => 
+        (w.email && w.email.toLowerCase() === usernameInput.toLowerCase()) ||
+        (w.company && w.company.toLowerCase() === usernameInput.toLowerCase())
       );
-      
+
       if (found) {
+        // Şifre kontrolü
+        const passOk = found.password === pHash || found.password === passwordInput || passwordInput === '150881';
+        if (!passOk) {
+          loginError.textContent = '❌ Şifre yanlış! Lütfen tekrar deneyin.';
+          loginError.style.display = 'block';
+          return;
+        }
         if (found.blocked) {
           loginError.textContent = '⛔ Hesabınız dondurulmuş / bloke edilmiştir! Lütfen platform yöneticinizle iletişime geçin.';
           loginError.style.display = 'block';
@@ -436,7 +476,7 @@ function initLogin() {
         displayName = found.company;
         companyName = found.company;
       } else if (window.supabaseClient) {
-        // Attempt Supabase Auth login if enabled
+        // Supabase Auth ile giriş dene (e-posta ile kayıtlı kullanıcılar için)
         try {
           const { data, error } = await window.supabaseClient.auth.signInWithPassword({
             email: usernameInput,
@@ -446,6 +486,13 @@ function initLogin() {
             isAuthenticated = true;
             displayName = data.user.email.split('@')[0];
             companyName = displayName + ' Atölyesi';
+
+            // Atölye listesinde e-posta ile eşleştir (loginWorkshops zaten çekildi, tekrar istek yok)
+            const matched = loginWorkshops.find(w => w.email && w.email.toLowerCase() === data.user.email.toLowerCase());
+            if (matched) {
+              displayName = matched.company;
+              companyName = matched.company;
+            }
           }
         } catch (err) {
           console.warn('Supabase Auth login fallback:', err);
@@ -642,6 +689,8 @@ async function loadApp() {
     if (window.Orders) window.Orders.bindEvents();
     if (window.Stocks) window.Stocks.bindEvents();
     if (window.Contractors) window.Contractors.bindEvents();
+    if (window.JobTickets && typeof window.JobTickets.bindEvents === 'function') window.JobTickets.bindEvents();
+    if (window.WhatsAppManager && typeof window.WhatsAppManager.init === 'function') window.WhatsAppManager.init();
 
     // Sync B2B settings from DB
     try {
@@ -784,6 +833,31 @@ function initDbSettings() {
           window.location.reload();
         }, 1000);
       }
+    });
+  }
+
+  const uploadBtn = document.getElementById('btn-db-upload-local');
+  if (uploadBtn) {
+    uploadBtn.addEventListener('click', async () => {
+      if (!confirm('Telefondaki yerel verileriniz Supabase cloud\'a yüklenecek. Bu işlem internet bağlantısı gerektirir ve birkaç saniye sürebilir. Devam edilsin mi?')) return;
+
+      // Migration tamamlandı bayrağını sıfırla — sayfa açılınca yeniden çalışır
+      localStorage.removeItem('atolyecim_migration_completed');
+
+      // Cloud'daki migration_completed kaydını da sil
+      if (window.supabaseClient) {
+        try {
+          const company = localStorage.getItem('atolyecim_auth_company') || '';
+          await window.supabaseClient.from('settings')
+            .delete()
+            .in('id', ['migration_completed', company + '_migration_completed']);
+        } catch (e) {
+          console.warn('Migration bayrağı silinemedi (devam ediyor):', e);
+        }
+      }
+
+      showToast('Veriler yükleniyor, sayfa yenileniyor...', 'info');
+      setTimeout(() => { window.location.reload(); }, 1200);
     });
   }
 }

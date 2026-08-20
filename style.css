@@ -1934,7 +1934,11 @@ body::before {
     color: #000 !important;
   }
 
-  /* Ledger printing */
+  /* Ledger printing (A5 Portrait Format) */
+  body.printing-ledger {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
   body.printing-ledger #ledger-print-area, body.printing-ledger #ledger-print-area * {
     visibility: visible;
   }
@@ -1943,16 +1947,43 @@ body::before {
     position: absolute;
     left: 0;
     top: 0;
-    width: 100%;
-    margin: 0 !important;
-    padding: 30px !important;
+    width: 100% !important;
+    max-width: 148mm !important;
+    margin: 0 auto !important;
+    padding: 12px !important;
     border: none !important;
     box-shadow: none !important;
     background: #fff !important;
     color: #000 !important;
     font-family: 'Segoe UI', Arial, sans-serif !important;
-    font-size: 12px !important;
-    line-height: 1.4 !important;
+    font-size: 10px !important;
+    line-height: 1.3 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Job Ticket Printing (A5 Landscape Kuponlu Şablon) */
+  body.printing-job-ticket {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+  body.printing-job-ticket #job-ticket-print-area, body.printing-job-ticket #job-ticket-print-area * {
+    visibility: visible !important;
+  }
+  body.printing-job-ticket #job-ticket-print-area {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm !important;
+    height: 148mm !important;
+    margin: 0 !important;
+    padding: 2mm !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    color: #000 !important;
+    box-sizing: border-box !important;
   }
 
   /* Thermal label printing */
@@ -2543,5 +2574,45 @@ body::before {
   font-size: 0.85rem;
 }
 
+/* Number input spinners completely hidden (Aşağı/Yukarı ok butonlarını gizle) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button,
+.tx-inline-input::-webkit-outer-spin-button,
+.tx-inline-input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
 
+input[type="number"],
+.tx-inline-input {
+  -moz-appearance: textfield !important;
+}
 
+/* WhatsApp Şablon Tab Butonları */
+.wa-tab-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-card);
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.wa-tab-btn:hover {
+  background: rgba(37, 211, 102, 0.1);
+  border-color: rgba(37, 211, 102, 0.3);
+  color: #25d366;
+}
+
+.wa-tab-btn.active {
+  background: #25d366 !important;
+  border-color: #25d366 !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+}

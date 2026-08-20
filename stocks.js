@@ -69,7 +69,7 @@ const Stocks = {
     const rowId = 'sole-row-' + Math.random().toString(36).substr(2, 9);
     const html = `
       <div class="sole-size-row" id="${rowId}" style="display: flex; gap: 6px; align-items: center; margin-bottom: 8px; width: 100%;">
-        <input type="text" class="sole-size-input" placeholder="No (Örn: 37)" value="${escapeHtml(size)}" required style="flex: 1.1; min-width: 0; padding: 6px 8px; font-size: 0.85rem; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: var(--radius-sm); color: var(--text-primary); outline: none;">
+        <input type="text" class="sole-size-input" placeholder="No" value="${escapeHtml(size)}" required style="flex: 1.1; min-width: 0; padding: 6px 8px; font-size: 0.85rem; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: var(--radius-sm); color: var(--text-primary); outline: none;">
         <input type="number" class="sole-qty-input" placeholder="Adet" value="${qty}" required style="flex: 1.1; min-width: 0; padding: 6px 8px; font-size: 0.85rem; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: var(--radius-sm); color: var(--text-primary); outline: none;">
         <input type="text" class="sole-color-input" placeholder="Renk" value="${escapeHtml(color)}" required style="flex: 1.3; min-width: 0; padding: 6px 8px; font-size: 0.85rem; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: var(--radius-sm); color: var(--text-primary); outline: none;">
         <input type="number" class="sole-limit-input" placeholder="Limit" value="${limit}" required style="flex: 1.3; min-width: 0; padding: 6px 8px; font-size: 0.85rem; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: var(--radius-sm); color: var(--text-primary); outline: none;">
@@ -298,7 +298,7 @@ const Stocks = {
         // Edit mode works like standard single size edit
         if (sizeLabel && sizeInput) {
           sizeLabel.textContent = 'Beden';
-          sizeInput.placeholder = 'Örn: 37';
+          sizeInput.placeholder = '';
         }
       }
     } else if (type === 'accessory') {
@@ -306,7 +306,7 @@ const Stocks = {
       if (colorGroup) colorGroup.style.display = 'none';
       if (extraLabel && extraInput) {
         extraLabel.textContent = 'Tedarikçi';
-        extraInput.placeholder = 'Örn: Yıldız Aksesuar';
+        extraInput.placeholder = '';
       }
       if (unitSelect) {
         unitSelect.value = 'Adet';
@@ -315,7 +315,7 @@ const Stocks = {
     } else if (type === 'leather') {
       if (sizeLabel && sizeInput) {
         sizeLabel.textContent = 'Kalite Sınıfı';
-        sizeInput.placeholder = 'Örn: 1. Sınıf (A)';
+        sizeInput.placeholder = '';
       }
       if (extraGroup) extraGroup.style.display = 'none';
       if (unitSelect) {
@@ -327,7 +327,7 @@ const Stocks = {
       if (colorGroup) colorGroup.style.display = 'none';
       if (extraLabel && extraInput) {
         extraLabel.textContent = 'Depo Alanı';
-        extraInput.placeholder = 'Örn: İplik Dolabı';
+        extraInput.placeholder = '';
       }
     }
   },

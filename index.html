@@ -104,7 +104,7 @@
         <form id="register-form" style="display: none;">
           <div class="form-group" style="margin-bottom: 12px;">
             <label for="reg-company">Atölye / Firma Adı</label>
-            <input type="text" id="reg-company" placeholder="Örn: Özkan Ayakkabı Atölyesi" autocomplete="organization" required>
+            <input type="text" id="reg-company" placeholder="" autocomplete="organization" required>
           </div>
           <div class="form-group" style="margin-bottom: 12px;">
             <label for="reg-email">E-posta Adresi</label>
@@ -222,6 +222,10 @@
             <span id="sidebar-incoming-badge" style="background: var(--color-danger); color: #fff; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 10px; display: none; line-height: 1.1; margin-right: 12px;">0</span>
           </li>
         </ul>
+        <li class="nav-item" data-page="job-tickets" role="menuitem" tabindex="0" aria-label="İş Takip Fişi">
+          <span class="sidebar-icon">📋</span>
+          <span>İş Takip Fişi</span>
+        </li>
         <li class="nav-item" data-page="contractors" role="menuitem" tabindex="0" aria-label="Fason Takip">
           <span class="sidebar-icon">🧵</span>
           <span>Fason Takip</span>
@@ -747,7 +751,7 @@
             <div class="scanner-manual-input">
               <label for="barcode-manual">Barkod Numarasını Elle Gir:</label>
               <div class="input-group">
-                <input type="text" id="barcode-manual" placeholder="Örn: 8690000000001">
+                <input type="text" id="barcode-manual" placeholder="">
                 <button class="btn btn-primary" id="btn-manual-scan">Sorgula</button>
               </div>
             </div>
@@ -984,11 +988,11 @@
             <form id="manager-broadcast-push-form" style="display: flex; flex-direction: column; gap: 12px;">
               <div class="form-group" style="margin-bottom: 0;">
                 <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">Bildirim Başlığı</label>
-                <input type="text" id="broadcast-push-title" placeholder="Örn: 💥 Büyük Sezon Sonu İndirimi!" required maxlength="50">
+                <input type="text" id="broadcast-push-title" placeholder="" required maxlength="50">
               </div>
               <div class="form-group" style="margin-bottom: 0;">
                 <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">Bildirim İçerik Mesajı</label>
-                <textarea id="broadcast-push-message" placeholder="Örn: Tüm spor ayakkabı modellerimizde net %20 indirim başladı. Katalogdan inceleyin!" required style="min-height: 80px; font-size: 12px;" maxlength="200"></textarea>
+                <textarea id="broadcast-push-message" placeholder="" required style="min-height: 80px; font-size: 12px;" maxlength="200"></textarea>
               </div>
               <button type="submit" class="btn btn-primary" id="btn-broadcast-push-submit" style="justify-content: center; font-weight: 700; background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; display: flex; align-items: center; gap: 8px; margin-top: 5px; width: 100%;">
                 📢 Bildirimi Herkese Gönder
@@ -1047,7 +1051,7 @@
               <div class="form-group">
                 <label style="font-weight: 600; margin-bottom: 8px; display: block; color: var(--text-accent);">WhatsApp Sipariş Hattı</label>
                 <div style="display: flex; gap: 8px;">
-                  <input type="text" id="manager-b2b-phone" placeholder="Örn: 905051234567" style="width: 100%;">
+                  <input type="text" id="manager-b2b-phone" placeholder="" style="width: 100%;">
                   <button type="button" id="btn-save-b2b-phone" class="btn btn-secondary" style="font-weight: 600;">💾 Kaydet</button>
                 </div>
                 <span style="font-size: 11px; color: var(--text-muted); margin-top: 6px; display: block;">Ülke kodu dahil (başında + veya sıfır olmadan) yazın. Siparişler bu numaraya WhatsApp mesajı olarak atılacaktır.</span>
@@ -1083,7 +1087,7 @@
             <div class="form-row" style="margin-bottom: 15px;">
               <div class="form-group" style="flex: 2;">
                 <label for="as-name">Şablon Adı</label>
-                <input type="text" id="as-name" placeholder="Örn: Erkek 12li Standart" required>
+                <input type="text" id="as-name" placeholder="" required>
               </div>
             </div>
             <label style="font-weight: 600; font-size: 0.82rem; margin-bottom: 8px; display: block; text-transform: uppercase;">Numara Adet Dağılımı</label>
@@ -1334,7 +1338,7 @@
 
           <!-- Input Bar -->
           <form id="ai-chat-form" style="display: flex; gap: 10px; width: 100%;">
-            <input type="text" id="ai-chat-input" placeholder="Asistana bir soru yazın... (Örn: 'Comfort EVA stokta ne kadar var?')" style="flex: 1; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: var(--radius-md); padding: 12px 16px; color: var(--text-primary); outline: none; font-size: 0.95rem; transition: border-color 0.2s;" required autocomplete="off">
+            <input type="text" id="ai-chat-input" placeholder="Asistana bir soru yazın..." style="flex: 1; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: var(--radius-md); padding: 12px 16px; color: var(--text-primary); outline: none; font-size: 0.95rem; transition: border-color 0.2s;" required autocomplete="off">
             <button type="submit" class="btn btn-primary" style="padding: 0 24px; display: flex; align-items: center; gap: 8px; border-radius: var(--radius-md);">
               <span>Gönder</span>
               <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -1384,6 +1388,91 @@
               <h3 style="color: var(--text-primary); margin-bottom: 8px;">Henüz fason usta kaydı yok</h3>
               <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Saya dikişçi, montajcı veya kesimci ustalarınızı ekleyerek iş ve ödeme takibi yapabilirsiniz.</p>
               <button class="btn btn-primary" onclick="document.getElementById('btn-add-contractor').click()" style="font-weight: 600;">➕ İlk Ustayı Ekle</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ JOB TICKETS (İŞ TAKİP FİŞLERİ) PAGE ============ -->
+      <section id="page-job-tickets" class="page">
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h1 class="page-title">📋 İş Takip Fişleri</h1>
+            <p class="page-subtitle">Ayakkabı imalat aşamaları, usta refakat kartları ve A5 kuponlu fiş basımı</p>
+          </div>
+          <button class="btn btn-primary" id="btn-add-job-ticket" style="font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+            <span>➕ Yeni İş Fişi Kes</span>
+          </button>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px;">
+          <div class="metric-card" style="padding: 14px;">
+            <span class="metric-label">Toplam Aktif Fiş</span>
+            <span class="metric-value" id="metric-jt-total" style="color: var(--text-accent);">0</span>
+          </div>
+          <div class="metric-card" style="padding: 14px;">
+            <span class="metric-label">✂️ Kesimde</span>
+            <span class="metric-value" id="metric-jt-kesim" style="color: #38bdf8;">0 Çift</span>
+          </div>
+          <div class="metric-card" style="padding: 14px;">
+            <span class="metric-label">🧵 Sayada</span>
+            <span class="metric-value" id="metric-jt-saya" style="color: #f59e0b;">0 Çift</span>
+          </div>
+          <div class="metric-card" style="padding: 14px;">
+            <span class="metric-label">🔨 Montajda</span>
+            <span class="metric-value" id="metric-jt-montaj" style="color: #ec4899;">0 Çift</span>
+          </div>
+          <div class="metric-card" style="padding: 14px;">
+            <span class="metric-label">📦 Paketlemede</span>
+            <span class="metric-value" id="metric-jt-paket" style="color: #8b5cf6;">0 Çift</span>
+          </div>
+          <div class="metric-card" style="padding: 14px;">
+            <span class="metric-label">✅ Biten Fişler</span>
+            <span class="metric-value" id="metric-jt-bitti" style="color: #10b981;">0</span>
+          </div>
+        </div>
+
+        <!-- Filters & Search Toolbar -->
+        <div class="page-toolbar" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+          <div class="filter-group" id="job-ticket-filters" style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button type="button" class="filter-btn active" data-stage="all">Tümü</button>
+            <button type="button" class="filter-btn" data-stage="kesim">✂️ Kesimde</button>
+            <button type="button" class="filter-btn" data-stage="saya">🧵 Sayada</button>
+            <button type="button" class="filter-btn" data-stage="montaj">🔨 Montajda</button>
+            <button type="button" class="filter-btn" data-stage="paketleme">📦 Paketlemede</button>
+            <button type="button" class="filter-btn" data-stage="tamamlandi">✅ Bitti</button>
+          </div>
+          <div class="search-box" style="flex: 1; max-width: 320px; min-width: 200px;">
+            <input type="text" id="search-job-tickets" placeholder="Seri No, Müşteri, Model, Usta ara..." style="width: 100%;">
+          </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="data-table" id="job-tickets-table">
+              <thead>
+                <tr>
+                  <th style="width: 95px;">Seri No</th>
+                  <th>Müşteri / Klişe</th>
+                  <th>Model & Deri</th>
+                  <th>Kalıp</th>
+                  <th>Çift / Asorti</th>
+                  <th style="width: 135px;">Aşama</th>
+                  <th style="width: 95px;">Teslim</th>
+                  <th style="width: 145px; text-align: center;">İşlemler</th>
+                </tr>
+              </thead>
+              <tbody id="job-tickets-tbody">
+                <!-- Dinamik İş Fişi Satırları -->
+              </tbody>
+            </table>
+            <div class="empty-state" id="job-tickets-empty" style="display: block; padding: 40px 20px; text-align: center;">
+              <div style="font-size: 3rem; margin-bottom: 12px;">📋</div>
+              <h3 style="color: var(--text-primary); margin-bottom: 8px;">Henüz iş takip fişi kesilmedi</h3>
+              <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Yeni imalata giren modelleriniz için refakat fişi oluşturabilir, aşamaları takip edip A5 kupon çıktısı alabilirsiniz.</p>
+              <button class="btn btn-primary" onclick="document.getElementById('btn-add-job-ticket').click()" style="font-weight: 600;">➕ İlk Fişi Kes</button>
             </div>
           </div>
         </div>
@@ -1544,9 +1633,13 @@
           <div class="form-row">
             <div class="form-group" style="flex: 1;">
               <label for="product-code">Model Kodu</label>
-              <input type="text" id="product-code" placeholder="Örn: M-420" required>
+              <input type="text" id="product-code" placeholder="" required>
             </div>
-            <div class="form-group product-detail-field" style="display: none;">
+            <div class="form-group" style="flex: 1;">
+              <label for="product-sole-material">Taban Bilgisi (Manuel)</label>
+              <input type="text" id="product-sole-material" placeholder="" maxlength="150">
+            </div>
+            <div class="form-group product-detail-field" style="display: none; flex: 1;">
               <label for="product-category">Kategori</label>
               <select id="product-category">
                 <option value="Ayakkabı" selected>Ayakkabı</option>
@@ -1560,39 +1653,27 @@
           </div>
 
           <div class="form-row product-detail-field" style="display: none;">
-            <div class="form-group">
+            <div class="form-group" style="flex: 1;">
               <label for="product-color">Ürün Rengi</label>
-              <input type="text" id="product-color" placeholder="Örn: Siyah, Taba, Beyaz, Bordo">
-            </div>
-            <div class="form-group">
-              <label for="product-sole-material">Taban Malzemesi</label>
-              <select id="product-sole-material">
-                <option value="TPU" selected>TPU</option>
-                <option value="Termo">Termo</option>
-                <option value="Poliüretan">Poliüretan</option>
-                <option value="Kauçuk">Kauçuk</option>
-                <option value="Kösele">Kösele</option>
-                <option value="EVA">EVA</option>
-                <option value="Mantar">Mantar</option>
-              </select>
+              <input type="text" id="product-color" placeholder="">
             </div>
           </div>
 
           <div class="form-row product-detail-field" style="display: none;">
             <div class="form-group">
               <label for="product-leather-lining">Astar Derisi</label>
-              <input type="text" id="product-leather-lining" placeholder="Örn: Koyun Astar (Manuel doldurulabilir)">
+              <input type="text" id="product-leather-lining" placeholder="">
             </div>
             <div class="form-group">
               <label for="product-leather-upper">Yüz Derisi</label>
-              <input type="text" id="product-leather-upper" placeholder="Örn: Vidala Sığır (Manuel doldurulabilir)">
+              <input type="text" id="product-leather-upper" placeholder="">
             </div>
           </div>
 
           <div class="form-row product-detail-field" style="display: none;">
             <div class="form-group">
               <label for="product-leather-type">Deri Türü</label>
-              <input type="text" id="product-leather-type" placeholder="Örn: Hakiki Deri (Manuel yazılabilir)">
+              <input type="text" id="product-leather-type" placeholder="">
             </div>
             <div class="form-group" style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
               <div>
@@ -1653,7 +1734,7 @@
           <div class="form-row">
             <div class="form-group">
               <label for="contact-name">Ad Soyad / Firma</label>
-              <input type="text" id="contact-name" placeholder="Örn: Ahmet Yılmaz" required>
+              <input type="text" id="contact-name" placeholder="" required>
             </div>
             <div class="form-group">
               <label for="contact-type">Tür</label>
@@ -1734,7 +1815,7 @@
             </div>
             <div class="form-group">
               <label for="tx-invoice-no">Evrak / Fiş No</label>
-              <input type="text" id="tx-invoice-no" placeholder="Örn: A00, F-101 vb.">
+              <input type="text" id="tx-invoice-no" placeholder="">
             </div>
           </div>
 
@@ -1793,7 +1874,7 @@
 
           <div class="form-group">
             <label for="tx-description">Genel Açıklama</label>
-            <textarea id="tx-description" placeholder="Örn: 200 Çift A-102 Taban Bedeli veya Havale Ödemesi..." rows="2" style="resize: vertical; min-height: 55px;" maxlength="1000"></textarea>
+            <textarea id="tx-description" placeholder="" rows="2" style="resize: vertical; min-height: 55px;" maxlength="1000"></textarea>
           </div>
           <div class="modal-actions">
             <button type="button" class="btn btn-ghost" data-modal="transaction-modal">İptal</button>
@@ -1818,7 +1899,7 @@
           
           <div class="form-group">
             <label for="stock-name">Malzeme / Model Adı</label>
-            <input type="text" id="stock-name" placeholder="Örn: Comfort EVA veya Vidala Deri" required>
+            <input type="text" id="stock-name" placeholder="" required>
           </div>
 
           <!-- Taban beden/numara listesi (Sadece yeni taban eklenirken görünür) -->
@@ -1835,11 +1916,11 @@
           <div class="form-row" id="stock-dynamic-row-1">
             <div class="form-group val-size-group">
               <label for="stock-size">Beden / Detay</label>
-              <input type="text" id="stock-size" placeholder="Örn: 40-44 veya 1. Sınıf (A)">
+              <input type="text" id="stock-size" placeholder="">
             </div>
             <div class="form-group val-color-group">
               <label for="stock-color">Renk</label>
-              <input type="text" id="stock-color" placeholder="Örn: Siyah">
+              <input type="text" id="stock-color" placeholder="">
             </div>
           </div>
 
@@ -1901,7 +1982,7 @@
             </div>
             <div class="form-group" style="flex: 1;">
               <label for="order-model-code">Model Kodu</label>
-              <input type="text" id="order-model-code" placeholder="Örn: M-420" required>
+              <input type="text" id="order-model-code" placeholder="" required>
             </div>
           </div>
 
@@ -1945,11 +2026,11 @@
           <div class="form-row">
             <div class="form-group">
               <label for="order-klise">Klişe</label>
-              <input type="text" id="order-klise" placeholder="Örn: Gold Logo (Manuel yazılabilir)">
+              <input type="text" id="order-klise" placeholder="">
             </div>
             <div class="form-group">
               <label for="order-accessory-color">Aksesuar Rengi</label>
-              <input type="text" id="order-accessory-color" placeholder="Örn: Gümüş (Manuel yazılabilir)">
+              <input type="text" id="order-accessory-color" placeholder="">
             </div>
           </div>
 
@@ -2079,10 +2160,11 @@
 
 
           
-          <div class="modal-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+          <div class="modal-actions" style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
             <button type="button" class="btn btn-ghost" data-modal="db-settings-modal" style="flex: 1;">Kapat</button>
             <button type="button" id="btn-db-settings-clear" class="btn btn-ghost" style="color: var(--color-danger); border-color: rgba(239, 68, 68, 0.2); flex: 1;">Sıfırla</button>
             <button type="submit" class="btn btn-primary" style="flex: 2;">Bağlantıyı Kaydet</button>
+            <button type="button" id="btn-db-upload-local" class="btn btn-primary" style="flex: 2; background: linear-gradient(135deg, #059669, #10b981); width: 100%;">&#x2601;&#xFE0F; Telefondaki Verileri Cloud'a Yükle</button>
           </div>
         </form>
       </div>
@@ -2287,11 +2369,11 @@
             </div>
             <div class="form-group" style="margin-bottom: 0;">
               <label for="inv-input-tax-office">Vergi Dairesi</label>
-              <input type="text" id="inv-input-tax-office" placeholder="Örn: Merter V.D.">
+              <input type="text" id="inv-input-tax-office" placeholder="">
             </div>
             <div class="form-group" style="margin-bottom: 0;">
               <label for="inv-input-tax-no">Vergi No / TC</label>
-              <input type="text" id="inv-input-tax-no" placeholder="Örn: 1234567890">
+              <input type="text" id="inv-input-tax-no" placeholder="">
             </div>
             <div class="form-group" style="margin-bottom: 0;">
               <label for="inv-input-kdv">KDV Oranı (%)</label>
@@ -2416,7 +2498,7 @@
             
             <div class="form-group">
               <label for="label-input-sender">Gönderici Firma (Atölye Adı)</label>
-              <input type="text" id="label-input-sender" placeholder="Örn: Aydemir Ayakkabı">
+              <input type="text" id="label-input-sender" placeholder="">
             </div>
 
             <div class="form-group">
@@ -2473,12 +2555,12 @@
 
             <div class="form-group">
               <label for="label-input-barcode">Barkod Metni (Sadece İngilizce Harf/Rakam)</label>
-              <input type="text" id="label-input-barcode" placeholder="Örn: ORD-102-1">
+              <input type="text" id="label-input-barcode" placeholder="">
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
               <label for="label-input-notes">Özel Sevkiyat Notu</label>
-              <input type="text" id="label-input-notes" placeholder="Örn: Dikkat Kırılmaz / Askılı Koli">
+              <input type="text" id="label-input-notes" placeholder="">
             </div>
 
           </div>
@@ -2742,14 +2824,14 @@
             </div>
             <div class="form-group">
               <label for="quick-order-model-code" style="font-weight: 600; display: block; margin-bottom: 6px;">Model Kodu</label>
-              <input type="text" id="quick-order-model-code" placeholder="Örn: A-102" required style="width: 100%;">
+              <input type="text" id="quick-order-model-code" placeholder="" required style="width: 100%;">
             </div>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px;">
             <div class="form-group">
               <label for="quick-order-color" style="font-weight: 600; display: block; margin-bottom: 6px;">Renk</label>
-              <input type="text" id="quick-order-color" placeholder="Örn: Siyah" required style="width: 100%;" list="quick-colors-list">
+              <input type="text" id="quick-order-color" placeholder="" required style="width: 100%;" list="quick-colors-list">
               <datalist id="quick-colors-list"></datalist>
             </div>
             <div class="form-group" style="grid-column: span 2; display: grid; grid-template-columns: 2fr 1.2fr; gap: 8px;">
@@ -2840,11 +2922,11 @@
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
               <label for="quick-order-klise" style="font-weight: 600; display: block; margin-bottom: 6px;">Klişe</label>
-              <input type="text" id="quick-order-klise" placeholder="Örn: Gold Logo" style="width: 100%;">
+              <input type="text" id="quick-order-klise" placeholder="" style="width: 100%;">
             </div>
             <div class="form-group">
               <label for="quick-order-accessory" style="font-weight: 600; display: block; margin-bottom: 6px;">Aksesuar Rengi</label>
-              <input type="text" id="quick-order-accessory" placeholder="Örn: Gümüş" style="width: 100%;">
+              <input type="text" id="quick-order-accessory" placeholder="" style="width: 100%;">
             </div>
           </div>
 
@@ -2871,7 +2953,7 @@
           <input type="hidden" id="contractor-id">
           <div class="form-group">
             <label for="contractor-name">Usta Ad Soyad / Firma</label>
-            <input type="text" id="contractor-name" placeholder="Örn: Ahmet Usta (Saya)" required>
+            <input type="text" id="contractor-name" placeholder="" required>
           </div>
           <div class="form-group">
             <label for="contractor-role">Ustalık Alanı / Rol</label>
@@ -2885,7 +2967,7 @@
           </div>
           <div class="form-group">
             <label for="contractor-phone">Telefon Numarası</label>
-            <input type="text" id="contractor-phone" placeholder="Örn: 0505 123 45 67">
+            <input type="text" id="contractor-phone" placeholder="">
           </div>
           <div class="modal-actions">
             <button type="button" class="btn btn-ghost" data-modal="contractor-modal">İptal</button>
@@ -2908,7 +2990,7 @@
           <input type="hidden" id="job-contractor-id">
           <div class="form-group">
             <label for="job-model-code">Model Kodu</label>
-            <input type="text" id="job-model-code" placeholder="Örn: A-102" required>
+            <input type="text" id="job-model-code" placeholder="" required>
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -2932,7 +3014,7 @@
           </div>
           <div class="form-group">
             <label for="job-description">Açıklama (Opsiyonel)</label>
-            <input type="text" id="job-description" placeholder="Örn: Saya dikişi için teslim edildi">
+            <input type="text" id="job-description" placeholder="">
           </div>
           <div class="modal-actions">
             <button type="button" class="btn btn-ghost" data-modal="contractor-job-modal">İptal</button>
@@ -2971,7 +3053,7 @@
           </div>
           <div class="form-group">
             <label for="payment-description">Ödeme Detayı / Makbuz No</label>
-            <input type="text" id="payment-description" placeholder="Örn: Elden teslimat / Avans" required>
+            <input type="text" id="payment-description" placeholder="" required>
           </div>
           <div class="modal-actions">
             <button type="button" class="btn btn-ghost" data-modal="contractor-payment-modal">İptal</button>
@@ -3034,10 +3116,13 @@
         </div>
 
         <div class="modal-actions" style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <!-- Sol taraf (Yazdır) -->
+          <!-- Sol taraf (Yazdır & WhatsApp) -->
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button type="button" class="btn" id="btn-c-ledger-print" style="font-weight: 700; display: flex; align-items: center; gap: 6px; height: 38px; background: #0284c7; border-color: #0284c7; color: #fff;">
-              🖨️ Yazdır (A4 PDF)
+              🖨️ Yazdır (A5 Format)
+            </button>
+            <button type="button" class="btn btn-primary" id="btn-c-ledger-whatsapp" style="font-weight: 700; display: flex; align-items: center; gap: 6px; height: 38px; background: #25d366; border-color: #25d366; color: #fff;">
+              📲 WhatsApp ile Paylaş
             </button>
           </div>
           <!-- Sağ taraf (Kapat) -->
@@ -3049,6 +3134,208 @@
       </div>
     </div>
   </div>
+
+  <!-- ============ JOB TICKET (İŞ TAKİP FİŞİ) MODAL ============ -->
+  <div class="modal-overlay" id="job-ticket-modal">
+    <div class="modal-card" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header" style="background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(168,85,247,0.05));">
+        <h2 id="job-ticket-modal-title" style="display: flex; align-items: center; gap: 8px;">📋 Yeni İş Takip Fişi Kes</h2>
+        <button class="modal-close" data-modal="job-ticket-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <form id="job-ticket-form">
+          <input type="hidden" id="jt-id">
+          
+          <!-- 1. Satır: Seri No, Müşteri, Teslim Tarihi -->
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="jt-serial-no" style="color: #ef4444; font-weight: 700;">Seri No (Manuel / Otomatik)</label>
+              <input type="text" id="jt-serial-no" placeholder="" required style="font-weight: 700; color: #ef4444;">
+            </div>
+            <div class="form-group" style="flex: 1.5;">
+              <label for="jt-customer">Müşteri / Cari Adı</label>
+              <input type="text" id="jt-customer" placeholder="" required>
+            </div>
+            <div class="form-group" style="flex: 1.2;">
+              <label for="jt-delivery-date">Teslim Tarihi</label>
+              <input type="date" id="jt-delivery-date">
+            </div>
+          </div>
+
+          <!-- 2. Satır: Model Kodu, Deri, Astar, İp -->
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="jt-model">Model Kodu</label>
+              <input type="text" id="jt-model" placeholder="" required>
+            </div>
+            <div class="form-group" style="flex: 1.2;">
+              <label for="jt-leather">Deri / Renk</label>
+              <input type="text" id="jt-leather" placeholder="">
+            </div>
+            <div class="form-group" style="flex: 1.2;">
+              <label for="jt-lining">Astar</label>
+              <input type="text" id="jt-lining" placeholder="">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="jt-thread">İp</label>
+              <input type="text" id="jt-thread" placeholder="">
+            </div>
+          </div>
+
+          <!-- 3. Satır: Kalıp No, Taban Bilgisi -->
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="jt-last-no">Kalıp No</label>
+              <input type="text" id="jt-last-no" placeholder="">
+            </div>
+            <div class="form-group" style="flex: 1.5;">
+              <label for="jt-sole">Taban (Manuel)</label>
+              <input type="text" id="jt-sole" placeholder="">
+            </div>
+            <div class="form-group" style="flex: 1.2;">
+              <label for="jt-stage">Mevcut Aşama</label>
+              <select id="jt-stage" style="font-weight: 700;">
+                <option value="kesim">✂️ Kesimde</option>
+                <option value="saya">🧵 Sayada</option>
+                <option value="montaj">🔨 Montajda</option>
+                <option value="paketleme">📦 Paketlemede</option>
+                <option value="tamamlandi">✅ Tamamlandı</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 4. Numara / Asorti Cetveli Bölümü -->
+          <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-card); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+              <span style="font-weight: 700; font-size: 13px; color: var(--text-accent);">👟 Numara & Çift Dağılımı (Asorti Cetveli)</span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <label for="jt-size-range-type" style="font-size: 12px; margin-bottom: 0; color: var(--text-muted);">Numara Grubu:</label>
+                <select id="jt-size-range-type" style="padding: 3px 8px; font-size: 11px; width: auto;">
+                  <option value="kadin" selected>Kadın (35 - 41)</option>
+                  <option value="erkek">Erkek (39 - 45)</option>
+                  <option value="cocuk">Çocuk (26 - 35)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Dynamic Size Inputs Container -->
+            <div id="jt-size-grid-inputs" style="margin-bottom: 12px;"></div>
+
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+              <span style="font-weight: 700; font-size: 13px; color: var(--text-primary);">Toplam Çift:</span>
+              <input type="number" id="jt-total-pairs" min="0" placeholder="" style="width: 90px; text-align: center; font-weight: 900; font-size: 15px; color: #10b981; border: 1.5px solid #10b981;">
+            </div>
+          </div>
+
+          <!-- 5. Satır: Usta Görevlendirmeleri -->
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="jt-cutter">✂️ Kesici Usta</label>
+              <input type="text" id="jt-cutter" placeholder="">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="jt-stitcher">🧵 Sayacı Usta</label>
+              <input type="text" id="jt-stitcher" placeholder="">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="jt-assembler">🔨 Kalfa (Montajcı)</label>
+              <input type="text" id="jt-assembler" placeholder="">
+            </div>
+          </div>
+
+          <!-- 6. Satır: Klişe, Sipariş Veren, Not, Ambalaj -->
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="jt-emboss">Klişe / Baskı Adı</label>
+              <input type="text" id="jt-emboss" placeholder="">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="jt-order-placer">Sipariş Veren</label>
+              <input type="text" id="jt-order-placer" placeholder="">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="jt-packaging">Ambalaj Bilgisi</label>
+              <input type="text" id="jt-packaging" placeholder="">
+            </div>
+            <div class="form-group" style="flex: 1.5;">
+              <label for="jt-notes">Özel İmalat Notu</label>
+              <input type="text" id="jt-notes" placeholder="">
+            </div>
+          </div>
+
+          <div class="modal-actions" style="margin-top: 20px;">
+            <button type="button" class="btn btn-ghost" data-modal="job-ticket-modal">İptal</button>
+            <button type="submit" class="btn btn-primary" style="font-weight: 700; padding: 0 24px;">💾 İş Fişini Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ UNIVERSAL WHATSAPP NOTIFICATION MODAL ============ -->
+  <div class="modal-overlay" id="whatsapp-modal">
+    <div class="modal-card" style="max-width: 580px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header" style="background: linear-gradient(135deg, rgba(37,211,102,0.15), rgba(16,185,129,0.05)); border-bottom: 1px solid rgba(37,211,102,0.2);">
+        <h2 id="wa-modal-title" style="display: flex; align-items: center; gap: 8px; color: #25d366; font-size: 1.15rem;">
+          <span>📲</span> WhatsApp Bildirim Merkezi
+        </h2>
+        <button class="modal-close" data-modal="whatsapp-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        
+        <!-- Recipient Bar -->
+        <div style="background: rgba(15,23,42,0.6); border: 1px solid var(--border-card); border-radius: 8px; padding: 12px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+            <span style="color: var(--text-muted);">Alıcı / Cari:</span>
+            <strong id="wa-recipient-name" style="color: #fff; font-size: 13px;">-</strong>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="wa-recipient-phone" style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px;">WhatsApp Telefon Numarası</label>
+            <div style="position: relative;">
+              <input type="text" id="wa-recipient-phone" placeholder="05XX XXX XX XX veya 905XXXXXXXXX" style="padding-left: 36px; font-weight: 600; font-family: monospace;">
+              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px;">📞</span>
+            </div>
+            <span style="font-size: 10.5px; color: var(--text-muted); margin-top: 3px; display: block;">Numara başında 0 veya +90 olması fark etmez, sistem otomatik düzenler.</span>
+          </div>
+        </div>
+
+        <!-- Template Selector Tabs -->
+        <div style="margin-bottom: 12px;">
+          <label style="font-size: 11.5px; font-weight: 700; color: var(--text-accent); display: block; margin-bottom: 6px;">📝 Mesaj Şablonu Seçin:</label>
+          <div id="wa-template-tabs" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
+        </div>
+
+        <!-- Message Editor -->
+        <div class="form-group" style="margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label for="wa-message-content" style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary); margin: 0;">Mesaj Metni (Canlı Düzenlenebilir)</label>
+            <span style="font-size: 10px; color: var(--text-muted);">*İstediğiniz bilgiyi ekleyip silebilirsiniz</span>
+          </div>
+          <textarea id="wa-message-content" rows="9" style="width: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12.5px; line-height: 1.5; resize: vertical; min-height: 160px; padding: 12px; background: rgba(3,7,18,0.7); border: 1px solid var(--border-input); border-radius: 6px; color: #fff;"></textarea>
+        </div>
+
+        <!-- Actions -->
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+          <button type="button" class="btn btn-ghost" id="btn-wa-copy-text" style="font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
+            📋 Metni Kopyala
+          </button>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-ghost" data-modal="whatsapp-modal">Kapat</button>
+            <button type="button" class="btn btn-primary" id="btn-wa-send-now" style="background: #25d366; border-color: #25d366; color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(37,211,102,0.3);">
+              <span>📲</span> WhatsApp'tan Gönder
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ JOB TICKET A5 PRINT AREA ============ -->
+  <div id="job-ticket-print-area" style="display: none;"></div>
 
   <!-- ============ LEDGER PRINT AREA ============ -->
   <div id="ledger-print-area" style="display: none;"></div>
@@ -3066,6 +3353,8 @@
   <script src="stocks.js" type="module"></script>
   <script src="orders.js" type="module"></script>
   <script src="contractors.js" type="module"></script>
+  <script src="job-tickets.js" type="module"></script>
+  <script src="whatsapp.js" type="module"></script>
   <script src="barcode.js" type="module"></script>
   <script src="ai-assistant.js" type="module"></script>
   <script src="app.js" type="module"></script>

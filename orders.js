@@ -1105,11 +1105,15 @@ const Orders = {
           await this.adjustStockForColors(o.colors, 'restore');
         }
 
-        // Y3 Düzeltme: Siparişe ait TÜM işlemler silinir (.filter ile)
+        // Y3 Düzeltme: Siparişe ait TÜM işlemler hızlıca silinir
         const txs = await dbGetAll('transactions');
         const relatedTxs = txs.filter(tx => tx.orderId === id);
-        for (const tx of relatedTxs) {
-          await dbDelete('transactions', tx.id);
+        if (relatedTxs.length > 0) {
+          if (window.dbDeleteMany) {
+            await window.dbDeleteMany('transactions', relatedTxs.map(t => t.id));
+          } else {
+            await Promise.all(relatedTxs.map(tx => dbDelete('transactions', tx.id)));
+          }
         }
         
         await dbDelete('orders', id);
@@ -1126,91 +1130,11 @@ const Orders = {
   },
 
   async sendWhatsAppNotification(orderId) {
-    try {
-      const order = await dbGet('orders', orderId);
-      if (!order) {
-        showToast('Sipariş bulunamadı!', 'error');
-        return;
-      }
-
-      let contact = null;
-      if (order.contactId && order.contactId !== 0) {
-        // Safe string/number ID checking
-        const rawId = order.contactId;
-        const numId = Number(rawId);
-        contact = await dbGet('contacts', !isNaN(numId) ? numId : rawId);
-      }
-
-      let phone = contact ? (contact.phone || '') : '';
-      let customerName = contact ? (contact.name || '') : '';
-
-      // Fallbacks
-      if (!phone) phone = order.customerPhone || '';
-      if (!customerName) customerName = order.customerName || 'Müşteri';
-
-      let cleanPhone = phone.replace(/\D/g, '');
-
-      // Prompt if phone is missing
-      if (!cleanPhone) {
-        const userInput = prompt(`"${customerName}" müşterisinin kayıtlı telefon numarası bulunmadı. Lütfen WhatsApp bildirimi göndermek istediğiniz numarayı girin (Örn: 05551234567):`, '');
-        if (!userInput) return;
-        cleanPhone = userInput.replace(/\D/g, '');
-        
-        // Auto-save back to contact card if contact exists
-        if (cleanPhone && contact) {
-          contact.phone = userInput.trim();
-          await dbUpdate('contacts', contact);
-          showToast('Telefon numarası müşteri kartına kaydedildi! 💾', 'info');
-        }
-      }
-
-      if (!cleanPhone) {
-        showToast('Geçersiz telefon numarası!', 'error');
-        return;
-      }
-
-      const statusNames = {
-        'beklemede': 'Beklemede (İmalat Sırasında)',
-        'kargoda': 'Kargoya Verildi',
-        'tamamlandi': 'Tamamlandı (Teslim Edildi)',
-        'iptal': 'İptal Edildi'
-      };
-
-      const statusSymbol = {
-        'beklemede': '⏳',
-        'kargoda': '📦',
-        'tamamlandi': '✅',
-        'iptal': '❌'
-      };
-
-      const company = localStorage.getItem('atolyecim_auth_company') || 'Atölyecim Master';
-      const newStatus = statusNames[order.status] || order.status;
-      const sym = statusSymbol[order.status] || '🔔';
-
-      let msg = `👟 *${company.toUpperCase()} - SİPARİŞ BİLGİLENDİRMESİ* 👟\n\n`;
-      msg += `Sayın *${customerName}*,\n`;
-      msg += `*${order.modelCode}* model siparişinizin durumu güncellendi:\n\n`;
-      msg += `${sym} *Durum:* ${newStatus}\n`;
-      msg += `📐 *Miktar:* ${order.qty} Çift\n`;
-      msg += `📅 *Termin Tarihi:* ${order.deadline ? new Date(order.deadline).toLocaleDateString('tr-TR') : '-'}\n\n`;
-
-      if (order.status === 'kargoda') {
-        msg += `🚚 Ürünleriniz kargoya teslim edilmiştir. Hayırlı işler, bol kazançlar dileriz!`;
-      } else if (order.status === 'tamamlandi') {
-        msg += `🤝 Siparişiniz tamamlanmıştır. Bizi tercih ettiğiniz için teşekkür eder, bereketli satışlar dileriz!`;
-      } else {
-        msg += `Siparişinizin üretim sürecini takip etmeye devam ediyoruz.`;
-      }
-
-      // Turkish country code handling
-      const formattedPhone = formatPhone(cleanPhone);
-      const waLink = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
-      window.open(waLink, '_blank');
-      showToast('WhatsApp yönlendirmesi açıldı! 💬', 'success');
-    } catch (err) {
-      console.error(err);
-      showToast('WhatsApp bildirimi oluşturulamadı.', 'error');
+    if (window.WhatsAppManager && typeof window.WhatsAppManager.openForOrder === 'function') {
+      window.WhatsAppManager.openForOrder(orderId);
+      return;
     }
+    showToast('WhatsApp yöneticisi yüklenemedi.', 'error');
   },
 
   async openInvoiceModal(orderId) {

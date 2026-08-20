@@ -33,6 +33,22 @@ const Products = {
       });
     }
 
+    // Manuel Taban Ekle butonu toggle dinleyicisi
+    const toggleSoleBtn = document.getElementById('btn-toggle-manual-sole');
+    if (toggleSoleBtn && !toggleSoleBtn._bound) {
+      toggleSoleBtn._bound = true;
+      toggleSoleBtn.addEventListener('click', () => {
+        const container = document.getElementById('product-sole-container');
+        const input = document.getElementById('product-sole-material');
+        if (container) {
+          const isHidden = container.style.display === 'none' || !container.style.display;
+          container.style.display = isHidden ? 'flex' : 'none';
+          toggleSoleBtn.textContent = isHidden ? '✕ Tabanı Gizle' : '👟 + Taban Ekle';
+          if (isHidden && input) input.focus();
+        }
+      });
+    }
+
     // Filters
     const filterBar = document.getElementById('product-filters');
     if (filterBar && !filterBar._bound) {
@@ -139,12 +155,32 @@ const Products = {
       else if (catLower.includes('bot')) categoryClass = 'badge-bot';
 
       const modelPhotoHtml = p.photo 
-        ? `<img class="table-thumbnail" src="${p.photo}" alt="Model" onclick="window.Products.showImageZoom('${p.photo}')" style="cursor:zoom-in;">`
-        : `<div class="table-thumbnail-placeholder">👟</div>`;
+        ? `<div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+             <img class="table-thumbnail" src="${p.photo}" alt="Model" onclick="window.Products.showImageZoom('${p.photo}')" style="cursor:zoom-in;">
+             <button type="button" class="btn btn-sm btn-ghost" onclick="window.Products.promptChangePhoto(${p.id}, 'photo')" title="Model Fotoğrafını Değiştir" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-card); color: var(--text-accent); display: flex; align-items: center; gap: 2px; background: rgba(99,102,241,0.08); cursor: pointer; white-space: nowrap;">
+               📷 Değiştir
+             </button>
+           </div>`
+        : `<div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+             <div class="table-thumbnail-placeholder" onclick="window.Products.promptChangePhoto(${p.id}, 'photo')" style="cursor:pointer;" title="Fotoğraf Ekle">👟</div>
+             <button type="button" class="btn btn-sm btn-ghost" onclick="window.Products.promptChangePhoto(${p.id}, 'photo')" title="Fotoğraf Ekle" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(16,185,129,0.25); color: var(--color-success); display: flex; align-items: center; gap: 2px; background: rgba(16,185,129,0.08); cursor: pointer; white-space: nowrap;">
+               + Foto Ekle
+             </button>
+           </div>`;
 
       const accPhotoHtml = p.accessoryPhoto 
-        ? `<img class="table-thumbnail" src="${p.accessoryPhoto}" alt="Aksesuar" onclick="window.Products.showImageZoom('${p.accessoryPhoto}')" style="cursor:zoom-in;">`
-        : `<div class="table-thumbnail-placeholder">📸</div>`;
+        ? `<div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+             <img class="table-thumbnail" src="${p.accessoryPhoto}" alt="Aksesuar" onclick="window.Products.showImageZoom('${p.accessoryPhoto}')" style="cursor:zoom-in;">
+             <button type="button" class="btn btn-sm btn-ghost" onclick="window.Products.promptChangePhoto(${p.id}, 'accessoryPhoto')" title="Aksesuar Fotoğrafını Değiştir" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-card); color: var(--text-accent); display: flex; align-items: center; gap: 2px; background: rgba(99,102,241,0.08); cursor: pointer; white-space: nowrap;">
+               📷 Değiştir
+             </button>
+           </div>`
+        : `<div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+             <div class="table-thumbnail-placeholder" onclick="window.Products.promptChangePhoto(${p.id}, 'accessoryPhoto')" style="cursor:pointer;" title="Aksesuar Fotoğrafı Ekle">📸</div>
+             <button type="button" class="btn btn-sm btn-ghost" onclick="window.Products.promptChangePhoto(${p.id}, 'accessoryPhoto')" title="Aksesuar Ekle" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-card); color: var(--text-muted); display: flex; align-items: center; gap: 2px; background: rgba(255,255,255,0.03); cursor: pointer; white-space: nowrap;">
+               + Ekle
+             </button>
+           </div>`;
 
       // Leather sub-elements display
       const leatherParts = [];
@@ -172,6 +208,7 @@ const Products = {
           <td>${sym}${Number(p.price).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
           <td>
             <div class="actions-cell">
+              <button class="btn-icon" style="background: rgba(99, 102, 241, 0.12); color: var(--text-accent); border: 1px solid rgba(99,102,241,0.25);" title="Fotoğrafı Değiştir" onclick="Products.promptChangePhoto(${p.id}, 'photo')">📷</button>
               <button class="btn-icon warning" title="Reçete (BOM)" onclick="Recipes.openModal(${p.id})">🛠️</button>
               <button class="btn-icon info" title="Düzenle" onclick="Products.openModal(${p.id})">✏️</button>
               <button class="btn-icon danger" title="Sil" onclick="Products.deleteProduct(${p.id})">🗑️</button>
@@ -206,6 +243,7 @@ const Products = {
 
     const detailFields = document.querySelectorAll('.product-detail-field');
     const modelCodeGroup = document.getElementById('product-code').closest('.form-group');
+    const soleInput = document.getElementById('product-sole-material');
 
     if (id) {
       title.textContent = 'Model Düzenle ✏️';
@@ -232,7 +270,8 @@ const Products = {
           const colorEl = document.getElementById('product-color');
           if (colorEl) colorEl.value = p.color || '';
           
-          document.getElementById('product-sole-material').value = p.soleMaterial || '';
+          if (soleInput) soleInput.value = p.soleMaterial || '';
+
           document.getElementById('product-leather-lining').value = p.leatherLining || '';
           document.getElementById('product-leather-upper').value = p.leatherUpper || '';
           document.getElementById('product-leather-type').value = p.leatherType || '';
@@ -263,6 +302,8 @@ const Products = {
       });
       if (modelCodeGroup) modelCodeGroup.style.flex = '1';
 
+      if (soleInput) soleInput.value = '';
+
       const currencyEl = document.getElementById('product-currency');
       if (currencyEl) currencyEl.value = 'TRY';
     }
@@ -283,13 +324,14 @@ const Products = {
     const colorEl = document.getElementById('product-color');
     const barcodeEl = document.getElementById('product-barcode');
     const currencyEl = document.getElementById('product-currency');
+    const soleInput = document.getElementById('product-sole-material');
 
     const data = {
       modelCode: document.getElementById('product-code').value.trim(),
       category: document.getElementById('product-category').value || 'Ayakkabı',
       size: sizeEl ? sizeEl.value.trim() : '',
       color: colorEl ? colorEl.value.trim() : '',
-      soleMaterial: document.getElementById('product-sole-material').value || 'TPU',
+      soleMaterial: soleInput ? soleInput.value.trim() : '',
       leatherLining: document.getElementById('product-leather-lining').value.trim(),
       leatherUpper: document.getElementById('product-leather-upper').value.trim(),
       leatherType: document.getElementById('product-leather-type').value.trim(),
@@ -431,6 +473,52 @@ const Products = {
     img.style.cssText = 'max-width:90%; max-height:90%; border-radius:8px; box-shadow: 0 4px 20px rgba(0,0,0,0.8); object-fit:contain;';
     zoomModal.appendChild(img);
     zoomModal.style.display = 'flex';
+  },
+
+  async promptChangePhoto(productId, photoType = 'photo') {
+    const product = await dbGet('products', productId);
+    if (!product) {
+      showToast('Ürün bulunamadı!', 'error');
+      return;
+    }
+
+    // Geçici dinamik dosya seçici oluştur
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+
+    fileInput.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) {
+        if (fileInput.parentNode) document.body.removeChild(fileInput);
+        return;
+      }
+
+      showToast('Fotoğraf işleniyor ve yükleniyor...', 'info');
+      try {
+        const base64 = await this.resizeAndBase64(file);
+        if (photoType === 'accessoryPhoto') {
+          product.accessoryPhoto = base64;
+        } else {
+          product.photo = base64;
+        }
+
+        await dbUpdate('products', product);
+        showToast('Fotoğraf başarıyla güncellendi! 📸', 'success');
+        await this.loadProducts();
+      } catch (err) {
+        console.error(err);
+        showToast('Fotoğraf güncellenirken hata oluştu: ' + err.message, 'error');
+      } finally {
+        if (fileInput.parentNode) {
+          document.body.removeChild(fileInput);
+        }
+      }
+    };
+
+    fileInput.click();
   },
 
   escape(str) {
