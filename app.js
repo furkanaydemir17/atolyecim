@@ -510,6 +510,9 @@ function initLogin() {
       localStorage.setItem('atolyecim_remember', isRemember ? 'true' : 'false');
       localStorage.setItem('atolyecim_saved_username', displayName);
 
+      const workshopId = companyName ? companyName.toLowerCase().replace(/[^a-z0-9]/g, '_') : 'default_workshop';
+      localStorage.setItem('saas_workshop_id', workshopId);
+
       if (isRemember) {
         localStorage.setItem('atolyecim_auth', authToken);
         localStorage.setItem('atolyecim_auth_username', displayName);
@@ -727,13 +730,21 @@ async function loadApp() {
       }
     }, 10000);
 
-    // Set up Supabase Realtime subscriptions
+    // Set up Supabase Realtime subscriptions with strict workshop isolation
     if (window.dbMode === 'supabase' && window.supabaseClient) {
       try {
+        const myCompany = (localStorage.getItem('atolyecim_auth_company') || '').toLowerCase().trim();
         window.supabaseClient
-          .channel('public:orders')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, async () => {
-            console.log('Realtime change detected in orders!');
+          .channel('public:orders:' + (myCompany || 'default'))
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, async (payload) => {
+            const row = payload.new || payload.old;
+            if (row) {
+              const rowComp = (row._ownerCompany || row._owner_company || row.company || '').toLowerCase().trim();
+              if (myCompany && rowComp && rowComp !== myCompany) {
+                // Ignore changes from another workshop
+                return;
+              }
+            }
             if (window.Orders && typeof window.Orders.loadOrders === 'function') {
               await window.Orders.loadOrders();
             }
@@ -1320,7 +1331,8 @@ async function togglePushSubscription() {
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
       });
       
-      const workshopId = localStorage.getItem('saas_workshop_id') || 'default_workshop';
+      const currentComp = localStorage.getItem('atolyecim_auth_company') || 'default_workshop';
+      const workshopId = currentComp.toLowerCase().replace(/[^a-z0-9]/g, '_');
       const subscriptionData = {
         endpoint: newSub.endpoint,
         keys: JSON.parse(JSON.stringify(newSub.toJSON().keys)),
@@ -1350,8 +1362,12 @@ async function sendNotificationAlert(type, message) {
   const now = new Date();
   const timeStr = now.toLocaleDateString('tr-TR') + ' ' + now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 
+  const currentComp = localStorage.getItem('atolyecim_auth_company') || 'default_workshop';
+  const workshopId = currentComp.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const historyKey = 'manager_notification_history_' + workshopId;
+
   // Log to history
-  let history = JSON.parse(localStorage.getItem('manager_notification_history') || '[]');
+  let history = JSON.parse(localStorage.getItem(historyKey) || '[]');
   
   const typeLabels = {
     'stock': '⚠️ Stok Eksikliği',
@@ -1368,11 +1384,11 @@ async function sendNotificationAlert(type, message) {
 
   history.unshift(newLog);
   if (history.length > 30) history.pop();
-  localStorage.setItem('manager_notification_history', JSON.stringify(history));
+  localStorage.setItem(historyKey, JSON.stringify(history));
 
   try {
     await dbUpdate('settings', {
-      id: 'manager_notification_history',
+      id: historyKey,
       data: { logs: history }
     });
   } catch (e) {
@@ -1408,7 +1424,6 @@ async function sendNotificationAlert(type, message) {
   }
 
   // Send remote Web Push notification via Vercel Serverless Function to managers
-  const workshopId = localStorage.getItem('saas_workshop_id') || 'default_workshop';
   fetch('/api/send-push', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

@@ -280,15 +280,25 @@ const Orders = {
           </div>
           <button type="button" class="btn-icon danger btn-remove-color-group" style="flex-shrink: 0; height: 34px; width: 34px; font-size: 16px;" title="Renk Grubunu Sil">&times;</button>
         </div>
+
+        <!-- Hızlı Asorti Butonları (Tek Tıkla Seri Doldur) -->
+        <div style="display: flex; gap: 5px; flex-wrap: wrap; align-items: center; background: rgba(255,255,255,0.03); padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+          <span style="font-size: 10.5px; font-weight: 700; color: var(--text-secondary); margin-right: 4px;">⚡ HIZLI DOLDUR:</span>
+          <button type="button" class="btn btn-sm btn-quick-asorti" data-type="kadin8" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: rgba(99,102,241,0.15); color: var(--text-accent); border: 1px solid rgba(99,102,241,0.3); font-weight: 600;">👠 Kadın (8 Çift)</button>
+          <button type="button" class="btn btn-sm btn-quick-asorti" data-type="kadin12" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: rgba(99,102,241,0.15); color: var(--text-accent); border: 1px solid rgba(99,102,241,0.3); font-weight: 600;">👠 Kadın (12'li)</button>
+          <button type="button" class="btn btn-sm btn-quick-asorti" data-type="erkek8" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-weight: 600;">👞 Erkek (8 Çift)</button>
+          <button type="button" class="btn btn-sm btn-quick-asorti" data-type="erkek12" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-weight: 600;">👞 Erkek (12'li)</button>
+          <button type="button" class="btn btn-sm btn-quick-asorti" data-type="cocuk" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); font-weight: 600;">🧒 Çocuk (10'lu)</button>
+        </div>
         
-        <!-- Asorti Şablon Uygulayıcı (Hızlı Doldurucu) -->
+        <!-- Özel Asorti Şablonu & Koli Çarpanı -->
         <div class="asorti-helper-row" style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.02); padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
-          <span style="font-size: 11px; font-weight: 600; color: var(--text-secondary); white-space: nowrap;">⚡ ASORTİ:</span>
+          <span style="font-size: 11px; font-weight: 600; color: var(--text-secondary); white-space: nowrap;">📦 ŞABLON / KOLİ:</span>
           <select class="color-group-asorti-select" style="flex: 2; padding: 4px 6px; font-size: 11px; border-radius: 4px; height: 28px;">
-            <option value="">Şablon Seçin</option>
+            <option value="">Kayıtlı Şablon Seçin</option>
           </select>
           <input type="number" class="color-group-asorti-qty" value="1" min="1" placeholder="Koli" style="width: 50px; padding: 4px 6px; font-size: 11px; text-align: center; border-radius: 4px; height: 28px; margin-bottom: 0;">
-          <button type="button" class="btn btn-sm btn-apply-asorti" style="padding: 4px 8px; font-size: 11px; height: 28px; font-weight: 600; background: var(--accent-primary); border-color: var(--accent-primary);">Doldur</button>
+          <button type="button" class="btn btn-sm btn-apply-asorti" style="padding: 4px 8px; font-size: 11px; height: 28px; font-weight: 600; background: var(--accent-primary); border-color: var(--accent-primary);">Uygula</button>
         </div>
       </div>
 
@@ -306,7 +316,7 @@ const Orders = {
 
       <!-- Add Size Row Button -->
       <button type="button" class="btn btn-sm btn-add-size-row" style="margin-top: 8px; padding: 4px 10px; font-size: 0.72rem; background: rgba(99,102,241,0.1); color: var(--text-accent); border: 1px dashed rgba(99,102,241,0.3); border-radius: 6px; cursor: pointer; width: 100%;">
-        + Numara Ekle
+        + Manuel Numara Ekle
       </button>
 
       <!-- Subtotal -->
@@ -317,6 +327,29 @@ const Orders = {
     `;
 
     container.appendChild(group);
+
+    // Bind Quick Asorti Preset Buttons
+    group.querySelectorAll('.btn-quick-asorti').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.type;
+        const rowsContainer = group.querySelector('.size-rows-container');
+        if (!rowsContainer) return;
+        rowsContainer.innerHTML = '';
+
+        const presets = {
+          kadin8: [{ size: '36', qty: '1' }, { size: '37', qty: '2' }, { size: '38', qty: '2' }, { size: '39', qty: '2' }, { size: '40', qty: '1' }],
+          kadin12: [{ size: '35', qty: '1' }, { size: '36', qty: '2' }, { size: '37', qty: '2' }, { size: '38', qty: '3' }, { size: '39', qty: '2' }, { size: '40', qty: '1' }, { size: '41', qty: '1' }],
+          erkek8: [{ size: '40', qty: '1' }, { size: '41', qty: '2' }, { size: '42', qty: '2' }, { size: '43', qty: '2' }, { size: '44', qty: '1' }],
+          erkek12: [{ size: '39', qty: '1' }, { size: '40', qty: '2' }, { size: '41', qty: '2' }, { size: '42', qty: '3' }, { size: '43', qty: '2' }, { size: '44', qty: '1' }, { size: '45', qty: '1' }],
+          cocuk: [{ size: '26', qty: '1' }, { size: '27', qty: '1' }, { size: '28', qty: '1' }, { size: '29', qty: '1' }, { size: '30', qty: '1' }, { size: '31', qty: '1' }, { size: '32', qty: '1' }, { size: '33', qty: '1' }, { size: '34', qty: '1' }, { size: '35', qty: '1' }]
+        };
+
+        const chosen = presets[type] || presets.kadin8;
+        chosen.forEach(item => this.addSizeRow(group, item.size, item.qty));
+        this.recalcGrandTotal();
+        if (window.showToast) window.showToast('Hızlı asorti şablonu uygulandı! ⚡', 'success');
+      });
+    });
 
     // Populate assortment templates select in the group
     const asortiSelect = group.querySelector('.color-group-asorti-select');
@@ -366,9 +399,13 @@ const Orders = {
       });
     }
 
-    // Pre-populate size rows if provided
+    // Pre-populate size rows if provided, or default to Kadın 8'li if completely new
     if (sizeRows.length > 0) {
       sizeRows.forEach(sr => this.addSizeRow(group, sr.size, sr.qty));
+    } else {
+      // Auto-prefill default Kadın 36-40 so user does not need to click anything
+      const defaultSizes = [{ size: '36', qty: '1' }, { size: '37', qty: '2' }, { size: '38', qty: '2' }, { size: '39', qty: '2' }, { size: '40', qty: '1' }];
+      defaultSizes.forEach(sr => this.addSizeRow(group, sr.size, sr.qty));
     }
 
     this.recalcGrandTotal();
@@ -591,8 +628,9 @@ const Orders = {
               <td>${statusBadge}</td>
               <td>
                 <div class="actions-cell">
+                  <button class="btn-icon" style="background: rgba(99, 102, 241, 0.12); color: #818cf8; border-color: rgba(99, 102, 241, 0.25);" title="İmalat Fişlerine / Partilere Böl" onclick="Orders.openSplitModal(${o.id})">🏭</button>
                   <button class="btn-icon success" style="background: rgba(37, 211, 102, 0.1); color: #25d366; border-color: rgba(37, 211, 102, 0.2);" title="WhatsApp Bildirimi Gönder" onclick="Orders.sendWhatsAppNotification(${o.id})">💬</button>
-                  <button class="btn-icon success" title="Fatura Oluştur" onclick="Orders.openInvoiceModal(${o.id})">🧾</button>
+                  <button class="btn-icon success" title="Teslim Fişi Oluştur" onclick="Orders.openInvoiceModal(${o.id})">🧾</button>
                   <button class="btn-icon warning" title="Koli Etiketi Yazdır" onclick="Orders.openLabelModal(${o.id})">🏷️</button>
                   <button class="btn-icon info" title="Durum Değiştir" onclick="Orders.openModal(${o.id})">✏️</button>
                   <button class="btn-icon danger" title="Sil" onclick="Orders.deleteOrder(${o.id})">🗑️</button>
@@ -888,54 +926,22 @@ const Orders = {
           return;
         }
 
-        // Process each color — auto-register product if needed
+        // Process each color — match existing product without polluting catalog
         const products = await dbGetAll('products');
         const colorsForDb = [];
         
         for (const cg of groupData) {
+          // Find matching product by model and color, or by model
           let match = products.find(p => 
             (p.modelCode || '').toLowerCase() === modelCode.toLowerCase() && 
             (p.color || '').toLowerCase() === cg.color.toLowerCase()
           );
-          
           if (!match) {
-            // Automatically register product in catalog
-            const templateProduct = products.find(p => (p.modelCode || '').toLowerCase() === modelCode.toLowerCase());
-            const newProduct = {
-              modelCode: modelCode,
-              color: cg.color,
-              category: templateProduct ? templateProduct.category : 'Ayakkabı',
-              size: templateProduct ? templateProduct.size : '38-44',
-              soleMaterial: templateProduct ? templateProduct.soleMaterial : '',
-              leatherLining: templateProduct ? templateProduct.leatherLining : '',
-              leatherUpper: templateProduct ? templateProduct.leatherUpper : '',
-              leatherType: templateProduct ? templateProduct.leatherType : '',
-              price: price,
-              currency: currency,
-              barcode: '',
-              photo: '',
-              accessoryPhoto: ''
-            };
-            const newProductId = await dbAdd('products', newProduct);
-            
-            // Automatically clone recipe if template has one
-            if (templateProduct) {
-              const templateRecipe = await dbGet('recipes', templateProduct.id);
-              if (templateRecipe) {
-                const newRecipe = {
-                  productId: newProductId,
-                  materials: JSON.parse(JSON.stringify(templateRecipe.materials))
-                };
-                await dbAdd('recipes', newRecipe);
-              }
-            }
-            
-            match = { id: newProductId, color: cg.color };
-            showToast(`Yeni ürün otomatik kaydedildi: ${modelCode} (${cg.color})`, 'info');
+            match = products.find(p => (p.modelCode || '').toLowerCase() === modelCode.toLowerCase());
           }
 
           colorsForDb.push({
-            productId: match.id,
+            productId: match ? match.id : null,
             color: cg.color,
             qty: cg.qty,
             sizes: cg.sizes
@@ -1151,26 +1157,18 @@ const Orders = {
       const contactPhone = contact ? (contact.phone || '-') : '-';
       const contactAddress = contact ? (contact.address || '-') : '-';
 
-      // Generate invoice number (e.g. FAT + Year + Month + Day + OrderId) (Y21 fix)
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const mockInvNo = order.invoiceNo || `FAT${year}${month}${day}${String(orderId).padStart(3, '0')}`;
-      const mockInvDate = order.invoiceDate || `${year}-${month}-${day}`;
+      const mockInvNo = order.invoiceNo || 'TSL' + new Date().getFullYear() + String(order.id).padStart(4, '0');
+      const mockInvDate = order.invoiceDate || new Date().toISOString().split('T')[0];
 
-      // Populate Inputs
       const inputNo = document.getElementById('inv-input-no');
       const inputDate = document.getElementById('inv-input-date');
       const inputTaxOffice = document.getElementById('inv-input-tax-office');
-      const inputTaxNo = document.getElementById('inv-input-tax-no');
       const selectKdv = document.getElementById('inv-input-kdv');
 
       inputNo.value = mockInvNo;
       inputDate.value = mockInvDate;
-      inputTaxOffice.value = '';
-      inputTaxNo.value = '';
-      selectKdv.value = '10'; // default KDV 10%
+      inputTaxOffice.value = order.deliveryNote || 'Teslimat ambar / araç ile yapılmıştır.';
+      if (selectKdv) selectKdv.value = '0'; // default Net / 0%
 
       // Update Preview fields
       const myCompany = localStorage.getItem('atolyecim_auth_company') || 'Atölyecim Master';
@@ -1179,7 +1177,7 @@ const Orders = {
       if (companyNameEl) companyNameEl.textContent = myCompany.toUpperCase();
       if (companyInfoEl) {
         if (myCompany === 'Atölyecim Master') {
-          companyInfoEl.innerHTML = 'Ayakkabı İmalat ve Toptan Satış Atölyesi<br>Güngören / İstanbul<br>Tel: 0212 XXX XX XX';
+          companyInfoEl.innerHTML = 'Ayakkabı İmalat ve Toptan Satış Atölyesi<br>Güngören / İstanbul';
         } else {
           companyInfoEl.innerHTML = 'Ayakkabı İmalat ve Toptan Satış Atölyesi';
         }
@@ -1187,7 +1185,7 @@ const Orders = {
 
       document.getElementById('inv-no-preview').textContent = mockInvNo;
       document.getElementById('inv-date-preview').textContent = new Date(mockInvDate).toLocaleDateString('tr-TR');
-      document.getElementById('inv-tax-office-preview').textContent = '-';
+      document.getElementById('inv-tax-office-preview').textContent = inputTaxOffice.value;
       document.getElementById('inv-tax-no-preview').textContent = '-';
       document.getElementById('inv-cust-name').textContent = contactName;
       document.getElementById('inv-cust-phone').textContent = `Tel: ${contactPhone}`;
@@ -1291,7 +1289,177 @@ const Orders = {
 
       openModalById('invoice-modal');
     } catch (err) {
-      showToast('Fatura yüklenemedi: ' + err.message, 'error');
+      showToast('Teslim fişi yüklenemedi: ' + err.message, 'error');
+    }
+  },
+
+  async openSplitModal(orderId) {
+    try {
+      const order = await dbGet('orders', orderId);
+      if (!order) {
+        showToast('Sipariş bulunamadı!', 'error');
+        return;
+      }
+
+      let customerName = 'Bilinmeyen Müşteri';
+      if (order.contactId) {
+        const c = await dbGet('contacts', order.contactId);
+        if (c) customerName = c.name;
+      }
+
+      document.getElementById('split-modal-model').textContent = order.modelCode || '-';
+      document.getElementById('split-modal-customer').textContent = customerName;
+      document.getElementById('split-modal-total-qty').textContent = `${order.qty} Çift`;
+
+      const colorsSummaryEl = document.getElementById('split-modal-colors-summary');
+      if (colorsSummaryEl) {
+        if (order.colors && order.colors.length > 0) {
+          colorsSummaryEl.innerHTML = '<strong>Renk ve Asorti Dağılımı:</strong><br>' + order.colors.map(c => {
+            const sz = (c.sizes || []).map(s => `${s.size}:${s.qty}`).join(', ');
+            return `• <strong>${c.color}:</strong> ${c.qty} Çift (${sz || 'Standart'})`;
+          }).join('<br>');
+        } else {
+          colorsSummaryEl.textContent = `Toplam ${order.qty} Çift`;
+        }
+      }
+
+      // Default next serial number from JobTickets
+      let nextSerial = '№ 01885';
+      if (window.JobTickets && typeof window.JobTickets.getNextSerialNo === 'function') {
+        nextSerial = await window.JobTickets.getNextSerialNo();
+      }
+      document.getElementById('split-starting-ticket-no').value = nextSerial;
+      document.getElementById('split-delivery-date').value = order.deadline || new Date().toISOString().split('T')[0];
+
+      // Split presets
+      let currentBatchSize = 24;
+      const chips = document.querySelectorAll('.split-chip');
+      const customRow = document.getElementById('split-custom-batch-row');
+      const customInput = document.getElementById('split-custom-batch-input');
+
+      const updatePreview = () => {
+        let batchSize = currentBatchSize;
+        if (batchSize === 'custom') {
+          batchSize = parseInt(customInput.value) || 24;
+        }
+        if (batchSize <= 0) batchSize = 24;
+
+        const totalQty = order.qty || 0;
+        const numTickets = Math.ceil(totalQty / batchSize);
+        document.getElementById('split-preview-ticket-count').textContent = numTickets;
+
+        const previewContainer = document.getElementById('split-tickets-preview-list');
+        previewContainer.innerHTML = '';
+
+        let currentSerialNum = parseInt(document.getElementById('split-starting-ticket-no').value.replace(/\D/g, '')) || 1885;
+
+        let remaining = totalQty;
+        for (let i = 1; i <= numTickets; i++) {
+          const ticketQty = Math.min(remaining, batchSize);
+          remaining -= ticketQty;
+          const serialStr = '№ ' + String(currentSerialNum + (i - 1)).padStart(5, '0');
+
+          const row = document.createElement('div');
+          row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 4px; font-size: 11.5px;';
+          row.innerHTML = `
+            <span><strong style="color: var(--text-accent);">${serialStr}</strong> — Parti ${i}/${numTickets}</span>
+            <span style="color: var(--text-muted);">${order.modelCode}</span>
+            <strong style="color: var(--color-warning);">${ticketQty} Çift</strong>
+          `;
+          previewContainer.appendChild(row);
+        }
+      };
+
+      chips.forEach(chip => {
+        chip.onclick = () => {
+          chips.forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          const b = chip.dataset.batch;
+          if (b === 'custom') {
+            customRow.style.display = 'block';
+            currentBatchSize = 'custom';
+          } else {
+            customRow.style.display = 'none';
+            currentBatchSize = parseInt(b);
+          }
+          updatePreview();
+        };
+      });
+
+      customInput.oninput = updatePreview;
+      document.getElementById('split-starting-ticket-no').oninput = updatePreview;
+
+      updatePreview();
+
+      // Confirm Generation Button
+      const confirmBtn = document.getElementById('btn-split-confirm-generate');
+      confirmBtn.onclick = async () => {
+        try {
+          let batchSize = currentBatchSize;
+          if (batchSize === 'custom') {
+            batchSize = parseInt(customInput.value) || 24;
+          }
+          if (batchSize <= 0) batchSize = 24;
+
+          const totalQty = order.qty || 0;
+          const numTickets = Math.ceil(totalQty / batchSize);
+          let startSerialNum = parseInt(document.getElementById('split-starting-ticket-no').value.replace(/\D/g, '')) || 1885;
+          const deliveryDate = document.getElementById('split-delivery-date').value;
+
+          // Pro-rate sizes across tickets if colors exist
+          let remainingTotal = totalQty;
+          for (let i = 1; i <= numTickets; i++) {
+            const ticketQty = Math.min(remainingTotal, batchSize);
+            remainingTotal -= ticketQty;
+            const serialStr = '№ ' + String(startSerialNum + (i - 1)).padStart(5, '0');
+
+            // Calculate sizes proportional to this batch
+            const proRatedSizes = {};
+            if (order.colors && order.colors.length > 0) {
+              order.colors.forEach(c => {
+                (c.sizes || []).forEach(s => {
+                  const proportion = (s.qty / totalQty);
+                  const alloc = Math.round(proportion * ticketQty) || 1;
+                  proRatedSizes[s.size] = (proRatedSizes[s.size] || 0) + alloc;
+                });
+              });
+            }
+
+            const ticketData = {
+              serialNo: serialStr,
+              customer: customerName,
+              modelCode: order.modelCode,
+              leather: order.colors && order.colors[0] ? order.colors[0].color : 'Standart',
+              sole: '-',
+              mold: '-',
+              gender: 'kadin',
+              totalPairs: ticketQty,
+              sizes: proRatedSizes,
+              stage: 'kesim',
+              orderId: order.id,
+              deliveryDate: deliveryDate,
+              createdAt: new Date().toISOString()
+            };
+
+            await dbAdd('job_tickets', ticketData);
+          }
+
+          showToast(`${numTickets} adet iş takip fişi başarıyla üretildi ve imalata alındı! 🚀`, 'success');
+          closeModalById('order-split-modal');
+
+          if (window.JobTickets && typeof window.JobTickets.loadTickets === 'function') {
+            await window.JobTickets.loadTickets();
+          }
+        } catch (err) {
+          console.error(err);
+          showToast('Fişler oluşturulurken hata oluştu: ' + err.message, 'error');
+        }
+      };
+
+      openModalById('order-split-modal');
+    } catch (err) {
+      console.error(err);
+      showToast('Hata oluştu: ' + err.message, 'error');
     }
   },
 
@@ -2213,20 +2381,29 @@ const Recipes = {
       return;
     }
 
-    document.getElementById('recipe-modal-title').textContent = `${product.modelCode} — Malzeme Reçetesi (BOM)`;
+    const titleEl = document.getElementById('recipe-modal-title');
+    if (titleEl) titleEl.textContent = `${product.modelCode} — İmalat Reçetesi (BOM) & Maliyet Analizi`;
     document.getElementById('recipe-product-id').value = productId;
 
-    // Reset dropdowns
-    document.getElementById('recipe-material-type').value = '';
-    const matSelect = document.getElementById('recipe-material-id');
-    matSelect.innerHTML = '<option value="">Önce tür seçin</option>';
-    document.getElementById('recipe-material-qty').value = '';
-    document.getElementById('recipe-material-unit-display').textContent = '-';
+    // Reset manual form fields
+    const typeSelect = document.getElementById('recipe-material-type');
+    if (typeSelect) typeSelect.value = '';
+    const nameInput = document.getElementById('recipe-material-name');
+    if (nameInput) nameInput.value = '';
+    const qtyInput = document.getElementById('recipe-material-qty');
+    if (qtyInput) qtyInput.value = '';
+    const unitSelect = document.getElementById('recipe-material-unit');
+    if (unitSelect) unitSelect.value = 'çift';
+    const priceInput = document.getElementById('recipe-material-unit-price');
+    if (priceInput) priceInput.value = '';
 
-    // Load recipe
+    // Populate stock suggestions datalist
+    await this.populateStockSuggestions();
+
+    // Load existing recipe
     const recipe = await dbGet('recipes', productId);
-    if (recipe && recipe.materials) {
-      this.currentMaterials = recipe.materials;
+    if (recipe && recipe.materials && Array.isArray(recipe.materials)) {
+      this.currentMaterials = JSON.parse(JSON.stringify(recipe.materials));
     }
 
     this.bindEvents();
@@ -2235,36 +2412,80 @@ const Recipes = {
     openModalById('recipe-modal');
   },
 
-  bindEvents() {
-    // Material type change
-    const typeSelect = document.getElementById('recipe-material-type');
-    if (typeSelect && !typeSelect._bound) {
-      typeSelect._bound = true;
-      typeSelect.addEventListener('change', async (e) => {
-        const type = e.target.value;
-        const matSelect = document.getElementById('recipe-material-id');
-        
-        if (!type) {
-          matSelect.innerHTML = '<option value="">Önce tür seçin</option>';
-          document.getElementById('recipe-material-unit-display').textContent = '-';
-          return;
-        }
+  async populateStockSuggestions() {
+    const datalist = document.getElementById('recipe-stock-suggestions');
+    if (!datalist) return;
+    try {
+      const stocks = await dbGetAll('stocks');
+      datalist.innerHTML = stocks.map(s => `<option value="${this.escape(s.name)}" data-price="${s.price || 0}" data-unit="${s.unit || 'adet'}">`).join('');
+    } catch (e) {
+      console.warn('Stock suggestions load failed:', e);
+    }
+  },
 
-        const stocks = await dbGetByIndex('stocks', 'type', type);
-        matSelect.innerHTML = '<option value="">Seçiniz</option>' + 
-          stocks.map(s => `<option value="${s.id}" data-unit="${s.unit}">${this.escape(s.name)} (${s.unit})</option>`).join('');
-        document.getElementById('recipe-material-unit-display').textContent = '-';
+  bindEvents() {
+    // 1-Click BOM Templates
+    const templateButtons = document.querySelectorAll('.btn-recipe-template');
+    templateButtons.forEach(btn => {
+      if (!btn._bound) {
+        btn._bound = true;
+        btn.addEventListener('click', () => {
+          const tName = btn.dataset.template;
+          this.applyShoeTemplate(tName);
+        });
+      }
+    });
+
+    // Clear all button
+    const clearBtn = document.getElementById('btn-recipe-clear-all');
+    if (clearBtn && !clearBtn._bound) {
+      clearBtn._bound = true;
+      clearBtn.addEventListener('click', () => {
+        if (this.currentMaterials.length === 0) return;
+        if (confirm('Reçetedeki tüm malzemeleri temizlemek istediğinizden emin misiniz?')) {
+          this.currentMaterials = [];
+          this.renderMaterialsTable();
+          showToast('Reçete listesi temizlendi.', 'info');
+        }
       });
     }
 
-    // Material item select change
-    const matSelect = document.getElementById('recipe-material-id');
-    if (matSelect && !matSelect._bound) {
-      matSelect._bound = true;
-      matSelect.addEventListener('change', (e) => {
-        const option = e.target.options[e.target.selectedIndex];
-        const unit = option ? option.dataset.unit : '-';
-        document.getElementById('recipe-material-unit-display').textContent = unit || '-';
+    // Material Name Input Autocomplete Auto-fill unit & price
+    const nameInput = document.getElementById('recipe-material-name');
+    if (nameInput && !nameInput._bound) {
+      nameInput._bound = true;
+      nameInput.addEventListener('change', async (e) => {
+        const val = e.target.value.trim();
+        const stocks = await dbGetAll('stocks');
+        const match = stocks.find(s => (s.name || '').toLowerCase() === val.toLowerCase());
+        if (match) {
+          const unitSelect = document.getElementById('recipe-material-unit');
+          if (unitSelect && match.unit) unitSelect.value = match.unit;
+          const priceInput = document.getElementById('recipe-material-unit-price');
+          if (priceInput && match.price) priceInput.value = match.price;
+        }
+      });
+    }
+
+    // Material category change defaults
+    const typeSelect = document.getElementById('recipe-material-type');
+    if (typeSelect && !typeSelect._bound) {
+      typeSelect._bound = true;
+      typeSelect.addEventListener('change', (e) => {
+        const type = e.target.value;
+        const unitSelect = document.getElementById('recipe-material-unit');
+        if (!unitSelect) return;
+        if (type === 'leather' || type === 'lining') {
+          unitSelect.value = 'dm²';
+        } else if (type === 'chemical') {
+          unitSelect.value = 'kg';
+        } else if (type === 'sole') {
+          unitSelect.value = 'çift';
+        } else if (type === 'reinforcement') {
+          unitSelect.value = 'takım';
+        } else {
+          unitSelect.value = 'adet';
+        }
       });
     }
 
@@ -2286,76 +2507,197 @@ const Recipes = {
     }
   },
 
+  applyShoeTemplate(templateKey) {
+    const templates = {
+      erkek_kosele: [
+        { type: 'leather', name: 'Dana Vidala Yüzlük Deri', qty: 22, unit: 'dm²', price: 9.50 },
+        { type: 'lining', name: 'Dana Meş Astar Deri', qty: 16, unit: 'dm²', price: 5.80 },
+        { type: 'sole', name: 'Gön Kösele Taban', qty: 1, unit: 'çift', price: 140.00 },
+        { type: 'sole', name: 'Klasik Ökçe & Lastik', qty: 1, unit: 'çift', price: 35.00 },
+        { type: 'reinforcement', name: 'Termoplastik Fort & Bombe', qty: 1, unit: 'takım', price: 12.00 },
+        { type: 'chemical', name: 'Poliüretan Yapıştırıcı & Solüsyon', qty: 0.08, unit: 'kg', price: 180.00 },
+        { type: 'chemical', name: 'Deri Cila & Apre Boyası', qty: 0.03, unit: 'kg', price: 220.00 },
+        { type: 'accessory', name: 'Mumlanmış Ayakkabı Bağcığı', qty: 1, unit: 'çift', price: 8.00 },
+        { type: 'packaging', name: 'Lüks Klasik Ayakkabı Kutusu', qty: 1, unit: 'adet', price: 22.00 }
+      ],
+      kadin_topuklu: [
+        { type: 'leather', name: 'Yumuşak Kuzu Rugan / Süet Deri', qty: 14, unit: 'dm²', price: 11.00 },
+        { type: 'lining', name: 'Keçi Astar Derisi', qty: 11, unit: 'dm²', price: 6.50 },
+        { type: 'sole', name: 'Jurdan / Neolit İnce Taban', qty: 1, unit: 'çift', price: 65.00 },
+        { type: 'sole', name: 'Stiletto İnce Topuk & Çelik Bel', qty: 1, unit: 'çift', price: 45.00 },
+        { type: 'sole', name: 'Poliüretan Ökçe Lastiği (Tapa)', qty: 1, unit: 'çift', price: 8.00 },
+        { type: 'reinforcement', name: 'İnce Mikro Fort & Bombe', qty: 1, unit: 'takım', price: 10.00 },
+        { type: 'chemical', name: 'Ayakkabı Yapıştırıcısı & İlaç', qty: 0.06, unit: 'kg', price: 180.00 },
+        { type: 'packaging', name: 'Baskılı Kutu & İpek Kese', qty: 1, unit: 'takım', price: 28.00 }
+      ],
+      sneaker: [
+        { type: 'leather', name: 'Flotter Dana Deri / Tekstil Kombin', qty: 18, unit: 'dm²', price: 8.80 },
+        { type: 'lining', name: 'Hava Alan File / Meş Astar', qty: 14, unit: 'dm²', price: 3.50 },
+        { type: 'sole', name: 'Hafif Eva / Kauçuk Spor Taban', qty: 1, unit: 'çift', price: 95.00 },
+        { type: 'sole', name: 'Anatomik Memory Foam İç Tabanlık', qty: 1, unit: 'çift', price: 25.00 },
+        { type: 'reinforcement', name: 'Kumaş Lamine Fort & Bombe', qty: 1, unit: 'takım', price: 11.00 },
+        { type: 'chemical', name: 'Primer & PU Taban Yapıştırıcı', qty: 0.07, unit: 'kg', price: 190.00 },
+        { type: 'accessory', name: 'Sneaker Yassı Bağcık', qty: 1, unit: 'çift', price: 6.50 },
+        { type: 'packaging', name: 'Kraft Sneaker Kutusu & Pelur', qty: 1, unit: 'adet', price: 18.00 }
+      ],
+      bot: [
+        { type: 'leather', name: 'Yağlı Hakiki Deri / Crazy Deri', qty: 32, unit: 'dm²', price: 10.50 },
+        { type: 'lining', name: 'Sıcak Kürk Astar / Polar', qty: 24, unit: 'dm²', price: 4.80 },
+        { type: 'sole', name: 'Kışlık Dişli Termo / Kauçuk Taban', qty: 1, unit: 'çift', price: 125.00 },
+        { type: 'accessory', name: 'Metal Fermuar (Sağ & Sol)', qty: 1, unit: 'çift', price: 16.00 },
+        { type: 'accessory', name: 'Kancalı Dağcı Bağcık & Kuşgözü', qty: 1, unit: 'takım', price: 14.00 },
+        { type: 'reinforcement', name: 'Kalın Ağır Hizmet Fort & Bombe', qty: 1, unit: 'takım', price: 15.00 },
+        { type: 'chemical', name: 'Su Geçirmezlik İlacı & Yapıştırıcı', qty: 0.09, unit: 'kg', price: 210.00 },
+        { type: 'packaging', name: 'Büyük Boy Bot Kutusu', qty: 1, unit: 'adet', price: 25.00 }
+      ],
+      sandalet: [
+        { type: 'leather', name: 'Bantlık Yüzlük Deri / Nubuk', qty: 9, unit: 'dm²', price: 9.00 },
+        { type: 'lining', name: 'Yumuşak Bant Astarı', qty: 6, unit: 'dm²', price: 4.50 },
+        { type: 'sole', name: 'Mantar / Eva Anatomik Taban', qty: 1, unit: 'çift', price: 75.00 },
+        { type: 'accessory', name: 'Metal Ayar Tokası', qty: 2, unit: 'adet', price: 6.00 },
+        { type: 'chemical', name: 'Kontak Yapıştırıcı', qty: 0.04, unit: 'kg', price: 180.00 },
+        { type: 'packaging', name: 'Sandalet Kutusu', qty: 1, unit: 'adet', price: 15.00 }
+      ]
+    };
+
+    const chosen = templates[templateKey];
+    if (!chosen) return;
+
+    this.currentMaterials = JSON.parse(JSON.stringify(chosen));
+    this.renderMaterialsTable();
+    showToast('Reçete şablonu uygulandı! Maliyetler hesaplandı. ⚡', 'success');
+  },
+
   async addMaterialItem() {
     const type = document.getElementById('recipe-material-type').value;
-    const id = parseInt(document.getElementById('recipe-material-id').value);
+    const name = document.getElementById('recipe-material-name').value.trim();
     const qty = parseFloat(document.getElementById('recipe-material-qty').value);
+    const unit = document.getElementById('recipe-material-unit').value || 'adet';
+    const price = parseFloat(document.getElementById('recipe-material-unit-price').value) || 0;
 
-    if (!type || !id || qty <= 0) {
-      showToast('Lütfen geçerli bir malzeme ve miktar seçin!', 'error');
+    if (!type || !name || isNaN(qty) || qty <= 0) {
+      showToast('Lütfen kategori, malzeme adı ve geçerli sarfiyat miktarı girin!', 'error');
       return;
     }
 
-    // Check if material already in list
-    if (this.currentMaterials.some(m => m.id === id)) {
-      showToast('Bu malzeme reçetede zaten ekli!', 'error');
-      return;
+    // Check if item already exists by name
+    const existing = this.currentMaterials.find(m => (m.name || '').toLowerCase() === name.toLowerCase());
+    if (existing) {
+      existing.qty = qty;
+      existing.unit = unit;
+      existing.price = price;
+      existing.type = type;
+      showToast('Mevcut malzeme güncellendi.', 'info');
+    } else {
+      this.currentMaterials.push({
+        type: type,
+        name: name,
+        qty: qty,
+        unit: unit,
+        price: price
+      });
+      showToast('Yeni malzeme reçeteye eklendi.', 'success');
     }
-
-    const stock = await dbGet('stocks', id);
-    if (!stock) return;
-
-    this.currentMaterials.push({
-      type: type,
-      id: id,
-      name: stock.name,
-      qty: qty,
-      unit: stock.unit
-    });
 
     // Reset fields
+    document.getElementById('recipe-material-name').value = '';
     document.getElementById('recipe-material-qty').value = '';
-    
+    document.getElementById('recipe-material-unit-price').value = '';
+
     await this.renderMaterialsTable();
-    showToast('Malzeme eklendi.', 'success');
   },
 
   async renderMaterialsTable() {
     const tbody = document.getElementById('recipe-materials-tbody');
     const empty = document.getElementById('recipe-materials-empty');
+    const countEl = document.getElementById('recipe-material-count');
+
+    if (!tbody) return;
+
+    if (countEl) countEl.textContent = `${this.currentMaterials.length} Kalem Malzeme`;
 
     if (this.currentMaterials.length === 0) {
       tbody.innerHTML = '';
-      empty.style.display = 'block';
+      if (empty) empty.style.display = 'block';
+      this.updateCostSummary(0, 0, 0, 0);
       return;
     }
 
-    empty.style.display = 'none';
+    if (empty) empty.style.display = 'none';
 
-    const typeLabels = {
-      sole: 'Taban',
-      accessory: 'Aksesuar',
-      leather: 'Deri',
-      raw: 'Ham Madde'
+    const typeConfig = {
+      leather: { label: '🥩 Yüzlük Deri', bg: 'rgba(236,72,153,0.1)', color: '#ec4899' },
+      lining: { label: '🧵 Astar', bg: 'rgba(168,85,247,0.1)', color: '#a855f7' },
+      sole: { label: '👟 Taban/Ökçe', bg: 'rgba(16,185,129,0.1)', color: '#10b981' },
+      reinforcement: { label: '🛡️ Fort/Bombe', bg: 'rgba(245,158,11,0.1)', color: '#f59e0b' },
+      chemical: { label: '🧪 Kimyasal/İlaç', bg: 'rgba(14,165,233,0.1)', color: '#0ea5e9' },
+      accessory: { label: '🪡 Aksesuar', bg: 'rgba(99,102,241,0.1)', color: 'var(--text-accent)' },
+      packaging: { label: '📦 Ambalaj', bg: 'rgba(100,116,139,0.15)', color: '#94a3b8' },
+      raw: { label: 'Ham Madde', bg: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }
     };
 
-    tbody.innerHTML = this.currentMaterials.map((m, idx) => `
-      <tr>
-        <td><span class="category-badge badge-tedarikci" style="background: rgba(99, 102, 241, 0.08); color: var(--text-accent);">${typeLabels[m.type] || m.type}</span></td>
-        <td><strong>${this.escape(m.name)}</strong></td>
-        <td>${m.qty}</td>
-        <td>${m.unit}</td>
-        <td>
-          <button class="btn-icon danger" type="button" onclick="Recipes.removeMaterialItem(${idx})">🗑️</button>
-        </td>
-      </tr>
-    `).join('');
+    let sumLeather = 0;
+    let sumSole = 0;
+    let sumOther = 0;
+    let grandTotal = 0;
+
+    tbody.innerHTML = this.currentMaterials.map((m, idx) => {
+      const cfg = typeConfig[m.type] || { label: m.type, bg: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' };
+      const unitPrice = parseFloat(m.price) || 0;
+      const rowCost = (m.qty * unitPrice);
+
+      grandTotal += rowCost;
+      if (m.type === 'leather' || m.type === 'lining') {
+        sumLeather += rowCost;
+      } else if (m.type === 'sole' || m.type === 'accessory') {
+        sumSole += rowCost;
+      } else {
+        sumOther += rowCost;
+      }
+
+      return `
+        <tr>
+          <td>
+            <span class="category-badge" style="background: ${cfg.bg}; color: ${cfg.color}; font-size: 11px; padding: 2px 6px;">
+              ${cfg.label}
+            </span>
+          </td>
+          <td><strong>${this.escape(m.name)}</strong></td>
+          <td style="text-align: center; font-weight: 600;">${m.qty} ${this.escape(m.unit)}</td>
+          <td style="text-align: right; color: var(--text-secondary);">₺${unitPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          <td style="text-align: right; font-weight: 700; color: var(--color-warning);">₺${rowCost.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          <td style="text-align: center;">
+            <button class="btn-icon danger" type="button" title="Sil" onclick="Recipes.removeMaterialItem(${idx})">🗑️</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    this.updateCostSummary(sumLeather, sumSole, sumOther, grandTotal);
+  },
+
+  updateCostSummary(leather, sole, other, grandTotal) {
+    const format = (val) => `₺${val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const badge = document.getElementById('recipe-total-cost-badge');
+    if (badge) badge.textContent = format(grandTotal);
+
+    const sumLeatherEl = document.getElementById('recipe-sum-leather');
+    if (sumLeatherEl) sumLeatherEl.textContent = format(leather);
+
+    const sumSoleEl = document.getElementById('recipe-sum-sole');
+    if (sumSoleEl) sumSoleEl.textContent = format(sole);
+
+    const sumOtherEl = document.getElementById('recipe-sum-other');
+    if (sumOtherEl) sumOtherEl.textContent = format(other);
+
+    const grandTotalEl = document.getElementById('recipe-sum-grand-total');
+    if (grandTotalEl) grandTotalEl.textContent = format(grandTotal);
   },
 
   removeMaterialItem(index) {
     this.currentMaterials.splice(index, 1);
     this.renderMaterialsTable();
-    showToast('Malzeme kaldırıldı.', 'info');
+    showToast('Malzeme reçeteden çıkarıldı.', 'info');
   },
 
   async saveRecipe() {
@@ -2372,7 +2714,7 @@ const Recipes = {
       };
 
       await dbUpdate('recipes', data);
-      showToast('Reçete başarıyla kaydedildi!', 'success');
+      showToast('Reçete ve maliyet analizi başarıyla kaydedildi! 🛠️', 'success');
       closeModalById('recipe-modal');
     } catch (err) {
       showToast('Hata: ' + err.message, 'error');
