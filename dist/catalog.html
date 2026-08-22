@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#030712">
+  <title>B2B Sipariş Portalı | Atölyecim</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #030712;
+      color: #f3f4f6;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+    .catalog-header {
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .catalog-title h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin: 0;
+      color: #fff;
+    }
+    .catalog-title p {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin: 2px 0 0 0;
+    }
+    .btn-cart {
+      background: rgba(99, 102, 241, 0.1);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      padding: 8px 16px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-cart:hover {
+      background: rgba(99, 102, 241, 0.2);
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .product-card {
+      background: rgba(31, 41, 55, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .product-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+    .product-img-container {
+      width: 100%;
+      height: 200px;
+      background: #111827;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .product-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .product-img-placeholder {
+      font-size: 3rem;
+      opacity: 0.3;
+    }
+    .product-details {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .product-details h3 {
+      margin: 0 0 6px 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .product-info-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .info-badge {
+      font-size: 10px;
+      background: rgba(255,255,255,0.05);
+      color: #9ca3af;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .product-price {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #10b981;
+      margin-top: auto;
+    }
+    .btn-select-product {
+      margin-top: 12px;
+      width: 100%;
+      padding: 10px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border-radius: 8px;
+    }
+    /* Sizes modal customizations */
+    .sizes-table-container {
+      max-height: 250px;
+      overflow-y: auto;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 8px;
+      margin-top: 12px;
+    }
+    .sizes-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .sizes-table th, .sizes-table td {
+      padding: 8px 12px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .sizes-table th {
+      background: rgba(0,0,0,0.2);
+      color: #9ca3af;
+      font-weight: 600;
+    }
+    .sizes-table input {
+      width: 60px;
+      text-align: center;
+      padding: 4px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.2);
+      color: #fff;
+    }
+    /* Cart Modal Custom */
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .cart-item-details h4 {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #fff;
+    }
+    .cart-item-details p {
+      margin: 4px 0 0 0;
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+    .cart-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/catalog-D0OUV-bS.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/index-BAgqhR_n.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-CAhcYpl3.css">
+</head>
+<body>
+  <noscript>
+    <div style="padding:40px;text-align:center;color:#fff;background:#030712;min-height:100vh;">
+      <h2>JavaScript Gerekli</h2>
+      <p>Bu sipariş portalını kullanmak için tarayıcınızda JavaScript'i etkinleştirmeniz gerekmektedir.</p>
+    </div>
+  </noscript>
+
+  <!-- Header -->
+  <header class="catalog-header">
+    <div class="catalog-title">
+      <h1 id="lbl-catalog-company">Ürün Kataloğu</h1>
+      <p>B2B Sipariş Portalı</p>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button class="btn-cart" id="btn-push-bell" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); font-weight: 700; width: 40px; padding: 0; justify-content: center; display: flex; align-items: center;" title="Bildirimleri Aç/Kapat">
+        🔔
+      </button>
+      <button class="btn-cart" id="btn-open-orders" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); font-weight: 700;">
+        📋 Siparişlerim
+      </button>
+      <button class="btn-cart" id="btn-open-cart">
+        🛒 Sepetim <span id="lbl-cart-count" style="background: #818cf8; color: #030712; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 800;">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Products catalog -->
+  <main class="product-grid" id="catalog-products-container">
+    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted);" id="catalog-loading">
+      <span style="font-size: 2rem; display: block; margin-bottom: 10px; animation: spin 1s linear infinite;">⏳</span>
+      Katalog yükleniyor...
+    </div>
+  </main>
+
+  <!-- Product Options Modal -->
+  <div class="modal-overlay" id="product-options-modal" style="display: none; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="modal-content" style="max-width: 500px; width: 100%;">
+      <div class="modal-header">
+        <h3 id="opt-modal-title" style="margin: 0; color: #fff;">Model Seçenekleri</h3>
+        <button type="button" class="modal-close" id="btn-close-opt-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 16px 0;">
+        <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px;">
+          <img id="opt-modal-img" src="" style="width: 90px; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: none;">
+          <div>
+            <h4 id="opt-modal-code" style="margin: 0; font-size: 1.1rem; color: #fff;">-</h4>
+            <div id="opt-modal-badges" style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px;"></div>
+            <div id="opt-modal-price" style="font-size: 1.15rem; font-weight: 800; color: #10b981; margin-top: 8px;">₺0.00</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label style="font-weight: 600; display: block; margin-bottom: 6px; color: #9ca3af;">Renk Seçin</label>
+          <select id="opt-color-select" style="width: 100%; padding: 8px; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff;"></select>
+        </div>
+
+        <div class="form-group" style="margin-top: 16px;">
+          <label style="font-weight: 600; display: block; margin-bottom: 6px; color: #9ca3af;">Numara Dağılımı ve Çift Adetleri</label>
+          <div class="sizes-table-container">
+            <table class="sizes-table">
+              <thead>
+                <tr>
+                  <th>Numara</th>
+                  <th>Çift Adedi</th>
+                </tr>
+              </thead>
+              <tbody id="opt-sizes-tbody">
+                <!-- Dynamic sizes -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
+        <span style="font-weight: bold; font-size: 0.95rem;">Toplam: <strong id="opt-total-qty" style="color: var(--accent-primary);">0 Çift</strong></span>
+        <button type="button" class="btn btn-primary" id="btn-add-to-cart" style="font-weight: bold; background: var(--accent-primary); border-color: var(--accent-primary);">🛒 Sepete Ekle</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shopping Cart Modal -->
+  <div class="modal-overlay" id="cart-modal" style="display: none; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="modal-content" style="max-width: 550px; width: 100%;">
+      <div class="modal-header">
+        <h3 style="margin: 0; color: #fff; display: flex; align-items: center; gap: 8px;">
+          <span>🛒</span> Sepetim
+        </h3>
+        <button type="button" class="modal-close" id="btn-close-cart-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 16px 0;">
+        <div id="cart-items-list" style="max-height: 220px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 16px;">
+          <!-- Cart items dynamic -->
+        </div>
+        <form id="cart-checkout-form" style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="form-group">
+            <label style="font-weight: 600; display: block; margin-bottom: 6px; color: #9ca3af;" for="txt-buyer-name">Firma Adınız / İsminiz <span style="color: var(--color-danger);">*</span></label>
+            <input type="text" id="txt-buyer-name" required placeholder="" style="width: 100%;">
+          </div>
+          <div class="form-group">
+            <label style="font-weight: 600; display: block; margin-bottom: 6px; color: #9ca3af;" for="txt-buyer-phone">Telefon Numaranız <span style="color: var(--color-danger);">*</span></label>
+            <input type="tel" id="txt-buyer-phone" required placeholder="" style="width: 100%;">
+          </div>
+          <div class="form-group">
+            <label style="font-weight: 600; display: block; margin-bottom: 6px; color: #9ca3af;" for="txt-buyer-note">Sipariş Notunuz</label>
+            <textarea id="txt-buyer-note" rows="2" placeholder="" style="width: 100%; font-family: inherit; font-size: 13px;"></textarea>
+          </div>
+        </form>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 12px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px; margin-top: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1.05rem;">
+          <span>Genel Toplam:</span>
+          <span style="font-weight: 800; font-size: 1.25rem; color: #fff;" id="cart-grand-total">0 Çift</span>
+        </div>
+        <button type="submit" form="cart-checkout-form" class="btn btn-primary" id="btn-submit-order" style="width: 100%; justify-content: center; font-weight: 800; font-size: 14px; padding: 12px; display: flex; align-items: center; gap: 8px;">
+          ✔️ Siparişi WhatsApp ve Panel Üzerinden Gönder
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client Orders History Modal -->
+  <div class="modal-overlay" id="client-orders-modal" style="display: none; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="modal-content" style="max-width: 600px; width: 100%;">
+      <div class="modal-header">
+        <h3 style="margin: 0; color: #fff; display: flex; align-items: center; gap: 8px;">
+          <span>📋</span> Sipariş Geçmişim
+        </h3>
+        <button type="button" class="modal-close" id="btn-close-client-orders-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 16px 0;">
+        <div id="client-orders-list" style="max-height: 320px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;">
+          <!-- Dynamic client orders list -->
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
+        <button type="button" class="btn btn-secondary" id="btn-close-client-orders-modal-bottom" style="font-weight: 600;">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout Success Modal -->
+  <div class="modal-overlay" id="checkout-success-modal" style="display: none; align-items: center; justify-content: center; z-index: 10000;">
+    <div class="modal-content" style="max-width: 450px; width: 100%; text-align: center; padding: 30px; box-sizing: border-box;">
+      <span style="font-size: 3.5rem; display: block; margin-bottom: 16px;">🎉</span>
+      <h3 style="margin: 0; color: #10b981; font-size: 1.4rem; font-weight: 800;">Siparişiniz Alındı!</h3>
+      <p style="font-size: 13.5px; color: #d1d5db; margin-top: 14px; line-height: 1.6;">
+        Sipariş kaydınız atölye panelimize başarıyla iletildi. Siparişi anında WhatsApp üzerinden atölye sahibine de bildirmek için lütfen <strong>WhatsApp'a Git</strong> butonuna basıp açılan sohbette <strong>Gönder</strong> deyin!
+      </p>
+      <button type="button" class="btn btn-primary" id="btn-success-ok" style="margin-top: 24px; width: 100%; justify-content: center; font-weight: 800; padding: 12px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+        💬 WhatsApp'a Git ve Bildir
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Toast -->
+  <div id="catalog-toast" style="position: fixed; bottom: 20px; right: 20px; background: #10b981; color: #fff; padding: 12px 24px; border-radius: 8px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: none; z-index: 2000; animation: fadeInUp 0.2s;"></div>
+
+</body>
+</html>
