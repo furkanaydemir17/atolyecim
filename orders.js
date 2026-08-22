@@ -1183,13 +1183,23 @@ const Orders = {
         }
       }
 
-      document.getElementById('inv-no-preview').textContent = mockInvNo;
-      document.getElementById('inv-date-preview').textContent = new Date(mockInvDate).toLocaleDateString('tr-TR');
-      document.getElementById('inv-tax-office-preview').textContent = inputTaxOffice.value;
-      document.getElementById('inv-tax-no-preview').textContent = '-';
-      document.getElementById('inv-cust-name').textContent = contactName;
-      document.getElementById('inv-cust-phone').textContent = `Tel: ${contactPhone}`;
-      document.getElementById('inv-cust-address').textContent = contactAddress;
+      const invNoPreview = document.getElementById('inv-no-preview');
+      if (invNoPreview) invNoPreview.textContent = mockInvNo;
+      
+      const invDatePreview = document.getElementById('inv-date-preview');
+      if (invDatePreview) invDatePreview.textContent = new Date(mockInvDate).toLocaleDateString('tr-TR');
+      
+      const invTaxOfficePreview = document.getElementById('inv-tax-office-preview');
+      if (invTaxOfficePreview) invTaxOfficePreview.textContent = inputTaxOffice ? inputTaxOffice.value : '-';
+      
+      const invCustName = document.getElementById('inv-cust-name');
+      if (invCustName) invCustName.textContent = contactName;
+      
+      const invCustPhone = document.getElementById('inv-cust-phone');
+      if (invCustPhone) invCustPhone.textContent = `Tel: ${contactPhone}`;
+      
+      const invCustAddress = document.getElementById('inv-cust-address');
+      if (invCustAddress) invCustAddress.textContent = contactAddress;
 
       // Render Table Rows
       const tbody = document.getElementById('inv-table-tbody');
@@ -1237,38 +1247,48 @@ const Orders = {
 
       // Calculations Function
       const recalcTotals = () => {
-        const kdvPercent = parseFloat(selectKdv.value) || 0;
+        const kdvPercent = parseFloat(selectKdv ? selectKdv.value : 0) || 0;
         const kdvAmount = (subtotal * kdvPercent) / 100;
         const grandtotal = subtotal + kdvAmount;
 
-        document.getElementById('inv-sum-subtotal').textContent = `${sym}${subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-        document.getElementById('inv-sum-kdv-percent').textContent = `%${kdvPercent}`;
-        document.getElementById('inv-sum-kdv-amount').textContent = `${sym}${kdvAmount.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-        document.getElementById('inv-sum-grandtotal').textContent = `${sym}${grandtotal.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+        const subEl = document.getElementById('inv-sum-subtotal');
+        if (subEl) subEl.textContent = `${sym}${subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+        const kdvPctEl = document.getElementById('inv-sum-kdv-percent');
+        if (kdvPctEl) kdvPctEl.textContent = `%${kdvPercent}`;
+        const kdvAmtEl = document.getElementById('inv-sum-kdv-amount');
+        if (kdvAmtEl) kdvAmtEl.textContent = `${sym}${kdvAmount.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+        const grandEl = document.getElementById('inv-sum-grandtotal');
+        if (grandEl) grandEl.textContent = `${sym}${grandtotal.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
       };
 
       recalcTotals();
 
       // Bind dynamic input changes to live preview
       const handleInput = (inputEl, previewId, placeholderText = '-') => {
+        if (!inputEl) return;
         inputEl.oninput = () => {
-          document.getElementById(previewId).textContent = inputEl.value.trim() || placeholderText;
+          const target = document.getElementById(previewId);
+          if (target) target.textContent = inputEl.value.trim() || placeholderText;
         };
       };
 
-      handleInput(inputNo, 'inv-no-preview');
+      if (inputNo) handleInput(inputNo, 'inv-no-preview');
       
-      inputDate.onchange = () => {
-        const val = inputDate.value;
-        document.getElementById('inv-date-preview').textContent = val ? new Date(val).toLocaleDateString('tr-TR') : '-';
-      };
+      if (inputDate) {
+        inputDate.onchange = () => {
+          const val = inputDate.value;
+          const target = document.getElementById('inv-date-preview');
+          if (target) target.textContent = val ? new Date(val).toLocaleDateString('tr-TR') : '-';
+        };
+      }
 
-      handleInput(inputTaxOffice, 'inv-tax-office-preview');
-      handleInput(inputTaxNo, 'inv-tax-no-preview');
+      if (inputTaxOffice) handleInput(inputTaxOffice, 'inv-tax-office-preview');
 
-      selectKdv.onchange = () => {
-        recalcTotals();
-      };
+      if (selectKdv) {
+        selectKdv.onchange = () => {
+          recalcTotals();
+        };
+      }
 
       // Bind Print button click
       const printBtn = document.getElementById('btn-invoice-print');
