@@ -461,7 +461,7 @@ const Contacts = {
         showToast('İşlem kaydı güncellendi!', 'success');
       } else {
         await dbAdd('transactions', data);
-        const typeLabels = { alacak: 'Satış Faturası', borc: 'Alış Faturası', tahsilat: 'Tahsilat', odeme: 'Ödeme' };
+        const typeLabels = { alacak: 'Satış / Teslim Fişi', borc: 'Alış Fişi / Gider', tahsilat: 'Tahsilat', odeme: 'Ödeme' };
         showToast(`${typeLabels[data.type]} kaydı eklendi!`, 'success');
       }
 
@@ -860,8 +860,8 @@ const Contacts = {
 
           // Fiş tipi etiketleri
           const typeLabels = {
-            alacak: 'Satış Faturası',
-            borc: 'Alış Faturası',
+            alacak: 'Satış / Teslim Fişi',
+            borc: 'Alış Fişi / Gider',
             tahsilat: 'Tahsilat',
             odeme: 'Ödeme'
           };
@@ -1114,8 +1114,8 @@ const Contacts = {
       const balanceStr = txSymbol + Math.abs(balance).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + balanceType;
 
       const typeLabels = {
-        alacak: 'Satış Faturası',
-        borc: 'Alış Faturası',
+        alacak: 'Satış / Teslim Fişi',
+        borc: 'Alış Fişi / Gider',
         tahsilat: 'Tahsilat',
         odeme: 'Ödeme'
       };
