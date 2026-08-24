@@ -469,40 +469,40 @@ const Contractors = {
     printArea.innerHTML = `
       <div style="width: 100%; box-sizing: border-box; background: #fff; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
         <!-- Header -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 8px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 6px; margin-bottom: 10px;">
           <div>
-            <h2 style="font-weight: 800; font-size: 1.3rem; color: #0f172a; margin: 0 0 3px 0; letter-spacing: -0.02em;">${escapeHtml(companyName)}</h2>
-            <p style="font-size: 11px; color: #475569; margin: 0; font-weight: 500;">Ayakkabı İmalat & Fason İşçilik Ekstresi</p>
+            <h2 style="font-weight: 800; font-size: 1.25rem; color: #0f172a; margin: 0 0 2px 0; letter-spacing: -0.02em;">${escapeHtml(companyName)}</h2>
+            <p style="font-size: 10px; color: #475569; margin: 0; font-weight: 500;">Ayakkabı İmalat & Fason İşçilik Ekstresi</p>
           </div>
           <div style="text-align: right;">
-            <h1 style="font-weight: 800; font-size: 1.3rem; color: #0284c7; margin: 0 0 3px 0; letter-spacing: 0.02em;">FASON HESAP EKSTRESİ</h1>
-            <p style="font-size: 11px; margin: 0; color: #64748b;"><strong>Tarih:</strong> ${dateStr}</p>
+            <h1 style="font-weight: 800; font-size: 1.25rem; color: #0284c7; margin: 0 0 2px 0; letter-spacing: 0.02em;">FASON HESAP EKSTRESİ</h1>
+            <p style="font-size: 10px; margin: 0; color: #64748b;"><strong>Tarih:</strong> ${dateStr}</p>
           </div>
         </div>
 
         <!-- Subcontractor Section -->
-        <div style="background: #f8fafc; padding: 10px 14px; border-radius: 4px; border: 1px solid #cbd5e1; margin-bottom: 14px;">
+        <div style="background: #f8fafc; padding: 8px 12px; border-radius: 4px; border: 1px solid #cbd5e1; margin-bottom: 10px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Fason Usta / Firma:</span>
-              <p style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin: 2px 0 0 0;">${escapeHtml(c.name)}</p>
+              <span style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Fason Usta / Firma:</span>
+              <p style="font-size: 12.5px; font-weight: 800; color: #0f172a; margin: 1px 0 0 0;">${escapeHtml(c.name)}</p>
             </div>
             <div style="text-align: right;">
-              <span style="font-size: 11.5px; color: #334155;"><strong>Alan:</strong> ${escapeHtml(c.role || '-')}</span>
-              <span style="margin-left: 14px; font-size: 11.5px; color: #334155;"><strong>Tel:</strong> ${escapeHtml(c.phone || '-')}</span>
+              <span style="font-size: 10.5px; color: #334155;"><strong>Alan:</strong> ${escapeHtml(c.role || '-')}</span>
+              <span style="margin-left: 12px; font-size: 10.5px; color: #334155;"><strong>Tel:</strong> ${escapeHtml(c.phone || '-')}</span>
             </div>
           </div>
         </div>
 
         <!-- Table -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11px;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 10px;">
           <thead>
             <tr style="border-top: 1.5px solid #0f172a; border-bottom: 1.5px solid #0f172a; text-align: left; font-weight: 700; background: #f1f5f9;">
-              <th style="padding: 7px 5px; width: 17%;">Tarih</th>
-              <th style="padding: 7px 5px; width: 41%;">İş Açıklaması / Detay</th>
-              <th style="padding: 7px 5px; width: 14%; text-align: right;">Hakediş</th>
-              <th style="padding: 7px 5px; width: 14%; text-align: right;">Ödenen</th>
-              <th style="padding: 7px 5px; width: 14%; text-align: right;">Bakiye</th>
+              <th style="padding: 5px 4px; width: 17%;">Tarih</th>
+              <th style="padding: 5px 4px; width: 41%;">İş Açıklaması / Detay</th>
+              <th style="padding: 5px 4px; width: 14%; text-align: right;">Hakediş</th>
+              <th style="padding: 5px 4px; width: 14%; text-align: right;">Ödenen</th>
+              <th style="padding: 5px 4px; width: 14%; text-align: right;">Bakiye</th>
             </tr>
           </thead>
           <tbody>
@@ -511,17 +511,17 @@ const Contractors = {
         </table>
 
         <!-- Summary & Balance -->
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 25px;">
-          <div style="width: 250px; font-size: 11.5px; background: #f8fafc; padding: 10px 14px; border-radius: 4px; border: 1.5px solid #cbd5e1;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #475569;">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+          <div style="width: 230px; font-size: 10.5px; background: #f8fafc; padding: 8px 12px; border-radius: 4px; border: 1.5px solid #cbd5e1;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #475569;">
               <span>Toplam Hakediş:</span>
               <span style="font-weight: 700; color: #0f172a;">${totalHakedisStr}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #475569; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #475569; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px;">
               <span>Toplam Ödenen:</span>
               <span style="font-weight: 700; color: #10b981;">${totalOdenenStr}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 13px; color: #0f172a; padding-top: 2px;">
+            <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 12px; color: #0f172a; padding-top: 2px;">
               <span>Kalan Alacak:</span>
               <span style="color: #ef4444;">${totalBalanceStr}</span>
             </div>
@@ -529,14 +529,14 @@ const Contractors = {
         </div>
 
         <!-- Signature Section -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; text-align: center; font-size: 11px;">
-          <div style="border-top: 1px dashed #94a3b8; padding-top: 8px; margin: 0 15px;">
-            <p style="font-weight: 700; margin: 0 0 3px 0; color: #0f172a;">Yetkili İmza</p>
-            <p style="color: #64748b; margin: 0; font-size: 10px;">${escapeHtml(companyName)}</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 15px; text-align: center; font-size: 10px;">
+          <div style="border-top: 1px dashed #94a3b8; padding-top: 6px; margin: 0 15px;">
+            <p style="font-weight: 700; margin: 0 0 2px 0; color: #0f172a;">Yetkili İmza</p>
+            <p style="color: #64748b; margin: 0; font-size: 9px;">${escapeHtml(companyName)}</p>
           </div>
-          <div style="border-top: 1px dashed #94a3b8; padding-top: 8px; margin: 0 15px;">
-            <p style="font-weight: 700; margin: 0 0 3px 0; color: #0f172a;">Fason Usta / Firma</p>
-            <p style="color: #64748b; margin: 0; font-size: 10px;">İmza / Kaşe</p>
+          <div style="border-top: 1px dashed #94a3b8; padding-top: 6px; margin: 0 15px;">
+            <p style="font-weight: 700; margin: 0 0 2px 0; color: #0f172a;">Fason Usta / Firma</p>
+            <p style="color: #64748b; margin: 0; font-size: 9px;">İmza / Kaşe</p>
           </div>
         </div>
       </div>

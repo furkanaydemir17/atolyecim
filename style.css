@@ -1910,6 +1910,29 @@ body::before {
     margin: 6mm 8mm;
   }
 
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  body::before {
+    display: none !important;
+  }
+
+  /* Sayfayı aşağı iten tüm ana elemanların yüksekliğini sıfırla */
+  #app, #sidebar, .header-bar, #mobile-menu-btn, .modal-overlay, #toast-container,
+  .modal-actions, .modal-close, .modal-header {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   body * {
     visibility: hidden;
   }
@@ -1943,13 +1966,13 @@ body::before {
   }
   body.printing-invoice #invoice-print-area {
     display: block !important;
-    position: relative !important;
+    position: absolute !important;
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    padding: 10mm 12mm !important;
+    padding: 8mm 10mm !important;
     border: none !important;
     box-shadow: none !important;
     background: #fff !important;
@@ -1969,20 +1992,17 @@ body::before {
   }
   body.printing-ledger #ledger-print-area {
     display: block !important;
-    position: relative !important;
+    position: absolute !important;
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    padding: 4mm 6mm !important;
+    padding: 0 !important;
     border: none !important;
     box-shadow: none !important;
     background: #fff !important;
     color: #000 !important;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
-    font-size: 11px !important;
-    line-height: 1.35 !important;
     box-sizing: border-box !important;
   }
 
@@ -1998,14 +2018,14 @@ body::before {
   }
   body.printing-job-ticket #job-ticket-print-area {
     display: block !important;
-    position: relative !important;
+    position: absolute !important;
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     height: auto !important;
     margin: 0 !important;
-    padding: 2mm !important;
+    padding: 0 !important;
     border: none !important;
     box-shadow: none !important;
     background: #fff !important;
@@ -2034,13 +2054,6 @@ body::before {
     flex-direction: column !important;
     justify-content: space-between !important;
     overflow: hidden !important;
-  }
-  
-  .modal-actions, .modal-close, .modal-header, #sidebar, #mobile-menu-btn, .header-bar, #toast-container {
-    display: none !important;
-    height: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
   }
 }
 
