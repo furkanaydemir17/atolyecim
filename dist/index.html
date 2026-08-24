@@ -43,9 +43,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/main-CMX3aP5j.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/index-BSMXP3NV.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-BaIMr0zW.css">
+  <script type="module" crossorigin src="/assets/main-DFo_VhV3.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/index-A7hJP16a.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-bmSXpnv6.css">
 </head>
 <body>
   <!-- O21 Düzeltme: JS devre dışı bırakıldığında noscript uyarısı -->
@@ -153,16 +153,6 @@
       <span></span><span></span><span></span>
     </button>
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
-
-    <!-- GLOBAL TOP-RIGHT AI ASSISTANT TRIGGER -->
-    <div id="global-header-bar" class="global-header-bar">
-      <button type="button" class="btn-top-ai-assistant" id="btn-top-ai-assistant" title="Atölyecim Akıllı Yapay Zeka Asistanı (Kısayol: Ctrl+K / Tıklayın)">
-        <span class="ai-sparkle-dot"></span>
-        <span class="ai-icon">🤖</span>
-        <span class="ai-title">Yapay Zeka Asistanı</span>
-        <span class="ai-shortcut-badge">Ctrl+K</span>
-      </button>
-    </div>
 
     <!-- SIDEBAR -->
     <nav id="sidebar">
@@ -297,7 +287,14 @@
             <h1 class="db-title">Genel Bakış</h1>
             <p class="db-subtitle" id="header-date">Yükleniyor...</p>
           </div>
-          <div class="db-header-right">
+          <div class="db-header-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <!-- AI Assistant Header Button -->
+            <button type="button" class="btn-top-ai-assistant" id="btn-top-ai-assistant" onclick="AiAssistant.toggleDrawer(true)" title="Atölyecim Akıllı Yapay Zeka Asistanı">
+              <span class="ai-sparkle-dot"></span>
+              <span class="ai-icon">🤖</span>
+              <span class="ai-title">Yapay Zeka Asistanı</span>
+            </button>
+
             <!-- Period Selector -->
             <div class="db-period-selector" id="analytics-period-selector">
               <button class="db-period-btn active" data-period="all">Tümü</button>
@@ -3542,8 +3539,14 @@
   <!-- ============ TOAST NOTIFICATION ============ -->
   <div id="toast-container"></div>
 
-  <!-- ============ AI ASSISTANT COPILOT DRAWER ============ -->
-  <div class="ai-drawer-overlay" id="ai-drawer-overlay"></div>
+  <!-- ============ FLOATING AI TRIGGER & COPILOT DRAWER ============ -->
+  <button type="button" class="ai-floating-trigger" id="btn-floating-ai-assistant" onclick="AiAssistant.toggleDrawer(true)" title="Atölyecim Yapay Zeka Asistanı (Kısayol: Ctrl+K)">
+    <span class="ai-floating-pulse"></span>
+    <span class="ai-floating-icon">🤖</span>
+    <span class="ai-floating-label">Yapay Zeka</span>
+  </button>
+
+  <div class="ai-drawer-overlay" id="ai-drawer-overlay" onclick="AiAssistant.toggleDrawer(false)"></div>
   <aside class="ai-copilot-drawer" id="ai-copilot-drawer" aria-label="Atölyecim Yapay Zeka Asistanı">
     <!-- Header -->
     <div class="ai-drawer-header">

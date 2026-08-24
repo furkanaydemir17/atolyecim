@@ -13,25 +13,21 @@ const AiAssistant = {
   },
 
   bindEvents() {
-    // 1. Top-right global trigger button
-    const topBtn = document.getElementById('btn-top-ai-assistant');
-    if (topBtn && !topBtn._bound) {
-      topBtn._bound = true;
-      topBtn.addEventListener('click', () => this.toggleDrawer(true));
-    }
+    // Global delegation for opening the AI drawer from any button
+    document.addEventListener('click', (e) => {
+      const openBtn = e.target.closest('#btn-top-ai-assistant, #btn-floating-ai-assistant, .btn-top-ai-assistant, .ai-floating-trigger, [data-open-ai]');
+      if (openBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleDrawer(true);
+      }
 
-    // 2. Drawer close & overlay buttons
-    const closeBtn = document.getElementById('btn-ai-close-drawer');
-    if (closeBtn && !closeBtn._bound) {
-      closeBtn._bound = true;
-      closeBtn.addEventListener('click', () => this.toggleDrawer(false));
-    }
-
-    const overlay = document.getElementById('ai-drawer-overlay');
-    if (overlay && !overlay._bound) {
-      overlay._bound = true;
-      overlay.addEventListener('click', () => this.toggleDrawer(false));
-    }
+      const closeBtn = e.target.closest('#btn-ai-close-drawer, #ai-drawer-overlay');
+      if (closeBtn) {
+        e.preventDefault();
+        this.toggleDrawer(false);
+      }
+    });
 
     const clearBtn = document.getElementById('btn-ai-clear-chat');
     if (clearBtn && !clearBtn._bound) {
@@ -608,4 +604,13 @@ const AiAssistant = {
 };
 
 window.AiAssistant = AiAssistant;
+window.openAiAssistant = () => AiAssistant.toggleDrawer(true);
+window.closeAiAssistant = () => AiAssistant.toggleDrawer(false);
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => AiAssistant.init());
+} else {
+  AiAssistant.init();
+}
+
 export default AiAssistant;
