@@ -2083,12 +2083,17 @@ const Orders = {
     const resultCard = document.getElementById('email-parse-result-card');
     if (resultCard) resultCard.style.display = 'none';
 
+    const ocrStatus = document.getElementById('email-ocr-status');
+    if (ocrStatus) ocrStatus.style.display = 'none';
+
+    this.emailParsedGroups = [];
+
     // Populate all customers (musteri and ikisi)
     const contacts = await dbGetAll('contacts');
     const customers = contacts.filter(c => c.type === 'musteri' || c.type === 'ikisi');
     const contactSelect = document.getElementById('email-parsed-contact');
     if (contactSelect) {
-      contactSelect.innerHTML = '<option value="">-- Müşteri (Cari) Seçiniz --</option>' + 
+      contactSelect.innerHTML = '<option value="">-- Müşteri (Cari Kart) Seçiniz --</option>' + 
         customers.map(c => `<option value="${c.id}">${this.escape(c.name)}${c.phone ? ` (${c.phone})` : ''}</option>`).join('');
     }
 
@@ -2105,11 +2110,39 @@ const Orders = {
       parseBtn.addEventListener('click', () => this.parseEmailContent());
     }
 
+    // Paste from Clipboard Button
+    const pasteBtn = document.getElementById('btn-email-paste-clipboard');
+    if (pasteBtn && !pasteBtn._bound) {
+      pasteBtn._bound = true;
+      pasteBtn.addEventListener('click', async () => {
+        try {
+          if (navigator.clipboard && navigator.clipboard.readText) {
+            const clipText = await navigator.clipboard.readText();
+            if (clipText && clipText.trim()) {
+              if (textarea) {
+                // Clean WhatsApp timestamps if present
+                const cleaned = clipText.replace(/\[\d{1,2}[.\/-]\d{1,2}[.\/-]\d{2,4}\s+\d{1,2}:\d{2}(?::\d{2})?\]\s+[^:]+:\s*/g, '');
+                textarea.value = cleaned;
+                showToast('Panodan yapıştırıldı ve taranıyor...', 'success');
+                await this.parseEmailContent();
+              }
+            } else {
+              showToast('Pano boş veya metin içermiyor.', 'info');
+            }
+          } else {
+            showToast('Lütfen metni Ctrl+V ile kutuya yapıştırın.', 'info');
+          }
+        } catch (e) {
+          showToast('Pano okuma izni verilmedi. Lütfen metni doğrudan yapıştırın.', 'warning');
+        }
+      });
+    }
+
     // Realistic sample templates
     const samples = {
       'sample-1': `Konu: Sipariş Talebi - Ahmet Kundura\n\nMerhaba Atölye,\nA-102 model kodlu Siyah rugan ayakkabıdan aşağıdaki numaralara göre acil sipariş vermek istiyoruz:\n\n38 numara: 5 çift\n39 numara: 10 çift\n40 numara: 12 çift\n41 numara: 8 çift\n42 numara: 3 çift\n\nBirim fiyat: 550 TL\nTermin: 15.09.2026\n\nİyi çalışmalar,\nAhmet Kundura\nTel: 0532 555 0011`,
-      'sample-2': `Gönderen: Furkan Mağazacılık <furkan@magaza.com>\nTarih: 24 Ağustos 2026\n\nSelamlar usta,\nModel: M-420 Kahverengi\n\nDağılımımız:\n4 çift 38 numara\n6 çift 39 numara\n10 çift 40 numara\n10 çift 41 numara\n4 çift 42 numara\n2 çift 43 numara\n\nFiyatı 650 ₺ olarak onaylamıştık.\nTeslimat: 2026-09-10\nAdres: İstanbul İstoç Depo`,
-      'sample-3': `Müşteri: Ayakkabı Dünyası\nModel Kodu: B-310 Beyaz\nAdetler: 36/10 37/15 38/20 39/20 40/15 41/10\nBirim Fiyat: 480 TL\nTermin: 10 gün içinde`
+      'sample-2': `[24.08.2026 14:20] Furkan Mağazacılık: Selamlar usta, yeni parti siparişimiz:\nModel: M-420 Kahverengi\n4 çift 38, 6 çift 39, 10 çift 40, 10 çift 41, 4 çift 42, 2 çift 43 numara.\nFiyatı 650 ₺ olarak anlaştık. Teslimat haftaya cuma olsun lütfen.`,
+      'sample-3': `Müşteri: Ayakkabı Dünyası\n1. Model: B-310 Beyaz\n36/10 37/15 38/20 39/20 40/15 41/10\nFiyat: 480 TL\n\n2. Model: K-800 Siyah\n40: 10 çift, 41: 15 çift, 42: 15 çift, 43: 10 çift\nFiyat: 520 TL\n\nTermin: 10 gün içinde`
     };
 
     Object.entries(samples).forEach(([id, text]) => {
@@ -2119,13 +2152,13 @@ const Orders = {
         btn.addEventListener('click', () => {
           if (textarea) {
             textarea.value = text;
-            showToast('Örnek sipariş metni yüklendi!', 'info');
+            showToast('Örnek sipariş şablonu yüklendi!', 'info');
           }
         });
       }
     });
 
-    // Setup File Upload & Drag-and-Drop Handler
+    // Setup File Upload & Drag-and-Drop Handler (Supports PDF, Images/Screenshots, TXT, CSV)
     const dropzone = document.getElementById('email-pdf-dropzone');
     const fileInput = document.getElementById('email-pdf-file');
 
@@ -2167,12 +2200,12 @@ const Orders = {
       });
     }
 
-    // Add Size button in preview
-    const addSizeBtn = document.getElementById('btn-email-add-size');
-    if (addSizeBtn && !addSizeBtn._bound) {
-      addSizeBtn._bound = true;
-      addSizeBtn.addEventListener('click', () => {
-        this.addEmailParsedSizeRow();
+    // Add Model Group button
+    const addModelGroupBtn = document.getElementById('btn-email-add-model-group');
+    if (addModelGroupBtn && !addModelGroupBtn._bound) {
+      addModelGroupBtn._bound = true;
+      addModelGroupBtn.addEventListener('click', () => {
+        this.addEmailModelGroup();
       });
     }
 
@@ -2194,12 +2227,43 @@ const Orders = {
 
   async handleEmailFileImport(file) {
     const textarea = document.getElementById('email-order-text');
+    const ocrStatus = document.getElementById('email-ocr-status');
     if (!file) return;
 
     const fileName = file.name.toLowerCase();
     showToast(`"${file.name}" dosyası işleniyor...`, 'info');
 
     try {
+      // 1. IMAGE & SCREENSHOT OCR (JPEG, PNG, WebP)
+      if (file.type.startsWith('image/') || fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.webp')) {
+        if (ocrStatus) {
+          ocrStatus.style.display = 'inline-block';
+          ocrStatus.textContent = '🖼️ Görsel OCR ile taranıyor...';
+        }
+        showToast('Görsel üzerindeki yazılar yapay zeka ile okunuyor...', 'info');
+
+        if (window.Tesseract) {
+          try {
+            const worker = await window.Tesseract.createWorker('tur+eng');
+            const ret = await worker.recognize(file);
+            await worker.terminate();
+
+            if (ret && ret.data && ret.data.text) {
+              if (textarea) {
+                textarea.value = ret.data.text.trim();
+                showToast('Görsel metni başarıyla okundu! Şimdi ayrıştırılıyor...', 'success');
+                if (ocrStatus) ocrStatus.textContent = '✔️ Görsel Başarıyla Okundu';
+                await this.parseEmailContent();
+              }
+              return;
+            }
+          } catch (ocrErr) {
+            console.warn('Tesseract worker error:', ocrErr);
+          }
+        }
+      }
+
+      // 2. TEXT FILES (TXT, CSV, EML, JSON)
       if (fileName.endsWith('.txt') || fileName.endsWith('.csv') || fileName.endsWith('.eml') || fileName.endsWith('.json')) {
         const text = await file.text();
         if (textarea) {
@@ -2210,12 +2274,13 @@ const Orders = {
         return;
       }
 
+      // 3. PDF DOCUMENTS
       if (fileName.endsWith('.pdf') || file.type === 'application/pdf') {
         const arrayBuffer = await file.arrayBuffer();
         const pdfjsLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
         
         if (!pdfjsLib) {
-          showToast('PDF okuyucu kütüphanesi yüklenemedi. Lütfen metni kopyalayıp yapıştırın.', 'error');
+          showToast('PDF okuyucu yüklenemedi. Lütfen metni kopyalayıp yapıştırın.', 'error');
           return;
         }
 
@@ -2268,11 +2333,16 @@ const Orders = {
 
   async parseEmailContent() {
     const textarea = document.getElementById('email-order-text');
-    const text = (textarea ? textarea.value : '').trim();
-    if (!text) {
+    const rawText = (textarea ? textarea.value : '').trim();
+    if (!rawText) {
       showToast('Lütfen e-posta veya sipariş metnini yapıştırın!', 'warning');
       return;
     }
+
+    // Clean WhatsApp timestamps and clutter
+    const text = rawText
+      .replace(/\[\d{1,2}[.\/-]\d{1,2}[.\/-]\d{2,4}\s+\d{1,2}:\d{2}(?::\d{2})?\]\s+[^:]+:\s*/g, '')
+      .replace(/\d{1,2}[.\/-]\d{1,2}[.\/-]\d{2,4},\s+\d{1,2}:\d{2}\s*-\s*[^:]+:\s*/g, '');
 
     const normalizeTr = (str) => {
       return (str || '')
@@ -2288,11 +2358,10 @@ const Orders = {
     const normText = normalizeTr(text);
     const contacts = await dbGetAll('contacts');
     const products = await dbGetAll('products');
+    const assortments = await dbGetAll('assortments');
 
     // 1. MATCH CUSTOMER (CARİ EŞLEŞTİRME)
     let matchedContactId = "";
-    
-    // Check specific header patterns first: "Kimden:", "Gönderen:", "From:", "Müşteri:", "Firma:"
     const custHeaderRegex = /(?:kimden|gönderen|from|müşteri|musteri|firma|alici|alıcı|sayın|sayin)\s*[:=\-]?\s*([^\n\r<,]+)/i;
     const custHeaderMatch = text.match(custHeaderRegex);
     if (custHeaderMatch) {
@@ -2301,7 +2370,6 @@ const Orders = {
       if (match) matchedContactId = match.id;
     }
 
-    // If not matched by header, search contacts across the entire text
     if (!matchedContactId) {
       let longestMatchLen = 0;
       for (const c of contacts) {
@@ -2315,108 +2383,7 @@ const Orders = {
       }
     }
 
-    // 2. MATCH MODEL CODE (MODEL KODU EŞLEŞTİRME)
-    let modelCode = "";
-    
-    // Check if any existing product model code is mentioned in text
-    if (products.length > 0) {
-      const sortedProds = [...products].sort((a, b) => (b.modelCode || '').length - (a.modelCode || '').length);
-      for (const p of sortedProds) {
-        if (!p.modelCode || p.modelCode.trim().length < 2) continue;
-        const normModel = normalizeTr(p.modelCode);
-        const regex = new RegExp(`\\b${normModel.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
-        if (regex.test(normText)) {
-          modelCode = p.modelCode;
-          break;
-        }
-      }
-    }
-
-    // If not found in DB products, extract via model keywords and patterns
-    if (!modelCode) {
-      const modelKeywordsRegex = /(?:model(?:\s*kodu|\s*no|\s*adı)?|ürün(?:\s*kodu)?|kod|ref)\s*[:=\-]?\s*([A-Za-z0-9\-_./]{2,20})\b/i;
-      const kwMatch = text.match(modelKeywordsRegex);
-      if (kwMatch) {
-        modelCode = kwMatch[1].toUpperCase();
-      } else {
-        const standardCodeRegex = /\b([A-Z]{1,4}[-_\s]?[0-9]{2,5}[A-Z]?)\b/i;
-        const stdMatch = text.match(standardCodeRegex);
-        if (stdMatch && !['TL', 'USD', 'EUR', 'TRY', 'PDF'].includes(stdMatch[1].toUpperCase())) {
-          modelCode = stdMatch[1].toUpperCase();
-        }
-      }
-    }
-
-    // 3. MATCH COLOR (RENK EŞLEŞTİRME)
-    let color = "Siyah";
-    const shoeColors = [
-      "Siyah", "Beyaz", "Kahverengi", "Taba", "Lacivert", "Bej", "Vizon", "Bordo", 
-      "Haki", "Ten", "Pudra", "Füme", "Hardal", "Antrasit", "Camel", "Nude", 
-      "Altın", "Gümüş", "Dore", "Lame", "Yeşil", "Kırmızı", "Mavi", "Sarı", 
-      "Pembe", "Turuncu", "Mor", "Krem", "Ekru", "Kum", "Taş", "Platin", "Bronz"
-    ];
-
-    const colorKeywordRegex = /(?:renk(?:leri|i)?|colour|color)\s*[:=\-]?\s*([^\n\r,.;]+)/i;
-    const colorKeywordMatch = text.match(colorKeywordRegex);
-    if (colorKeywordMatch) {
-      const extractedColor = colorKeywordMatch[1].trim();
-      for (const col of shoeColors) {
-        if (normalizeTr(extractedColor).includes(normalizeTr(col))) {
-          color = col;
-          break;
-        }
-      }
-      if (!color && extractedColor.length < 25) color = extractedColor;
-    } else {
-      for (const col of shoeColors) {
-        const colReg = new RegExp(`\\b${normalizeTr(col)}\\b`, 'i');
-        if (colReg.test(normText)) {
-          color = col;
-          break;
-        }
-      }
-    }
-
-    // 4. MATCH PRICE & CURRENCY (FİYAT VE PARA BİRİMİ)
-    let price = "";
-    let currency = "TRY";
-
-    if (normText.includes('$') || normText.includes('usd') || normText.includes('dolar')) {
-      currency = 'USD';
-    } else if (normText.includes('€') || normText.includes('eur') || normText.includes('euro')) {
-      currency = 'EUR';
-    }
-
-    const priceRegexes = [
-      /(?:birim\s*)?fiyat(?:ı|u)?\s*[:=\-]?\s*(\d+(?:[.,]\d+)?)\s*(?:tl|₺|lira|usd|\$|eur|€)?/i,
-      /(\d+(?:[.,]\d+)?)\s*(?:tl|₺|lira)/i,
-      /(?:\$|usd)\s*(\d+(?:[.,]\d+)?)/i,
-      /(\d+(?:[.,]\d+)?)\s*(?:\$|usd)/i,
-      /(?:€|eur)\s*(\d+(?:[.,]\d+)?)/i,
-      /(\d+(?:[.,]\d+)?)\s*(?:€|eur)/i
-    ];
-
-    for (const pr of priceRegexes) {
-      const m = text.match(pr);
-      if (m && m[1]) {
-        const parsedVal = parseFloat(m[1].replace(',', '.'));
-        if (parsedVal > 0 && parsedVal < 100000) {
-          price = parsedVal;
-          break;
-        }
-      }
-    }
-
-    // If price not found in text, check catalog product price
-    if (!price && modelCode) {
-      const matchedProd = products.find(p => (p.modelCode || '').toLowerCase() === modelCode.toLowerCase());
-      if (matchedProd && matchedProd.price) {
-        price = matchedProd.price;
-        if (matchedProd.currency) currency = matchedProd.currency;
-      }
-    }
-
-    // 5. MATCH DEADLINE (TERMİN TARİHİ)
+    // 2. MATCH DEADLINE (TERMİN TARİHİ)
     let deadline = "";
     const dateRegexes = [
       /(?:termin|teslim(?:at)?|tarih)\s*[:=\-]?\s*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2,4})/i,
@@ -2443,107 +2410,226 @@ const Orders = {
       deadline = defaultDate.toISOString().split('T')[0];
     }
 
-    // 6. ROBUST SIZE & QUANTITY EXTRACTION (BEDEN VE ADETLERİ AYRIŞTIRMA)
-    const sizesMap = {};
-    const lines = text.split(/\r?\n/);
+    // 3. MULTI-MODEL SECTION DETECTOR
+    // Detect if text has multiple model sections (e.g. "1. Model: ...", "Model 2: ...", or paragraphs)
+    const shoeColors = [
+      "Siyah", "Beyaz", "Kahverengi", "Taba", "Lacivert", "Bej", "Vizon", "Bordo", 
+      "Haki", "Ten", "Pudra", "Füme", "Hardal", "Antrasit", "Camel", "Nude", 
+      "Altın", "Gümüş", "Dore", "Lame", "Yeşil", "Kırmızı", "Mavi", "Sarı", 
+      "Pembe", "Turuncu", "Mor", "Krem", "Ekru", "Kum", "Taş", "Platin", "Bronz"
+    ];
 
-    for (let rawLine of lines) {
-      const line = rawLine.trim();
-      if (!line) continue;
+    // Split text into model sections if multiple models are mentioned
+    let sections = [];
+    const sectionSplitRegex = /(?:(?:\d+[\.\)]\s*(?:model|ürün|kod))|(?:model\s*(?:kodu|no|adı)?\s*[:=\-]))/gi;
+    const splitIndices = [];
+    let sMatch;
+    while ((sMatch = sectionSplitRegex.exec(text)) !== null) {
+      splitIndices.push(sMatch.index);
+    }
 
-      // Skip lines that are purely headers or metadata
-      if (/^(konu|kimden|gönderen|from|tarih|date|sevk adresi|sevk|fatura|tel|telefon|e-posta|email|saygılar|iyi çalışmalar|teşekkür)/i.test(line)) {
-        continue;
+    if (splitIndices.length > 1) {
+      for (let i = 0; i < splitIndices.length; i++) {
+        const start = splitIndices[i];
+        const end = (i + 1 < splitIndices.length) ? splitIndices[i + 1] : text.length;
+        sections.push(text.substring(start, end).trim());
+      }
+    } else {
+      sections = [text];
+    }
+
+    this.emailParsedGroups = [];
+
+    sections.forEach((secText, secIdx) => {
+      const normSec = normalizeTr(secText);
+
+      // Model code extraction for this section
+      let modelCode = "";
+      for (const p of products) {
+        if (!p.modelCode || p.modelCode.trim().length < 2) continue;
+        const normModel = normalizeTr(p.modelCode);
+        const regex = new RegExp(`\\b${normModel.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
+        if (regex.test(normSec)) {
+          modelCode = p.modelCode;
+          break;
+        }
       }
 
-      // Check Pattern 1 (Qty first): e.g. "5 çift 38 numara", "10 adet 39", "8 çift 40 numara"
-      const qtyFirstRegex = /\b(\d{1,4})\s*(?:çift|adet|tane|cift|pr|prs|pairs?)?\s*(?:numara|no|nmr|beden)?\s*[:=\-]?\s*\b([2-5][0-9])\s*(?:numara|no|nmr|beden)?\b/gi;
-      let qm;
-      let matchedInLine = false;
-      while ((qm = qtyFirstRegex.exec(line)) !== null) {
-        const qty = parseInt(qm[1], 10);
-        const sz = qm[2];
-        if (qty > 0 && qty < 5000 && parseInt(sz) >= 20 && parseInt(sz) <= 50) {
-          if (!(qty >= 2020 && qty <= 2035)) { // ignore years
-            sizesMap[sz] = (sizesMap[sz] || 0) + qty;
-            matchedInLine = true;
+      if (!modelCode) {
+        const modelKeywordsRegex = /(?:model(?:\s*kodu|\s*no|\s*adı)?|ürün(?:\s*kodu)?|kod|ref)\s*[:=\-]?\s*([A-Za-z0-9\-_./]{2,20})\b/i;
+        const kwMatch = secText.match(modelKeywordsRegex);
+        if (kwMatch) {
+          modelCode = kwMatch[1].toUpperCase();
+        } else {
+          const standardCodeRegex = /\b([A-Z]{1,4}[-_\s]?[0-9]{2,5}[A-Z]?)\b/i;
+          const stdMatch = secText.match(standardCodeRegex);
+          if (stdMatch && !['TL', 'USD', 'EUR', 'TRY', 'PDF', 'OCR'].includes(stdMatch[1].toUpperCase())) {
+            modelCode = stdMatch[1].toUpperCase();
           }
         }
       }
 
-      // Check Pattern 2 (Size first): e.g. "38: 5", "38 numara: 5 çift", "38/5", "38-5", "38 -> 10", "38lik 4 cift"
-      if (!matchedInLine) {
-        const sizeFirstRegex = /\b([2-5][0-9])\s*(?:numara|no|nmr|beden|lik|lik|lük|luk)?\s*[:=\->\/]\s*(\d{1,4})\s*(?:çift|adet|tane|cift)?\b/gi;
-        let sm;
-        while ((sm = sizeFirstRegex.exec(line)) !== null) {
-          const sz = sm[1];
-          const qty = parseInt(sm[2], 10);
-          if (qty > 0 && qty < 5000 && parseInt(sz) >= 20 && parseInt(sz) <= 50) {
-            if (!(qty >= 2020 && qty <= 2035)) {
-              sizesMap[sz] = (sizesMap[sz] || 0) + qty;
-              matchedInLine = true;
+      // Color extraction for this section
+      let color = "Siyah";
+      const colorKeywordRegex = /(?:renk(?:leri|i)?|colour|color)\s*[:=\-]?\s*([^\n\r,.;]+)/i;
+      const colorKeywordMatch = secText.match(colorKeywordRegex);
+      if (colorKeywordMatch) {
+        const extractedColor = colorKeywordMatch[1].trim();
+        for (const col of shoeColors) {
+          if (normalizeTr(extractedColor).includes(normalizeTr(col))) {
+            color = col;
+            break;
+          }
+        }
+        if (!color && extractedColor.length < 25) color = extractedColor;
+      } else {
+        for (const col of shoeColors) {
+          const colReg = new RegExp(`\\b${normalizeTr(col)}\\b`, 'i');
+          if (colReg.test(normSec)) {
+            color = col;
+            break;
+          }
+        }
+      }
+
+      // Price & currency extraction
+      let price = "";
+      let currency = "TRY";
+
+      if (normSec.includes('$') || normSec.includes('usd') || normSec.includes('dolar')) {
+        currency = 'USD';
+      } else if (normSec.includes('€') || normSec.includes('eur') || normSec.includes('euro')) {
+        currency = 'EUR';
+      }
+
+      const priceRegexes = [
+        /(?:birim\s*)?fiyat(?:ı|u)?\s*[:=\-]?\s*(\d+(?:[.,]\d+)?)\s*(?:tl|₺|lira|usd|\$|eur|€)?/i,
+        /(\d+(?:[.,]\d+)?)\s*(?:tl|₺|lira)/i,
+        /(?:\$|usd)\s*(\d+(?:[.,]\d+)?)/i,
+        /(\d+(?:[.,]\d+)?)\s*(?:\$|usd)/i,
+        /(?:€|eur)\s*(\d+(?:[.,]\d+)?)/i,
+        /(\d+(?:[.,]\d+)?)\s*(?:€|eur)/i
+      ];
+
+      for (const pr of priceRegexes) {
+        const m = secText.match(pr);
+        if (m && m[1]) {
+          const parsedVal = parseFloat(m[1].replace(',', '.'));
+          if (parsedVal > 0 && parsedVal < 100000) {
+            price = parsedVal;
+            break;
+          }
+        }
+      }
+
+      if (!price && modelCode) {
+        const matchedProd = products.find(p => (p.modelCode || '').toLowerCase() === modelCode.toLowerCase());
+        if (matchedProd && matchedProd.price) {
+          price = matchedProd.price;
+          if (matchedProd.currency) currency = matchedProd.currency;
+        }
+      }
+
+      // Sizes extraction for this section
+      const sizesMap = {};
+
+      // Check Asorti template match (e.g. "2 koli standart asorti")
+      const asortiRegex = /(\d+)\s*(?:koli|takım|asorti)\s+([^\n\r]+)/i;
+      const asMatch = secText.match(asortiRegex);
+      if (asMatch && assortments.length > 0) {
+        const koliQty = parseInt(asMatch[1], 10) || 1;
+        const asName = normalizeTr(asMatch[2]);
+        const matchedAs = assortments.find(a => asName.includes(normalizeTr(a.name)) || normalizeTr(a.name).includes(asName));
+        if (matchedAs && matchedAs.sizes) {
+          matchedAs.sizes.forEach(s => {
+            sizesMap[s.size] = (sizesMap[s.size] || 0) + (s.qty * koliQty);
+          });
+        }
+      }
+
+      // Regular size extractions if not resolved by asorti
+      if (Object.keys(sizesMap).length === 0) {
+        const secLines = secText.split(/\r?\n/);
+        for (let rawLine of secLines) {
+          const line = rawLine.trim();
+          if (!line) continue;
+
+          if (/^(konu|kimden|gönderen|from|tarih|date|sevk adresi|sevk|fatura|tel|telefon|e-posta|email)/i.test(line)) {
+            continue;
+          }
+
+          // Pattern 1: "5 çift 38 numara"
+          const qtyFirstRegex = /\b(\d{1,4})\s*(?:çift|adet|tane|cift|pr|prs|pairs?)?\s*(?:numara|no|nmr|beden)?\s*[:=\-]?\s*\b([2-5][0-9])\s*(?:numara|no|nmr|beden)?\b/gi;
+          let qm;
+          let matchedInLine = false;
+          while ((qm = qtyFirstRegex.exec(line)) !== null) {
+            const qty = parseInt(qm[1], 10);
+            const sz = qm[2];
+            if (qty > 0 && qty < 5000 && parseInt(sz) >= 20 && parseInt(sz) <= 50) {
+              if (!(qty >= 2020 && qty <= 2035)) {
+                sizesMap[sz] = (sizesMap[sz] || 0) + qty;
+                matchedInLine = true;
+              }
+            }
+          }
+
+          // Pattern 2: "38: 5", "38 numara: 5 çift", "38/5"
+          if (!matchedInLine) {
+            const sizeFirstRegex = /\b([2-5][0-9])\s*(?:numara|no|nmr|beden|lik|lik|lük|luk)?\s*[:=\->\/]\s*(\d{1,4})\s*(?:çift|adet|tane|cift)?\b/gi;
+            let sm;
+            while ((sm = sizeFirstRegex.exec(line)) !== null) {
+              const sz = sm[1];
+              const qty = parseInt(sm[2], 10);
+              if (qty > 0 && qty < 5000 && parseInt(sz) >= 20 && parseInt(sz) <= 50) {
+                if (!(qty >= 2020 && qty <= 2035)) {
+                  sizesMap[sz] = (sizesMap[sz] || 0) + qty;
+                  matchedInLine = true;
+                }
+              }
+            }
+          }
+
+          // Pattern 3: "36/10 37/15 38/20"
+          if (!matchedInLine) {
+            const compactRegex = /\b([2-5][0-9])[\/\-](\d{1,4})\b/g;
+            let cm;
+            while ((cm = compactRegex.exec(line)) !== null) {
+              const sz = cm[1];
+              const qty = parseInt(cm[2], 10);
+              if (qty > 0 && qty < 5000 && parseInt(sz) >= 20 && parseInt(sz) <= 50) {
+                sizesMap[sz] = (sizesMap[sz] || 0) + qty;
+                matchedInLine = true;
+              }
             }
           }
         }
       }
 
-      // Check Pattern 3 (Simple space separated pairs on dedicated lines, e.g. "38 numara 5 çift")
-      if (!matchedInLine) {
-        const sizeSpaceRegex = /\b([2-5][0-9])\s*(?:numara|no|nmr|beden)\s*(\d{1,4})\s*(?:çift|adet|tane|cift)?\b/gi;
-        let ssm;
-        while ((ssm = sizeSpaceRegex.exec(line)) !== null) {
-          const sz = ssm[1];
-          const qty = parseInt(ssm[2], 10);
-          if (qty > 0 && qty < 5000 && parseInt(sz) >= 20 && parseInt(sz) <= 50) {
-            sizesMap[sz] = (sizesMap[sz] || 0) + qty;
-            matchedInLine = true;
-          }
-        }
-      }
+      const parsedSizes = Object.keys(sizesMap)
+        .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
+        .map(sz => ({ size: sz, qty: sizesMap[sz] }));
 
-      // Check Pattern 4 (Compact slash or dash format: "36/10 37/15 38/20" or "36-10, 37-15")
-      if (!matchedInLine) {
-        const compactRegex = /\b([2-5][0-9])[\/\-](\d{1,4})\b/g;
-        let cm;
-        while ((cm = compactRegex.exec(line)) !== null) {
-          const sz = cm[1];
-          const qty = parseInt(cm[2], 10);
-          if (qty > 0 && qty < 5000 && parseInt(sz) >= 20 && parseInt(sz) <= 50) {
-            sizesMap[sz] = (sizesMap[sz] || 0) + qty;
-            matchedInLine = true;
-          }
-        }
-      }
-    }
+      this.emailParsedGroups.push({
+        id: 'group_' + Date.now() + '_' + secIdx,
+        modelCode: modelCode || '',
+        color: color || 'Siyah',
+        price: price ? Number(price) : '',
+        currency: currency || 'TRY',
+        sizes: parsedSizes
+      });
+    });
 
-    // Convert map to sorted array
-    const parsedSizes = Object.keys(sizesMap)
-      .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
-      .map(sz => ({ size: sz, qty: sizesMap[sz] }));
-
-    // Populate Modal Form Fields
+    // Populate Contact and Deadline
     const contactSelect = document.getElementById('email-parsed-contact');
     if (contactSelect && matchedContactId) {
       contactSelect.value = matchedContactId;
     }
 
-    const modelInput = document.getElementById('email-parsed-model');
-    if (modelInput) modelInput.value = modelCode || '';
-
-    const colorInput = document.getElementById('email-parsed-color');
-    if (colorInput) colorInput.value = color || 'Siyah';
-
-    const priceInput = document.getElementById('email-parsed-price');
-    if (priceInput) priceInput.value = price ? Number(price).toFixed(2) : '';
-
-    const currSelect = document.getElementById('email-parsed-currency');
-    if (currSelect) currSelect.value = currency || 'TRY';
-
     const deadlineInputEl = document.getElementById('email-parsed-deadline');
     if (deadlineInputEl) deadlineInputEl.value = deadline;
 
-    // Render interactive sizes grid
-    this.renderEmailParsedSizes(parsedSizes);
+    // Render Model Cards in Preview
+    this.renderEmailParsedModels();
 
     const resultCard = document.getElementById('email-parse-result-card');
     if (resultCard) {
@@ -2551,75 +2637,154 @@ const Orders = {
       resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    if (parsedSizes.length > 0) {
-      showToast(`E-posta başarıyla ayrıştırıldı: ${modelCode || 'Model'} (${color}) — Toplam ${parsedSizes.reduce((a, s) => a + s.qty, 0)} Çift`, 'success');
-    } else {
-      showToast('E-posta okundu ancak numara dağılımı bulunamadı. "+ Beden Ekle" ile numaraları elle girebilirsiniz.', 'info');
-    }
+    const totalPairs = this.emailParsedGroups.reduce((acc, g) => acc + g.sizes.reduce((sAcc, s) => sAcc + s.qty, 0), 0);
+    showToast(`Sipariş başarıyla ayrıştırıldı: ${this.emailParsedGroups.length} Model • Toplam ${totalPairs} Çift 🚀`, 'success');
   },
 
-  renderEmailParsedSizes(sizes = []) {
-    const previewDiv = document.getElementById('email-parsed-items-preview');
-    if (!previewDiv) return;
+  renderEmailParsedModels() {
+    const container = document.getElementById('email-parsed-models-container');
+    if (!container) return;
 
-    if (sizes.length === 0) {
-      previewDiv.innerHTML = `
-        <div style="text-align: center; padding: 10px; color: var(--text-muted);">
-          Numara dağılımı otomatik tespit edilemedi. Lütfen yukarıdaki <strong>"+ Beden Ekle"</strong> butonuna basarak numaraları ekleyin.
-        </div>
-      `;
-      previewDiv.tempSizes = [];
-      this.recalcEmailParsedTotals();
+    if (this.emailParsedGroups.length === 0) {
+      this.addEmailModelGroup();
       return;
     }
 
-    previewDiv.tempSizes = sizes;
-    previewDiv.innerHTML = `
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px;" id="email-parsed-sizes-grid">
-        ${sizes.map((s, idx) => `
-          <div class="email-size-chip" data-index="${idx}" style="background: #ffffff; border: 1px solid var(--border-card); border-radius: 6px; padding: 6px 8px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative;">
-            <button type="button" class="btn-remove-email-size" data-index="${idx}" style="position: absolute; top: 2px; right: 4px; border: none; background: transparent; color: #ef4444; font-size: 14px; cursor: pointer; line-height: 1; padding: 0;" title="Sil">&times;</button>
-            <span style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 2px;">${this.escape(s.size)}</span>
-            <div style="display: flex; align-items: center; gap: 2px; width: 100%;">
-              <input type="number" class="email-size-qty-input" data-index="${idx}" min="1" max="5000" value="${s.qty}" style="width: 100%; text-align: center; padding: 3px 2px; font-size: 12px; font-weight: 700; border-radius: 4px; height: 26px;">
+    container.innerHTML = this.emailParsedGroups.map((grp, gIdx) => {
+      const subtotalPairs = (grp.sizes || []).reduce((sum, s) => sum + (parseInt(s.qty, 10) || 0), 0);
+      const subtotalAmount = subtotalPairs * (parseFloat(grp.price) || 0);
+      const sym = { TRY: '₺', USD: '$', EUR: '€' }[grp.currency || 'TRY'] || '₺';
+
+      return `
+        <div class="email-model-card" data-group-id="${grp.id}" style="background: #f8fafc; border: 1px solid var(--border-card); border-radius: 8px; padding: 14px; position: relative;">
+          ${this.emailParsedGroups.length > 1 ? `
+            <button type="button" class="btn-remove-model-group" onclick="Orders.removeEmailModelGroup('${grp.id}')" style="position: absolute; top: 10px; right: 12px; border: none; background: transparent; color: #ef4444; font-size: 16px; cursor: pointer; line-height: 1; font-weight: bold;" title="Modeli Kaldır">&times; Kaldır</button>
+          ` : ''}
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 10px; margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 11px; font-weight: 700; color: #475569;">Model Kodu</label>
+              <input type="text" class="email-grp-model" data-group-id="${grp.id}" value="${this.escape(grp.modelCode)}" placeholder="Örn: A-102" style="width: 100%; font-weight: 800; font-size: 13px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 11px; font-weight: 700; color: #475569;">Renk</label>
+              <input type="text" class="email-grp-color" data-group-id="${grp.id}" value="${this.escape(grp.color)}" placeholder="Siyah" style="width: 100%; font-weight: 600; font-size: 13px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 11px; font-weight: 700; color: #475569;">Birim Fiyat & Para Birimi</label>
+              <div style="display: flex; gap: 4px;">
+                <input type="number" class="email-grp-price" data-group-id="${grp.id}" min="0.01" step="0.01" value="${grp.price !== '' ? Number(grp.price).toFixed(2) : ''}" placeholder="0.00" style="width: 65%; font-weight: 700;">
+                <select class="email-grp-currency" data-group-id="${grp.id}" style="width: 35%; padding: 0 4px; font-size: 12px;">
+                  <option value="TRY" ${grp.currency === 'TRY' ? 'selected' : ''}>₺</option>
+                  <option value="USD" ${grp.currency === 'USD' ? 'selected' : ''}>$</option>
+                  <option value="EUR" ${grp.currency === 'EUR' ? 'selected' : ''}>€</option>
+                </select>
+              </div>
             </div>
           </div>
-        `).join('')}
-      </div>
-    `;
 
-    // Bind size input change listeners
-    previewDiv.querySelectorAll('.email-size-qty-input').forEach(input => {
-      input.addEventListener('input', (e) => {
-        const idx = parseInt(e.target.dataset.index, 10);
-        const val = parseInt(e.target.value, 10) || 0;
-        if (previewDiv.tempSizes[idx]) {
-          previewDiv.tempSizes[idx].qty = val;
-        }
+          <!-- Beden Dağılımı -->
+          <div style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 11px; font-weight: 700; color: #0f172a;">Numara Dağılımı:</span>
+              <button type="button" class="btn btn-sm btn-ghost" onclick="Orders.addEmailSizeToGroup('${grp.id}')" style="padding: 2px 8px; font-size: 11px;">+ Numara Ekle</button>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 6px;" class="email-grp-sizes-grid" data-group-id="${grp.id}">
+              ${(grp.sizes || []).map((s, sIdx) => `
+                <div style="background: #f8fafc; border: 1px solid var(--border-card); border-radius: 4px; padding: 4px 6px; display: flex; flex-direction: column; align-items: center; position: relative;">
+                  <button type="button" onclick="Orders.removeEmailSizeFromGroup('${grp.id}', ${sIdx})" style="position: absolute; top: 1px; right: 2px; border: none; background: transparent; color: #ef4444; font-size: 12px; cursor: pointer; line-height: 1;" title="Sil">&times;</button>
+                  <span style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 2px;">${this.escape(s.size)}</span>
+                  <input type="number" class="email-size-qty-input" data-group-id="${grp.id}" data-size-index="${sIdx}" min="1" max="5000" value="${s.qty}" style="width: 100%; text-align: center; padding: 2px; font-size: 11.5px; font-weight: 700; height: 24px; border-radius: 4px;">
+                </div>
+              `).join('')}
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px;">
+              <span>Model Toplamı: <strong style="color: #0f172a;">${subtotalPairs} Çift</strong></span>
+              ${subtotalAmount > 0 ? `<span style="color: #059669; font-weight: 700;">(${sym}${subtotalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })})</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Bind inputs event listeners
+    container.querySelectorAll('.email-grp-model').forEach(input => {
+      input.oninput = (e) => {
+        const grp = this.emailParsedGroups.find(g => g.id === e.target.dataset.groupId);
+        if (grp) grp.modelCode = e.target.value.trim();
         this.recalcEmailParsedTotals();
-      });
+      };
     });
 
-    // Bind size remove listeners
-    previewDiv.querySelectorAll('.btn-remove-email-size').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const idx = parseInt(e.target.dataset.index, 10);
-        previewDiv.tempSizes.splice(idx, 1);
-        this.renderEmailParsedSizes(previewDiv.tempSizes);
-      });
+    container.querySelectorAll('.email-grp-color').forEach(input => {
+      input.oninput = (e) => {
+        const grp = this.emailParsedGroups.find(g => g.id === e.target.dataset.groupId);
+        if (grp) grp.color = e.target.value.trim();
+      };
+    });
+
+    container.querySelectorAll('.email-grp-price').forEach(input => {
+      input.oninput = (e) => {
+        const grp = this.emailParsedGroups.find(g => g.id === e.target.dataset.groupId);
+        if (grp) grp.price = parseFloat(e.target.value) || 0;
+        this.recalcEmailParsedTotals();
+      };
+    });
+
+    container.querySelectorAll('.email-grp-currency').forEach(select => {
+      select.onchange = (e) => {
+        const grp = this.emailParsedGroups.find(g => g.id === e.target.dataset.groupId);
+        if (grp) grp.currency = e.target.value;
+        this.recalcEmailParsedTotals();
+      };
+    });
+
+    container.querySelectorAll('.email-size-qty-input').forEach(input => {
+      input.oninput = (e) => {
+        const grp = this.emailParsedGroups.find(g => g.id === e.target.dataset.groupId);
+        const sIdx = parseInt(e.target.dataset.sizeIndex, 10);
+        const val = parseInt(e.target.value, 10) || 0;
+        if (grp && grp.sizes[sIdx]) {
+          grp.sizes[sIdx].qty = val;
+        }
+        this.recalcEmailParsedTotals();
+      };
     });
 
     this.recalcEmailParsedTotals();
   },
 
-  addEmailParsedSizeRow() {
-    const previewDiv = document.getElementById('email-parsed-items-preview');
-    if (!previewDiv) return;
+  addEmailModelGroup() {
+    this.emailParsedGroups.push({
+      id: 'group_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      modelCode: '',
+      color: 'Siyah',
+      price: '',
+      currency: 'TRY',
+      sizes: [
+        { size: '38', qty: 5 },
+        { size: '39', qty: 10 },
+        { size: '40', qty: 10 },
+        { size: '41', qty: 5 }
+      ]
+    });
+    this.renderEmailParsedModels();
+  },
 
-    const currentSizes = previewDiv.tempSizes || [];
+  removeEmailModelGroup(groupId) {
+    this.emailParsedGroups = this.emailParsedGroups.filter(g => g.id !== groupId);
+    this.renderEmailParsedModels();
+  },
+
+  addEmailSizeToGroup(groupId) {
+    const grp = this.emailParsedGroups.find(g => g.id === groupId);
+    if (!grp) return;
+
     let nextSize = 36;
-    if (currentSizes.length > 0) {
-      const lastSize = parseInt(currentSizes[currentSizes.length - 1].size, 10);
+    if (grp.sizes.length > 0) {
+      const lastSize = parseInt(grp.sizes[grp.sizes.length - 1].size, 10);
       if (!isNaN(lastSize)) nextSize = lastSize + 1;
     }
 
@@ -2628,162 +2793,196 @@ const Orders = {
 
     const customQty = parseInt(prompt(`${customSize} numara için çift adedi:`, '5'), 10) || 1;
 
-    currentSizes.push({ size: customSize.trim(), qty: customQty });
-    this.renderEmailParsedSizes(currentSizes);
+    grp.sizes.push({ size: customSize.trim(), qty: customQty });
+    this.renderEmailParsedModels();
+  },
+
+  removeEmailSizeFromGroup(groupId, sizeIndex) {
+    const grp = this.emailParsedGroups.find(g => g.id === groupId);
+    if (!grp) return;
+    grp.sizes.splice(sizeIndex, 1);
+    this.renderEmailParsedModels();
   },
 
   recalcEmailParsedTotals() {
-    const previewDiv = document.getElementById('email-parsed-items-preview');
-    const badge = document.getElementById('email-parsed-total-badge');
-    const priceInput = document.getElementById('email-parsed-price');
-    const currSelect = document.getElementById('email-parsed-currency');
+    const totalBadge = document.getElementById('email-parsed-total-badge');
+    const modelCountBadge = document.getElementById('email-parsed-model-count-badge');
 
-    const sizes = previewDiv ? (previewDiv.tempSizes || []) : [];
-    const totalPairs = sizes.reduce((sum, s) => sum + (parseInt(s.qty, 10) || 0), 0);
-    const price = parseFloat(priceInput?.value || '0') || 0;
-    const sym = { TRY: '₺', USD: '$', EUR: '€' }[currSelect?.value || 'TRY'] || '₺';
+    let grandTotalPairs = 0;
+    let grandTotalPrice = 0;
+    const currTotals = { TRY: 0, USD: 0, EUR: 0 };
 
-    const totalPrice = totalPairs * price;
+    (this.emailParsedGroups || []).forEach(grp => {
+      const pairs = (grp.sizes || []).reduce((sum, s) => sum + (parseInt(s.qty, 10) || 0), 0);
+      const pr = parseFloat(grp.price) || 0;
+      grandTotalPairs += pairs;
+      const curr = grp.currency || 'TRY';
+      currTotals[curr] = (currTotals[curr] || 0) + (pairs * pr);
+    });
 
-    if (badge) {
-      badge.textContent = `${totalPairs} Çift ${totalPrice > 0 ? `• ${sym}${totalPrice.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` : ''}`;
+    if (modelCountBadge) {
+      modelCountBadge.textContent = `${this.emailParsedGroups.length} Model / Renk`;
+    }
+
+    if (totalBadge) {
+      const sym = { TRY: '₺', USD: '$', EUR: '€' };
+      const priceParts = [];
+      for (const [code, val] of Object.entries(currTotals)) {
+        if (val > 0) {
+          priceParts.push(`${sym[code] || code}${val.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`);
+        }
+      }
+      totalBadge.textContent = `${grandTotalPairs} Çift ${priceParts.length > 0 ? `• ${priceParts.join(' | ')}` : ''}`;
     }
   },
 
   async saveEmailParsedOrder(targetStatus = 'gelen') {
     const contactSelect = document.getElementById('email-parsed-contact');
     const contactId = contactSelect ? parseInt(contactSelect.value, 10) : null;
-    const modelCode = document.getElementById('email-parsed-model')?.value?.trim() || '';
-    const color = document.getElementById('email-parsed-color')?.value?.trim() || 'Siyah';
-    const price = parseFloat(document.getElementById('email-parsed-price')?.value || '0') || 0;
-    const currency = document.getElementById('email-parsed-currency')?.value || 'TRY';
     const deadline = document.getElementById('email-parsed-deadline')?.value || '';
 
-    const previewDiv = document.getElementById('email-parsed-items-preview');
-    const sizes = previewDiv ? (previewDiv.tempSizes || []).filter(s => s.qty > 0) : [];
-
     if (!contactId) {
-      showToast('Lütfen siparişin ait olduğu Müşteriyi (Cari) seçin!', 'warning');
-      return;
-    }
-    if (!modelCode) {
-      showToast('Lütfen Model Kodunu girin!', 'warning');
-      return;
-    }
-    if (price <= 0) {
-      showToast('Lütfen geçerli bir Birim Fiyat girin!', 'warning');
+      showToast('Lütfen siparişin ait olduğu Müşteriyi (Cari Kart) seçin!', 'warning');
       return;
     }
     if (!deadline) {
       showToast('Lütfen Termin Tarihini belirleyin!', 'warning');
       return;
     }
-    if (sizes.length === 0) {
-      showToast('Lütfen en az bir beden ve adet girin!', 'warning');
+
+    if (this.emailParsedGroups.length === 0) {
+      showToast('Lütfen en az bir model ve beden dağılımı girin!', 'warning');
       return;
     }
 
-    const totalQty = sizes.reduce((sum, s) => sum + (parseInt(s.qty, 10) || 0), 0);
+    // Validate all groups
+    for (const grp of this.emailParsedGroups) {
+      if (!grp.modelCode || !grp.modelCode.trim()) {
+        showToast('Lütfen tüm modellerin model kodlarını doldurun!', 'warning');
+        return;
+      }
+      if (parseFloat(grp.price) <= 0 || isNaN(parseFloat(grp.price))) {
+        showToast(`"${grp.modelCode}" için geçerli bir birim fiyat girin!`, 'warning');
+        return;
+      }
+      const validSizes = (grp.sizes || []).filter(s => s.qty > 0);
+      if (validSizes.length === 0) {
+        showToast(`"${grp.modelCode}" için en az bir adet numara dağılımı girilmelidir!`, 'warning');
+        return;
+      }
+    }
 
     try {
-      // Find or create product in products catalog
       const products = await dbGetAll('products');
-      let match = products.find(p => 
-        (p.modelCode || '').toLowerCase() === modelCode.toLowerCase() && 
-        (p.color || '').toLowerCase() === color.toLowerCase()
-      );
+      const savedOrders = [];
 
-      if (!match) {
-        const templateProduct = products.find(p => (p.modelCode || '').toLowerCase() === modelCode.toLowerCase());
-        const newProduct = {
-          modelCode,
-          color,
-          category: templateProduct ? templateProduct.category : 'Ayakkabı',
-          size: templateProduct ? templateProduct.size : '36-45',
-          soleMaterial: templateProduct ? templateProduct.soleMaterial : '',
-          leatherLining: templateProduct ? templateProduct.leatherLining : '',
-          leatherUpper: templateProduct ? templateProduct.leatherUpper : '',
-          leatherType: templateProduct ? templateProduct.leatherType : '',
-          price,
-          currency,
-          barcode: '',
-          photo: '',
-          accessoryPhoto: ''
-        };
-        const newProductId = await dbAdd('products', newProduct);
-        if (templateProduct) {
-          const templateRecipe = await dbGet('recipes', templateProduct.id);
-          if (templateRecipe) {
-            const newRecipe = {
-              productId: newProductId,
-              materials: JSON.parse(JSON.stringify(templateRecipe.materials))
-            };
-            await dbAdd('recipes', newRecipe);
+      for (const grp of this.emailParsedGroups) {
+        const modelCode = grp.modelCode.trim();
+        const color = grp.color.trim() || 'Siyah';
+        const price = parseFloat(grp.price) || 0;
+        const currency = grp.currency || 'TRY';
+        const validSizes = (grp.sizes || []).filter(s => s.qty > 0);
+        const totalQty = validSizes.reduce((sum, s) => sum + s.qty, 0);
+
+        // Find or create product in catalog
+        let match = products.find(p => 
+          (p.modelCode || '').toLowerCase() === modelCode.toLowerCase() && 
+          (p.color || '').toLowerCase() === color.toLowerCase()
+        );
+
+        if (!match) {
+          const templateProduct = products.find(p => (p.modelCode || '').toLowerCase() === modelCode.toLowerCase());
+          const newProduct = {
+            modelCode,
+            color,
+            category: templateProduct ? templateProduct.category : 'Ayakkabı',
+            size: templateProduct ? templateProduct.size : '36-45',
+            soleMaterial: templateProduct ? templateProduct.soleMaterial : '',
+            leatherLining: templateProduct ? templateProduct.leatherLining : '',
+            leatherUpper: templateProduct ? templateProduct.leatherUpper : '',
+            leatherType: templateProduct ? templateProduct.leatherType : '',
+            price,
+            currency,
+            barcode: '',
+            photo: '',
+            accessoryPhoto: ''
+          };
+          const newProductId = await dbAdd('products', newProduct);
+          if (templateProduct) {
+            const templateRecipe = await dbGet('recipes', templateProduct.id);
+            if (templateRecipe) {
+              const newRecipe = {
+                productId: newProductId,
+                materials: JSON.parse(JSON.stringify(templateRecipe.materials))
+              };
+              await dbAdd('recipes', newRecipe);
+            }
           }
+          match = { id: newProductId, color };
         }
-        match = { id: newProductId, color };
+
+        const colorsForDb = [{
+          productId: match.id,
+          color,
+          qty: totalQty,
+          sizes: validSizes
+        }];
+
+        if (targetStatus === 'aktif') {
+          // Stock check & deduction
+          const isStockOk = await this.verifyAndDeductStockForColors(colorsForDb);
+          if (!isStockOk) return; // User cancelled stock deduction
+
+          const activeOrderData = {
+            contactId,
+            modelCode,
+            colors: colorsForDb,
+            qty: totalQty,
+            price,
+            currency,
+            deadline,
+            status: 'beklemede',
+            date: new Date().toISOString()
+          };
+
+          const orderId = await dbAdd('orders', activeOrderData);
+          savedOrders.push({ id: orderId, modelCode, totalQty });
+        } else {
+          // Incoming pending order
+          const incomingOrderData = {
+            contactId,
+            customerName: contactSelect.options[contactSelect.selectedIndex]?.text || 'Müşteri',
+            modelCode,
+            colors: colorsForDb,
+            qty: totalQty,
+            price,
+            currency,
+            deadline,
+            note: 'E-posta / WhatsApp içe aktarma aracı ile alındı',
+            status: 'gelen',
+            date: new Date().toISOString()
+          };
+
+          const orderId = await dbAdd('orders', incomingOrderData);
+          savedOrders.push({ id: orderId, modelCode, totalQty });
+        }
       }
 
-      const colorsForDb = [{
-        productId: match.id,
-        color,
-        qty: totalQty,
-        sizes
-      }];
+      const totalItemsCount = savedOrders.reduce((sum, o) => sum + o.totalQty, 0);
+      const customerName = contactSelect.options[contactSelect.selectedIndex]?.text || 'Müşteri';
+
+      if (window.sendNotificationAlert) {
+        window.sendNotificationAlert('new-order', `Siparis Alindi! Musteri: ${customerName}, Toplam: ${savedOrders.length} Model (${totalItemsCount} cift).`);
+      }
+
+      showToast(`Toplam ${savedOrders.length} model (${totalItemsCount} çift) başarıyla ${targetStatus === 'aktif' ? 'aktif imalata' : 'gelen siparişlere'} kaydedildi! 🚀`, 'success');
+      closeModalById('email-order-modal');
+      await this.render();
 
       if (targetStatus === 'aktif') {
-        // Verify and deduct stock
-        const isStockOk = await this.verifyAndDeductStockForColors(colorsForDb);
-        if (!isStockOk) return; // User cancelled stock warning
-
-        const activeOrderData = {
-          contactId,
-          modelCode,
-          colors: colorsForDb,
-          qty: totalQty,
-          price,
-          currency,
-          deadline,
-          status: 'beklemede',
-          date: new Date().toISOString()
-        };
-
-        const orderId = await dbAdd('orders', activeOrderData);
-
-        if (window.sendNotificationAlert) {
-          const customerName = contactSelect.options[contactSelect.selectedIndex]?.text || 'Bilinmeyen Müşteri';
-          window.sendNotificationAlert('new-order', `E-Posta Siparişi Alındı! Sipariş ID: #${orderId}, Müşteri: ${customerName}, Model: ${modelCode}, Toplam: ${totalQty} çift.`);
-        }
-
-        showToast(`Sipariş başarıyla aktif imalata alındı! (#${orderId}) 🚀`, 'success');
-        closeModalById('email-order-modal');
-        await this.render();
-
         const tabActive = document.getElementById('btn-tab-active-orders');
         if (tabActive) tabActive.click();
-
       } else {
-        // Save as incoming pending order
-        const incomingOrderData = {
-          contactId,
-          customerName: contactSelect.options[contactSelect.selectedIndex]?.text || 'Müşteri',
-          modelCode,
-          colors: colorsForDb,
-          qty: totalQty,
-          price,
-          currency,
-          deadline,
-          note: 'E-posta içe aktarma aracı ile alındı',
-          status: 'gelen',
-          date: new Date().toISOString()
-        };
-
-        await dbAdd('orders', incomingOrderData);
-
-        showToast('Sipariş başarıyla "Gelen Siparişler" sekmesine eklendi!', 'success');
-        closeModalById('email-order-modal');
-        await this.render();
-
         const tabIncoming = document.getElementById('btn-tab-incoming-orders');
         if (tabIncoming) tabIncoming.click();
       }
