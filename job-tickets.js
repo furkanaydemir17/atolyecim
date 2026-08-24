@@ -665,6 +665,15 @@ export const JobTickets = {
         </div>
       `;
 
+      // Inject A5 Landscape @page CSS dynamically
+      let pageStyle = document.getElementById('dynamic-print-page-style');
+      if (!pageStyle) {
+        pageStyle = document.createElement('style');
+        pageStyle.id = 'dynamic-print-page-style';
+        document.head.appendChild(pageStyle);
+      }
+      pageStyle.innerHTML = '@page { size: A5 landscape !important; margin: 3mm 4mm !important; }';
+
       document.body.classList.add('printing-job-ticket');
       setTimeout(() => {
         window.print();

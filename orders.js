@@ -1299,6 +1299,14 @@ const Orders = {
           order.invoiceDate = inputDate.value || mockInvDate;
           await dbUpdate('orders', order);
           
+          let pageStyle = document.getElementById('dynamic-print-page-style');
+          if (!pageStyle) {
+            pageStyle = document.createElement('style');
+            pageStyle.id = 'dynamic-print-page-style';
+            document.head.appendChild(pageStyle);
+          }
+          pageStyle.innerHTML = '@page { size: A4 portrait !important; margin: 8mm 10mm !important; }';
+
           document.body.classList.add('printing-invoice');
           window.print();
           document.body.classList.remove('printing-invoice');

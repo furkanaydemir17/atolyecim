@@ -1223,45 +1223,54 @@ const Contacts = {
     const netBalanceType = netBalance >= 0 ? 'Borçlu (B)' : 'Alacaklı (A)';
     const netBalanceStr = '₺' + Math.abs(netBalance).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' (' + netBalanceType + ')';
 
+    // Inject A5 Portrait @page CSS dynamically
+    let pageStyle = document.getElementById('dynamic-print-page-style');
+    if (!pageStyle) {
+      pageStyle = document.createElement('style');
+      pageStyle.id = 'dynamic-print-page-style';
+      document.head.appendChild(pageStyle);
+    }
+    pageStyle.innerHTML = '@page { size: A5 portrait !important; margin: 6mm 8mm !important; }';
+
     printArea.innerHTML = `
-      <div style="padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+      <div style="width: 100%; box-sizing: border-box; background: #fff; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
         <!-- Header -->
-        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 8px; margin-bottom: 12px;">
           <div>
-            <h2 style="font-weight: 800; font-size: 1.4rem; color: #0f172a; margin: 0 0 6px 0;">${this.escape(companyName)}</h2>
-            <p style="font-size: 11px; color: #475569; margin: 0;">Ayakkabı İmalat & Toptan Satış Cari Ekstresi</p>
+            <h2 style="font-weight: 800; font-size: 1.3rem; color: #0f172a; margin: 0 0 3px 0; letter-spacing: -0.02em;">${this.escape(companyName)}</h2>
+            <p style="font-size: 11px; color: #475569; margin: 0; font-weight: 500;">Ayakkabı İmalat & Toptan Satış Cari Ekstresi</p>
           </div>
           <div style="text-align: right;">
-            <h1 style="font-weight: 800; font-size: 1.5rem; color: #0284c7; margin: 0 0 6px 0;">HESAP EKSTRESİ</h1>
-            <p style="font-size: 11px; margin: 0; color: #64748b;"><strong>Yazdırma Tarihi:</strong> ${dateStr}</p>
+            <h1 style="font-weight: 800; font-size: 1.3rem; color: #0284c7; margin: 0 0 3px 0; letter-spacing: 0.02em;">HESAP EKSTRESİ</h1>
+            <p style="font-size: 11px; margin: 0; color: #64748b;"><strong>Tarih:</strong> ${dateStr}</p>
           </div>
         </div>
 
         <!-- Customer Section -->
-        <div style="display: flex; justify-content: space-between; background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 20px; font-size: 12px; color: #0f172a;">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px 14px; border-radius: 4px; border: 1px solid #cbd5e1; margin-bottom: 14px; font-size: 11.5px; color: #0f172a;">
           <div>
-            <h3 style="margin-top: 0; margin-bottom: 6px; font-size: 11px; color: #475569; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; font-weight: 700; text-transform: uppercase;">Cari Tanım</h3>
-            <p style="font-size: 14px; font-weight: 800; margin: 0 0 4px 0;">${this.escape(contact.name)}</p>
-            <p style="margin: 0;"><strong>Telefon:</strong> ${this.escape(contact.phone || 'Kayıtlı Değil')}</p>
+            <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Cari Müşteri / Firma:</span>
+            <p style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin: 2px 0 0 0;">${this.escape(contact.name)}</p>
+            <p style="margin: 2px 0 0 0; color: #475569; font-size: 11px;"><strong>Tel:</strong> ${this.escape(contact.phone || 'Kayıtlı Değil')}</p>
           </div>
           <div style="text-align: right;">
-            <h3 style="margin-top: 0; margin-bottom: 6px; font-size: 11px; color: #475569; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; font-weight: 700; text-transform: uppercase;">Özet</h3>
-            <p style="margin: 0 0 4px 0;"><strong>Döviz Cinsi:</strong> TRY (₺)</p>
-            <p style="margin: 0; font-size: 13px; font-weight: 800; color: ${netBalance >= 0 ? '#ef4444' : '#10b981'};"><strong>Bakiye:</strong> ${netBalanceStr}</p>
+            <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Bakiye Durumu:</span>
+            <p style="margin: 2px 0 0 0; font-size: 13.5px; font-weight: 800; color: ${netBalance >= 0 ? '#ef4444' : '#10b981'};">${netBalanceStr}</p>
+            <p style="margin: 2px 0 0 0; color: #475569; font-size: 11px;"><strong>Para Birimi:</strong> TRY (₺)</p>
           </div>
         </div>
 
         <!-- Table -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 11px;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11px;">
           <thead>
-            <tr style="border-bottom: 2px solid #0f172a; text-align: left; font-weight: 700; background: #f1f5f9;">
-              <th style="padding: 8px 5px; width: 12%; color: #0f172a;">Tarih</th>
-              <th style="padding: 8px 5px; width: 12%; color: #0f172a;">Evrak No</th>
-              <th style="padding: 8px 5px; width: 14%; color: #0f172a;">Tip</th>
-              <th style="padding: 8px 5px; width: 26%; color: #0f172a;">Açıklama</th>
-              <th style="padding: 8px 5px; width: 12%; text-align: right; color: #0f172a;">Borç</th>
-              <th style="padding: 8px 5px; width: 12%; text-align: right; color: #0f172a;">Alacak</th>
-              <th style="padding: 8px 5px; width: 12%; text-align: right; color: #0f172a;">Bakiye</th>
+            <tr style="border-top: 1.5px solid #0f172a; border-bottom: 1.5px solid #0f172a; text-align: left; font-weight: 700; background: #f1f5f9;">
+              <th style="padding: 7px 4px; width: 14%; color: #0f172a;">Tarih</th>
+              <th style="padding: 7px 4px; width: 14%; color: #0f172a;">Evrak No</th>
+              <th style="padding: 7px 4px; width: 16%; color: #0f172a;">İşlem Türü</th>
+              <th style="padding: 7px 4px; width: 26%; color: #0f172a;">Açıklama</th>
+              <th style="padding: 7px 4px; width: 10%; text-align: right; color: #0f172a;">Borç</th>
+              <th style="padding: 7px 4px; width: 10%; text-align: right; color: #0f172a;">Alacak</th>
+              <th style="padding: 7px 4px; width: 10%; text-align: right; color: #0f172a;">Bakiye</th>
             </tr>
           </thead>
           <tbody>
@@ -1270,32 +1279,32 @@ const Contacts = {
         </table>
 
         <!-- Summary & Balance -->
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 40px;">
-          <div style="width: 300px; font-size: 12px; background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #475569;">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 25px;">
+          <div style="width: 270px; font-size: 11.5px; background: #f8fafc; padding: 10px 14px; border-radius: 4px; border: 1.5px solid #cbd5e1;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #475569;">
               <span>Toplam Borç (Satış/Ödeme):</span>
               <span style="font-weight: 700; color: #0f172a;">₺${totalDebit.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #475569;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #475569; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px;">
               <span>Toplam Alacak (Tahsilat/Alış):</span>
               <span style="font-weight: 700; color: #0f172a;">₺${totalCredit.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 14px; border-top: 2px solid #cbd5e1; padding-top: 8px; margin-top: 8px; color: ${netBalance >= 0 ? '#ef4444' : '#10b981'};">
-              <span>Bakiye:</span>
+            <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 13px; color: ${netBalance >= 0 ? '#ef4444' : '#10b981'}; padding-top: 2px;">
+              <span>Net Bakiye:</span>
               <span>${netBalanceStr}</span>
             </div>
           </div>
         </div>
 
-        <!-- Footer -->
-        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #64748b; margin-top: 40px; border-top: 1px solid #cbd5e1; padding-top: 15px;">
-          <div>
-            <p style="margin: 0 0 4px 0;"><strong>Düzenleyen Yetkili</strong></p>
-            <p style="margin: 0; font-size: 12px; color: #0f172a; font-weight: 700;">${this.escape(companyName)}</p>
+        <!-- Footer / Signatures -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; text-align: center; font-size: 11px;">
+          <div style="border-top: 1px dashed #94a3b8; padding-top: 8px; margin: 0 15px;">
+            <p style="font-weight: 700; margin: 0 0 3px 0; color: #0f172a;">Düzenleyen Yetkili</p>
+            <p style="color: #64748b; margin: 0; font-size: 10px;">${this.escape(companyName)}</p>
           </div>
-          <div style="text-align: right;">
-            <p style="margin: 0 0 4px 0;"><strong>Teslim Alan / Cari</strong></p>
-            <p style="margin: 0; font-size: 12px; color: #0f172a; font-weight: 700;">${this.escape(contact.name)}</p>
+          <div style="border-top: 1px dashed #94a3b8; padding-top: 8px; margin: 0 15px;">
+            <p style="font-weight: 700; margin: 0 0 3px 0; color: #0f172a;">Teslim Alan / Cari</p>
+            <p style="color: #64748b; margin: 0; font-size: 10px;">${this.escape(contact.name)}</p>
           </div>
         </div>
       </div>
