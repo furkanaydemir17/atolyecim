@@ -2,27 +2,67 @@ import { escapeHtml } from './utils.js';
 
 const AiAssistant = {
   isThinking: false,
-
-  navigateToPage(pageName) {
-    const item = document.querySelector(`.nav-item[data-page="${pageName}"]`);
-    if (item) {
-      item.click();
-      return true;
-    }
-    return false;
-  },
+  isOpen: false,
+  recognition: null,
+  isListening: false,
 
   init() {
     this.bindEvents();
-    this.updateBadge();
+    this.initSpeechRecognition();
     this.renderWelcome();
   },
 
   bindEvents() {
-    const chatForm = document.getElementById('ai-chat-form');
-    if (chatForm && !chatForm._bound) {
-      chatForm._bound = true;
-      chatForm.addEventListener('submit', (e) => {
+    // 1. Top-right global trigger button
+    const topBtn = document.getElementById('btn-top-ai-assistant');
+    if (topBtn && !topBtn._bound) {
+      topBtn._bound = true;
+      topBtn.addEventListener('click', () => this.toggleDrawer(true));
+    }
+
+    // 2. Drawer close & overlay buttons
+    const closeBtn = document.getElementById('btn-ai-close-drawer');
+    if (closeBtn && !closeBtn._bound) {
+      closeBtn._bound = true;
+      closeBtn.addEventListener('click', () => this.toggleDrawer(false));
+    }
+
+    const overlay = document.getElementById('ai-drawer-overlay');
+    if (overlay && !overlay._bound) {
+      overlay._bound = true;
+      overlay.addEventListener('click', () => this.toggleDrawer(false));
+    }
+
+    const clearBtn = document.getElementById('btn-ai-clear-chat');
+    if (clearBtn && !clearBtn._bound) {
+      clearBtn._bound = true;
+      clearBtn.addEventListener('click', () => {
+        const container = document.getElementById('ai-drawer-chat-messages');
+        if (container) container.innerHTML = '';
+        this.renderWelcome();
+        showToast('Sohbet geçmişi temizlendi.', 'info');
+      });
+    }
+
+    // 3. Drawer Chat Form
+    const drawerForm = document.getElementById('ai-drawer-chat-form');
+    if (drawerForm && !drawerForm._bound) {
+      drawerForm._bound = true;
+      drawerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('ai-drawer-input');
+        if (!input || !input.value.trim() || this.isThinking) return;
+        const query = input.value.trim();
+        input.value = '';
+        this.ask(query);
+      });
+    }
+
+    // 4. In-page Legacy Chat Form (if open)
+    const pageForm = document.getElementById('ai-chat-form');
+    if (pageForm && !pageForm._bound) {
+      pageForm._bound = true;
+      pageForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const input = document.getElementById('ai-chat-input');
         if (!input || !input.value.trim() || this.isThinking) return;
@@ -32,8 +72,8 @@ const AiAssistant = {
       });
     }
 
-    // Suggestion buttons
-    document.querySelectorAll('.ai-suggest-btn').forEach(btn => {
+    // 5. Quick Suggestion Buttons
+    document.querySelectorAll('.ai-quick-chip, .ai-suggest-btn').forEach(btn => {
       if (!btn._bound) {
         btn._bound = true;
         btn.addEventListener('click', () => {
@@ -43,105 +83,206 @@ const AiAssistant = {
         });
       }
     });
+
+    // 6. Global Keyboard Shortcuts (Ctrl+K or Ctrl+Space)
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K' || e.code === 'Space')) {
+        e.preventDefault();
+        this.toggleDrawer();
+      }
+      if (e.key === 'Escape' && this.isOpen) {
+        this.toggleDrawer(false);
+      }
+    });
+
+    // 7. Voice Recognition Button
+    const voiceBtn = document.getElementById('btn-ai-voice-input');
+    if (voiceBtn && !voiceBtn._bound) {
+      voiceBtn._bound = true;
+      voiceBtn.addEventListener('click', () => this.toggleSpeech());
+    }
   },
 
-  updateBadge() {
-    const badge = document.getElementById('ai-mode-badge');
-    if (!badge) return;
-    badge.textContent = '⚡ Yerel Yapay Zeka (Aktif)';
-    badge.className = 'db-status-badge local';
-    badge.style.background = 'rgba(99, 102, 241, 0.15)';
-    badge.style.color = 'var(--text-accent)';
-    badge.style.border = '1px solid var(--border-card)';
+  toggleDrawer(forceState) {
+    const drawer = document.getElementById('ai-copilot-drawer');
+    const overlay = document.getElementById('ai-drawer-overlay');
+    if (!drawer || !overlay) return;
+
+    this.isOpen = typeof forceState === 'boolean' ? forceState : !this.isOpen;
+
+    if (this.isOpen) {
+      overlay.classList.add('open');
+      drawer.classList.add('open');
+      const input = document.getElementById('ai-drawer-input');
+      if (input) setTimeout(() => input.focus(), 250);
+    } else {
+      overlay.classList.remove('open');
+      drawer.classList.remove('open');
+      if (this.isListening) this.stopSpeech();
+    }
+  },
+
+  initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      this.recognition = new SpeechRecognition();
+      this.recognition.lang = 'tr-TR';
+      this.recognition.continuous = false;
+      this.recognition.interimResults = false;
+
+      this.recognition.onstart = () => {
+        this.isListening = true;
+        const btn = document.getElementById('btn-ai-voice-input');
+        if (btn) btn.classList.add('listening');
+        showToast('🎙️ Dinliyorum... Konuşun', 'info');
+      };
+
+      this.recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          const input = document.getElementById('ai-drawer-input');
+          if (input) input.value = transcript;
+          this.ask(transcript);
+        }
+      };
+
+      this.recognition.onerror = (event) => {
+        console.warn('Speech error:', event.error);
+        this.stopSpeech();
+        showToast('Ses algılanamadı veya mikrofon izni verilmedi.', 'warning');
+      };
+
+      this.recognition.onend = () => {
+        this.stopSpeech();
+      };
+    }
+  },
+
+  toggleSpeech() {
+    if (!this.recognition) {
+      showToast('Tarayıcınız ses tanıma özelliğini desteklemiyor. Lütfen Chrome veya Edge kullanın.', 'warning');
+      return;
+    }
+    if (this.isListening) {
+      this.stopSpeech();
+    } else {
+      try {
+        this.recognition.start();
+      } catch (e) {
+        this.stopSpeech();
+      }
+    }
+  },
+
+  stopSpeech() {
+    this.isListening = false;
+    const btn = document.getElementById('btn-ai-voice-input');
+    if (btn) btn.classList.remove('listening');
+    if (this.recognition) {
+      try { this.recognition.stop(); } catch (e) {}
+    }
+  },
+
+  navigateToPage(pageName, callback) {
+    const item = document.querySelector(`.nav-item[data-page="${pageName}"], .nav-sub-item[data-page="${pageName}"]`);
+    if (item) {
+      item.click();
+      if (typeof callback === 'function') setTimeout(callback, 200);
+      return true;
+    }
+    return false;
   },
 
   renderWelcome() {
-    const container = document.getElementById('ai-chat-messages');
-    if (!container) return;
-    container.innerHTML = `
-      <div class="ai-msg-bubble assistant" style="display: flex; gap: 10px; align-items: flex-start; max-width: 85%;">
-        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; box-shadow: 0 0 10px rgba(99,102,241,0.3);">🤖</div>
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-card); border-radius: 0 16px 16px 16px; padding: 12px 16px; line-height: 1.5; font-size: 0.92rem; color: var(--text-primary);">
-          Selam Patron! Atölyecim Yerel Yapay Zeka Asistanı hizmetinde. 👋 <br><br>
-          Veritabanındaki tüm bilgilere bu sohbet panelinden anında erişebilirsin.
-          <br><br>
-          **Neler Sorabilirsin?**<br>
-          • 📦 *"tüm stoklarımı göster"* veya *"Comfort EVA ne kadar var?"*<br>
-          • 💰 *"tüm cariler"* veya *"Özkan Ayakkabı bakiye"*<br>
-          • 📋 *"tüm siparişler"* veya *"üretim raporu"*<br>
-          • 👟 *"ürün listesi"* (Katalog fiyatları)<br>
-          • ⚠️ *"kritik stok limitleri"* (Eksilen malzemeler)<br><br>
-          Hızlı butonları kullanabilir ya da dilediğin soruyu yazabilirsin!
+    const containers = [
+      document.getElementById('ai-drawer-chat-messages'),
+      document.getElementById('ai-chat-messages')
+    ].filter(Boolean);
+
+    const welcomeHtml = `
+      <div class="ai-msg-bubble assistant" style="display: flex; gap: 10px; align-items: flex-start; max-width: 90%;">
+        <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0f172a, #334155); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">🤖</div>
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0 14px 14px 14px; padding: 12px 14px; line-height: 1.5; font-size: 0.88rem; color: #0f172a; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+          <strong>Selam Patron! Atölyecim AI Copilot hazır. 👋</strong><br><br>
+          Atölyendeki tüm siparişleri, stok durumunu, cari hesap bakiyelerini ve fason üretim aşamalarını anlık olarak analiz edebilirim.<br><br>
+          <strong>Hızlı İşlemler:</strong><br>
+          • 📊 <em>"günlük brifing"</em> veya <em>"atölye özeti"</em><br>
+          • ⚠️ <em>"kritik stoklar"</em> veya <em>"biten malzemeler"</em><br>
+          • ⏳ <em>"geciken siparişler"</em> veya <em>"yaklaşan teslimatlar"</em><br>
+          • 💰 <em>"alacak borç dengesi"</em> veya <em>"Ahmet Kundura bakiye"</em><br>
+          • ✂️ <em>"kesim ve sayadaki işler"</em><br>
+          • 💬 <em>"[Müşteri Adı] için WhatsApp hatırlatması yaz"</em><br><br>
+          Mikrofonla konuşabilir veya yukarıdaki hazır etiketlere tıklayabilirsiniz!
         </div>
       </div>
     `;
+
+    containers.forEach(c => {
+      c.innerHTML = welcomeHtml;
+    });
   },
 
   addMessage(sender, htmlContent) {
-    const container = document.getElementById('ai-chat-messages');
-    if (!container) return;
+    const containers = [
+      document.getElementById('ai-drawer-chat-messages'),
+      document.getElementById('ai-chat-messages')
+    ].filter(Boolean);
 
     const isAssistant = sender === 'assistant';
     const alignStyle = isAssistant ? 'align-self: flex-start;' : 'align-self: flex-end; flex-direction: row-reverse;';
-    const bgStyle = isAssistant ? 'background: rgba(255,255,255,0.03); border: 1px solid var(--border-card); border-radius: 0 16px 16px 16px;' : 'background: var(--accent-gradient); border-radius: 16px 0 16px 16px; color: #fff;';
+    const bgStyle = isAssistant 
+      ? 'background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0 14px 14px 14px; color: #0f172a; box-shadow: 0 1px 3px rgba(0,0,0,0.04);' 
+      : 'background: #0f172a; border-radius: 14px 0 14px 14px; color: #ffffff; box-shadow: 0 2px 6px rgba(15,23,42,0.15);';
     const icon = isAssistant ? '🤖' : '👤';
-    const iconBg = isAssistant ? 'var(--accent-gradient)' : 'rgba(255,255,255,0.15)';
+    const iconBg = isAssistant ? 'linear-gradient(135deg, #0f172a, #334155)' : '#3b82f6';
 
     const bubbleHtml = `
-      <div class="ai-msg-bubble ${sender}" style="display: flex; gap: 10px; align-items: flex-start; max-width: 85%; ${alignStyle}">
-        <div style="width: 32px; height: 32px; border-radius: 50%; background: ${iconBg}; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; box-shadow: 0 0 10px rgba(99,102,241,0.2);">${icon}</div>
-        <div style="${bgStyle} padding: 12px 16px; line-height: 1.5; font-size: 0.92rem;">
+      <div class="ai-msg-bubble ${sender}" style="display: flex; gap: 10px; align-items: flex-start; max-width: 90%; margin-bottom: 12px; ${alignStyle}">
+        <div style="width: 32px; height: 32px; border-radius: 50%; background: ${iconBg}; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">${icon}</div>
+        <div style="${bgStyle} padding: 12px 14px; line-height: 1.5; font-size: 0.88rem;">
           ${htmlContent}
         </div>
       </div>
     `;
 
-    container.insertAdjacentHTML('beforeend', bubbleHtml);
-    container.scrollTop = container.scrollHeight;
-  },
-
-  formatResponse(text) {
-    let formatted = escapeHtml(text);
-    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    formatted = formatted.replace(/\n/g, '<br>');
-    return formatted;
+    containers.forEach(c => {
+      c.insertAdjacentHTML('beforeend', bubbleHtml);
+      c.scrollTop = c.scrollHeight;
+    });
   },
 
   async ask(query) {
-    if (this.isThinking) return;
+    if (this.isThinking || !query.trim()) return;
     this.isThinking = true;
 
     // Add user message
     this.addMessage('user', escapeHtml(query));
 
     // Add typing indicator
-    const container = document.getElementById('ai-chat-messages');
     const indicatorId = 'ai-typing-indicator';
     const indicatorHtml = `
-      <div id="${indicatorId}" style="display: flex; gap: 10px; align-items: flex-start; max-width: 85%; align-self: flex-start;">
-        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">🤖</div>
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-card); border-radius: 0 16px 16px 16px; padding: 12px 16px; font-style: italic; color: var(--text-muted);">
-          Düşünüyor...
+      <div id="${indicatorId}" style="display: flex; gap: 10px; align-items: flex-start; max-width: 90%; align-self: flex-start; margin-bottom: 12px;">
+        <div style="width: 32px; height: 32px; border-radius: 50%; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;">🤖</div>
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0 14px 14px 14px; padding: 10px 14px; font-style: italic; color: #64748b; font-size: 0.85rem;">
+          Atölye verileri analiz ediliyor... ⚡
         </div>
       </div>
     `;
-    container.insertAdjacentHTML('beforeend', indicatorHtml);
-    container.scrollTop = container.scrollHeight;
+
+    [document.getElementById('ai-drawer-chat-messages'), document.getElementById('ai-chat-messages')].filter(Boolean).forEach(c => {
+      c.insertAdjacentHTML('beforeend', indicatorHtml);
+      c.scrollTop = c.scrollHeight;
+    });
 
     try {
       const responseHtml = await this.queryLocal(query);
 
-      // Remove indicator
-      const indicator = document.getElementById(indicatorId);
-      if (indicator) indicator.remove();
-
+      document.querySelectorAll(`#${indicatorId}`).forEach(el => el.remove());
       this.addMessage('assistant', responseHtml);
     } catch (err) {
-      console.error('AI Error:', err);
-      const indicator = document.getElementById(indicatorId);
-      if (indicator) indicator.remove();
-      this.addMessage('assistant', `<span style="color:var(--color-danger);">Yanıt oluşturulurken bir hata oluştu: ${escapeHtml(err.message)}</span>`);
+      console.error('AI query error:', err);
+      document.querySelectorAll(`#${indicatorId}`).forEach(el => el.remove());
+      this.addMessage('assistant', `<span style="color:#ef4444; font-weight:700;">Hata oluştu: ${escapeHtml(err.message)}</span>`);
     } finally {
       this.isThinking = false;
     }
@@ -150,103 +291,15 @@ const AiAssistant = {
   async queryLocal(query) {
     const q = query.toLowerCase().trim();
 
-    // 1. PAGE NAVIGATION TRIGGERS (göster / aç / git / yönlendir)
-    if (q.includes('göster') || q.includes('aç') || q.includes('git') || q.includes('yönlendir') || q.includes('paneli') || q.includes('ekranı')) {
-      if (q.includes('yönetici') || q.includes('ayarlar') || q.includes('yönetim')) {
-        const navigated = this.navigateToPage('manager');
-        if (navigated) return 'Başarıyla **Yönetici Paneline** yönlendirildiniz. ⚙️';
-      }
-      if (q.includes('admin') || q.includes('süper admin')) {
-        const navigated = this.navigateToPage('admin');
-        if (navigated) return 'Başarıyla **Süper Admin Paneline** yönlendirildiniz. 👑';
-      }
-      if (q.includes('kontrol') || q.includes('dashboard') || q.includes('ana sayfa') || q.includes('ana menü')) {
-        const navigated = this.navigateToPage('dashboard');
-        if (navigated) return 'Başarıyla **Kontrol Paneline** yönlendirildiniz. 📊';
-      }
-      if (q.includes('cari') || q.includes('müşteri')) {
-        const navigated = this.navigateToPage('contacts');
-        if (navigated) return 'Başarıyla **Cari Hesaplar** sayfasına yönlendirildiniz. 👥';
-      }
-      if (q.includes('sipariş')) {
-        const navigated = this.navigateToPage('orders');
-        if (navigated) return 'Başarıyla **Siparişler** sayfasına yönlendirildiniz. 📋';
-      }
-      if (q.includes('ürün') || q.includes('model')) {
-        const navigated = this.navigateToPage('products');
-        if (navigated) return 'Başarıyla **Ürünler & Modeller** sayfasına yönlendirildiniz. 👟';
-      }
-      if (q.includes('barkod') || q.includes('kamera') || q.includes('tara')) {
-        const navigated = this.navigateToPage('barcode');
-        if (navigated) return 'Başarıyla **Barkod Okutma** sayfasına yönlendirildiniz. 📷';
-      }
-      if (q.includes('silinen') || q.includes('çöp') || q.includes('geri dönüşüm')) {
-        const navigated = this.navigateToPage('recycle');
-        if (navigated) return 'Başarıyla **Son Silinenler / Geri Dönüşüm** kutusuna yönlendirildiniz. 🗑️';
-      }
-      if (q.includes('stok') || q.includes('envanter')) {
-        if (q.includes('taban')) {
-          const navigated = this.navigateToPage('stock-sole');
-          if (navigated) return 'Başarıyla **Taban Stokları** sayfasına yönlendirildiniz. 👟';
-        }
-        if (q.includes('aksesuar')) {
-          const navigated = this.navigateToPage('stock-accessory');
-          if (navigated) return 'Başarıyla **Aksesuar Stokları** sayfasına yönlendirildiniz. 💍';
-        }
-        if (q.includes('deri')) {
-          const navigated = this.navigateToPage('stock-leather');
-          if (navigated) return 'Başarıyla **Deri Stokları** sayfasına yönlendirildiniz. 👜';
-        }
-        if (q.includes('ham') || q.includes('madde')) {
-          const navigated = this.navigateToPage('stock-raw');
-          if (navigated) return 'Başarıyla **Ham Madde Stokları** sayfasına yönlendirildiniz. 📦';
-        }
-      }
-    }
-
-    // 2. ACTION / MODAL TRIGGERS (ekle / oluştur / yeni / gir)
-    if (q.includes('ekle') || q.includes('oluştur') || q.includes('yeni') || q.includes('gir') || q.includes('tanımla')) {
-      if (q.includes('stok') || q.includes('taban') || q.includes('aksesuar') || q.includes('deri') || q.includes('ham')) {
-        let type = 'sole';
-        let typeText = 'Taban';
-        if (q.includes('aksesuar')) { type = 'accessory'; typeText = 'Aksesuar'; }
-        else if (q.includes('deri')) { type = 'leather'; typeText = 'Deri'; }
-        else if (q.includes('ham') || q.includes('madde')) { type = 'raw'; typeText = 'Ham Madde'; }
-        
-        this.navigateToPage('stock-' + type);
-        if (window.Stocks && typeof window.Stocks.openModal === 'function') {
-          setTimeout(() => window.Stocks.openModal(type), 150);
-          return `Sizin için **Stoklarım > ${typeText} Stokları** sayfasını açtım ve **Yeni ${typeText} Ekle** penceresini başlattım! 👟`;
-        }
-      }
-      if (q.includes('cari') || q.includes('müşteri') || q.includes('tedarikçi')) {
-        this.navigateToPage('contacts');
-        if (window.Contacts && typeof window.Contacts.openModal === 'function') {
-          setTimeout(() => window.Contacts.openModal(), 150);
-          return 'Sizin için **Cari Hesaplar** sayfasını açtım ve **Yeni Cari Ekle** formunu başlattım! 👥';
-        }
-      }
-      if (q.includes('sipariş')) {
-        this.navigateToPage('orders');
-        if (window.Orders && typeof window.Orders.openModal === 'function') {
-          setTimeout(() => window.Orders.openModal(), 150);
-          return 'Sizin için **Siparişler** sayfasını açtım ve **Yeni Sipariş Ekle** formunu başlattım! 📋';
-        }
-      }
-      if (q.includes('ürün') || q.includes('model')) {
-        this.navigateToPage('products');
-        if (window.Products && typeof window.Products.openModal === 'function') {
-          setTimeout(() => window.Products.openModal(), 150);
-          return 'Sizin için **Ürünler & Modeller** sayfasını açtım ve **Yeni Ürün Ekle** formunu başlattım! 👟';
-        }
-      }
-    }
-
+    // Fetch live tables from IndexedDB
     const stocks = await dbGetAll('stocks');
     const contacts = await dbGetAll('contacts');
     const orders = await dbGetAll('orders');
     const products = await dbGetAll('products');
     const transactions = await dbGetAll('transactions');
+    const jobTickets = await dbGetAll('job_tickets');
+    const contractors = await dbGetAll('contractors');
+    const recipes = await dbGetAll('recipes');
 
     // Helper: calculate balance for a contact
     const getContactBalance = (contactId) => {
@@ -254,15 +307,216 @@ const AiAssistant = {
       let bal = 0;
       txs.forEach(t => {
         const amt = Number(t.amount || 0);
-        if (t.type === 'alacak') { bal += amt; }       // Receivable: adds to balance (customer owes us)
-        else if (t.type === 'tahsilat') { bal -= amt; }  // Collection: reduces balance (customer paid)
-        else if (t.type === 'borc') { bal -= amt; }      // Debt: we owe them (reduces our net)
-        else if (t.type === 'odeme') { bal += amt; }     // Payment: we paid (reduces what we owe)
+        if (t.type === 'alacak') bal += amt;
+        else if (t.type === 'tahsilat') bal -= amt;
+        else if (t.type === 'borc') bal -= amt;
+        else if (t.type === 'odeme') bal += amt;
       });
       return bal;
     };
 
-    // 1. Check specific contact match
+    // 1. ACTION & PAGE TRIGGERS (ekle, oluştur, yeni, aç, git)
+    if (q.includes('ekle') || q.includes('oluştur') || q.includes('yeni') || q.includes('gir') || q.includes('tanımla')) {
+      if (q.includes('sipariş')) {
+        this.navigateToPage('orders', () => {
+          if (window.Orders && typeof window.Orders.openModal === 'function') window.Orders.openModal();
+        });
+        return `
+          Sizin için <strong>Siparişler</strong> sayfasını açtım ve <strong>Yeni Sipariş Formunu</strong> başlattım! 📋
+          <div class="ai-action-btn-row">
+            <button class="ai-action-btn" onclick="Orders.openModal()">📋 Sipariş Formunu Aç</button>
+            <button class="ai-action-btn" onclick="Orders.openEmailImportModal()">✉️ E-posta Siparişi Al</button>
+          </div>
+        `;
+      }
+      if (q.includes('cari') || q.includes('müşteri') || q.includes('tedarikçi')) {
+        this.navigateToPage('contacts', () => {
+          if (window.Contacts && typeof window.Contacts.openModal === 'function') window.Contacts.openModal();
+        });
+        return `
+          Sizin için <strong>Cari Hesaplar</strong> sayfasını açtım ve <strong>Yeni Cari Ekle</strong> formunu başlattım! 👥
+          <div class="ai-action-btn-row">
+            <button class="ai-action-btn" onclick="Contacts.openModal()">➕ Yeni Cari Ekle</button>
+          </div>
+        `;
+      }
+      if (q.includes('stok') || q.includes('taban') || q.includes('deri') || q.includes('aksesuar') || q.includes('ham')) {
+        let type = 'sole';
+        let label = 'Taban';
+        if (q.includes('aksesuar')) { type = 'accessory'; label = 'Aksesuar'; }
+        else if (q.includes('deri')) { type = 'leather'; label = 'Deri'; }
+        else if (q.includes('ham') || q.includes('madde')) { type = 'raw'; label = 'Ham Madde'; }
+
+        this.navigateToPage('stock-' + type, () => {
+          if (window.Stocks && typeof window.Stocks.openModal === 'function') window.Stocks.openModal(type);
+        });
+        return `
+          Sizin için <strong>${label} Stokları</strong> sayfasını açtım ve <strong>Yeni ${label} Girişi</strong> formunu başlattım! 📦
+        `;
+      }
+      if (q.includes('iş fişi') || q.includes('takip fişi') || q.includes('fiş')) {
+        this.navigateToPage('job-tickets', () => {
+          const btn = document.getElementById('btn-add-job-ticket');
+          if (btn) btn.click();
+        });
+        return `Sizin için <strong>İş Takip Fişleri</strong> sayfasını açtım ve yeni fiş kesme formunu başlattım! 📋`;
+      }
+    }
+
+    // 2. WHATSAPP MESAJI OLUŞTURMA TALEP EDİLDİYSE
+    if (q.includes('whatsapp') || q.includes('mesaj') || q.includes('hatırlat') || q.includes('yaz')) {
+      for (const c of contacts) {
+        if (q.includes(c.name.toLowerCase())) {
+          const bal = getContactBalance(c.id);
+          const phone = (c.phone || '').replace(/\D/g, '');
+          const msg = `Sayın ${c.name}, Atölyecim ERP sistemimizdeki güncel bakiye durumunuz ${bal > 0 ? `₺${bal.toLocaleString('tr-TR', {minimumFractionDigits:2})} alacak bakiyesidir` : `₺${Math.abs(bal).toLocaleString('tr-TR', {minimumFractionDigits:2})} borç bakiyesidir`}. Detaylı ekstre ve sipariş durumunuz için bilgi alabilirsiniz. İyi çalışmalar dileriz.`;
+          const waUrl = phone ? `https://wa.me/90${phone.replace(/^0/, '')}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+
+          return `
+            <strong>💬 ${escapeHtml(c.name)} İçin Hazırlanan WhatsApp Mesajı:</strong><br><br>
+            <div style="background:#f1f5f9; border-left:3px solid #25d366; padding:10px; border-radius:4px; font-size:0.85rem; margin-bottom:8px;">
+              "${escapeHtml(msg)}"
+            </div>
+            <div class="ai-action-btn-row">
+              <a href="${waUrl}" target="_blank" class="ai-action-btn wa" style="text-decoration:none;">📲 WhatsApp'tan Gönder</a>
+            </div>
+          `;
+        }
+      }
+    }
+
+    // 3. GÜNLÜK BRİFİNG & ATÖLYE GENEL ÖZETİ
+    if (q.includes('brifing') || q.includes('özet') || q.includes('durum') || q.includes('bugün') || q.includes('rapor') || q.includes('genel')) {
+      const activeOrders = orders.filter(o => o.status === 'beklemede');
+      const incomingOrders = orders.filter(o => o.status === 'gelen');
+      const totalPairsInProd = activeOrders.reduce((sum, o) => sum + (o.qty || o.totalPair || 0), 0);
+      
+      let totalReceivable = 0;
+      let totalPayable = 0;
+      contacts.forEach(c => {
+        const bal = getContactBalance(c.id);
+        if (bal > 0) totalReceivable += bal;
+        else if (bal < 0) totalPayable += Math.abs(bal);
+      });
+
+      const criticalStocks = stocks.filter(s => Number(s.qty || 0) <= Number(s.limit || 0));
+      const activeTickets = jobTickets.filter(t => t.stage !== 'tamamlandi');
+
+      return `
+        <strong>📊 Günlük Atölye Yönetici Brifingi:</strong><br><br>
+        • 📋 <strong>Aktif İmalat:</strong> ${activeOrders.length} Sipariş (${totalPairsInProd} Çift)<br>
+        • 📥 <strong>Onay Bekleyen Gelenler:</strong> ${incomingOrders.length} Sipariş<br>
+        • ✂️ <strong>Atölyedeki İş Fişleri:</strong> ${activeTickets.length} Fiş Aşamada<br>
+        • ⚠️ <strong>Kritik Seviyedeki Malzemeler:</strong> <span style="color:${criticalStocks.length > 0 ? '#ef4444' : '#10b981'}; font-weight:700;">${criticalStocks.length} Kalem</span><br>
+        • 💰 <strong>Toplam Alacağımız:</strong> <strong style="color:#059669;">₺${totalReceivable.toLocaleString('tr-TR', {minimumFractionDigits:2})}</strong><br>
+        • 💳 <strong>Toplam Borcumuz:</strong> <strong style="color:#ef4444;">₺${totalPayable.toLocaleString('tr-TR', {minimumFractionDigits:2})}</strong><br><br>
+        <div class="ai-action-btn-row">
+          <button class="ai-action-btn" onclick="AiAssistant.ask('Kritik ve biten malzemeleri listele')">⚠️ Kritik Stokları Gör</button>
+          <button class="ai-action-btn" onclick="AiAssistant.ask('Termini yaklaşan ve geciken siparişler hangileri?')">⏳ Terminleri İncele</button>
+        </div>
+      `;
+    }
+
+    // 4. TERMİN VE GECİKEN SİPARİŞLER ANALİZİ
+    if (q.includes('termin') || q.includes('gecik') || q.includes('teslimat') || q.includes('acil')) {
+      const activeOrders = orders.filter(o => o.status === 'beklemede' && o.deadline);
+      const today = new Date().toISOString().split('T')[0];
+
+      const delayed = [];
+      const upcoming = [];
+
+      activeOrders.forEach(o => {
+        const diffDays = Math.round((new Date(o.deadline) - new Date(today)) / (1000 * 60 * 60 * 24));
+        const client = contacts.find(c => c.id === o.contactId);
+        const itemInfo = {
+          id: o.id,
+          modelCode: o.modelCode,
+          qty: o.qty || o.totalPair || 0,
+          customerName: client ? client.name : 'Müşteri',
+          deadline: o.deadline,
+          diffDays
+        };
+
+        if (diffDays < 0) delayed.push(itemInfo);
+        else if (diffDays <= 7) upcoming.push(itemInfo);
+      });
+
+      let html = '<strong>⏳ Sipariş Termin & Aciliyet Analizi:</strong><br><br>';
+
+      if (delayed.length > 0) {
+        html += `<strong style="color:#ef4444;">🚨 GECİKEN SİPARİŞLER (${delayed.length} Adet):</strong><br>`;
+        html += '<table style="width:100%; border-collapse:collapse; font-size:0.82rem; margin:6px 0 12px 0;">';
+        delayed.forEach(d => {
+          html += `<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:4px 0;"><strong>${escapeHtml(d.modelCode)}</strong> (${escapeHtml(d.customerName)})</td><td style="text-align:right; color:#ef4444; font-weight:700;">${Math.abs(d.diffDays)} gün gecikti (${d.qty} çift)</td></tr>`;
+        });
+        html += '</table>';
+      } else {
+        html += '✅ Gecikmiş sipariş bulunmuyor, tüm üretim zamanında ilerliyor!<br><br>';
+      }
+
+      if (upcoming.length > 0) {
+        html += `<strong style="color:#f59e0b;">⚠️ BU HAFTA TESLİM EDİLECEKLER (${upcoming.length} Adet):</strong><br>`;
+        html += '<table style="width:100%; border-collapse:collapse; font-size:0.82rem; margin-top:6px;">';
+        upcoming.forEach(u => {
+          html += `<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:4px 0;"><strong>${escapeHtml(u.modelCode)}</strong> (${escapeHtml(u.customerName)})</td><td style="text-align:right; font-weight:700; color:#3b82f6;">${u.diffDays === 0 ? 'Bugün!' : `${u.diffDays} gün kaldı`} (${u.qty} çift)</td></tr>`;
+        });
+        html += '</table>';
+      }
+
+      return html;
+    }
+
+    // 5. KRİTİK VE TÜKENEN STOKLAR
+    if (q.includes('kritik') || q.includes('limit') || q.includes('biten') || q.includes('azalan') || q.includes('eksik')) {
+      const critical = stocks.filter(s => Number(s.qty || 0) <= Number(s.limit || 0));
+      if (critical.length === 0) {
+        return 'Sistemde kritik limitin altında herhangi bir stok kalemi bulunmuyor. Malzeme durumunuz eksiksiz patron! 👍';
+      }
+
+      let html = `<strong>⚠️ Kritik & Biten Malzeme Raporu (${critical.length} Kalem):</strong><br><br>`;
+      html += '<table style="width:100%; border-collapse:collapse; font-size:0.82rem;">';
+      html += '<tr style="border-bottom:1px solid #cbd5e1; color:#64748b; text-align:left;"><th style="padding:4px 0;">Malzeme Adı</th><th style="text-align:right;">Kalan</th><th style="text-align:right;">Limit</th></tr>';
+      
+      critical.forEach(s => {
+        const isOut = Number(s.qty || 0) <= 0;
+        const color = isOut ? '#ef4444' : '#f59e0b';
+        const detail = s.size ? ` (${s.size})` : '';
+        html += `<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:4px 0;">${escapeHtml(s.name)}${escapeHtml(detail)}</td><td style="text-align:right; font-weight:800; color:${color};">${s.qty} ${s.unit || 'Çift'}</td><td style="text-align:right; color:#94a3b8;">${s.limit}</td></tr>`;
+      });
+      html += '</table>';
+
+      return html;
+    }
+
+    // 6. İMALAT VE FASON AŞAMALARI
+    if (q.includes('kesim') || q.includes('saya') || q.includes('montaj') || q.includes('paket') || q.includes('imalat') || q.includes('fason')) {
+      const activeTickets = jobTickets.filter(t => t.stage !== 'tamamlandi');
+      const stageCounts = { kesim: 0, saya: 0, montaj: 0, paketleme: 0 };
+      const stagePairs = { kesim: 0, saya: 0, montaj: 0, paketleme: 0 };
+
+      activeTickets.forEach(t => {
+        const st = t.stage || 'kesim';
+        if (stageCounts[st] !== undefined) {
+          stageCounts[st]++;
+          stagePairs[st] += (t.totalPair || t.qty || 0);
+        }
+      });
+
+      return `
+        <strong>🧵 İmalat ve Atölye Aşamaları Durumu:</strong><br><br>
+        • ✂️ <strong>Kesim Aşamasında:</strong> ${stageCounts.kesim} Fiş (${stagePairs.kesim} Çift)<br>
+        • 🪡 <strong>Saya Dikişte:</strong> ${stageCounts.saya} Fiş (${stagePairs.saya} Çift)<br>
+        • 🔨 <strong>Taban Montajda:</strong> ${stageCounts.montaj} Fiş (${stagePairs.montaj} Çift)<br>
+        • 📦 <strong>Kutu / Paketlemede:</strong> ${stageCounts.paketleme} Fiş (${stagePairs.paketleme} Çift)<br><br>
+        Toplam aktif fiş sayısı: <strong>${activeTickets.length} adet</strong>
+        <div class="ai-action-btn-row">
+          <button class="ai-action-btn" onclick="window.AiAssistant.navigateToPage('job-tickets')">📋 İş Fişlerini Aç</button>
+          <button class="ai-action-btn" onclick="window.AiAssistant.navigateToPage('contractors')">🧵 Fason Takibini Aç</button>
+        </div>
+      `;
+    }
+
+    // 7. SPECIFIC CONTACT SEARCH (CARİ SORGULAMA)
     let matchedContact = null;
     for (const c of contacts) {
       if (q.includes(c.name.toLowerCase())) {
@@ -272,102 +526,50 @@ const AiAssistant = {
     }
     if (matchedContact) {
       const bal = getContactBalance(matchedContact.id);
-      const balText = bal > 0 
-        ? `<strong style="color:var(--color-success);">₺${bal.toLocaleString('tr-TR', {minimumFractionDigits:2})} Alacaklıyız</strong>` 
-        : bal < 0 
-          ? `<strong style="color:var(--color-danger);">₺${Math.abs(bal).toLocaleString('tr-TR', {minimumFractionDigits:2})} Borçluyuz</strong>`
-          : 'Bakiye dengede (₺0,00)';
+      const phone = (matchedContact.phone || '').replace(/\D/g, '');
+      const balColor = bal > 0 ? '#059669' : bal < 0 ? '#ef4444' : '#64748b';
+      const balText = bal > 0 ? `₺${bal.toLocaleString('tr-TR', {minimumFractionDigits:2})} Alacaklıyız` : bal < 0 ? `₺${Math.abs(bal).toLocaleString('tr-TR', {minimumFractionDigits:2})} Borçluyuz` : 'Bakiye Dengede (₺0,00)';
+
+      const clientOrders = orders.filter(o => o.contactId === matchedContact.id);
+
       return `
-        <strong>👤 Cari Hesap Detay Raporu: ${escapeHtml(matchedContact.name)}</strong><br><br>
-        • 📞 **Telefon:** ${escapeHtml(matchedContact.phone || '-')}<br>
-        • 📍 **Adres:** ${escapeHtml(matchedContact.address || '-')}<br>
-        • ⚖️ **Güncel Bakiye:** ${balText}<br>
+        <strong>👤 Cari Hesap Özeti: ${escapeHtml(matchedContact.name)}</strong><br><br>
+        • 📞 <strong>Telefon:</strong> ${escapeHtml(matchedContact.phone || '-')}<br>
+        • ⚖️ <strong>Güncel Bakiye:</strong> <strong style="color:${balColor}; font-size:1rem;">${balText}</strong><br>
+        • 📋 <strong>Kayıtlı Siparişler:</strong> ${clientOrders.length} Sipariş<br><br>
+        <div class="ai-action-btn-row">
+          <button class="ai-action-btn" onclick="Contacts.openLedgerModal(${matchedContact.id})">📜 Ekstre İncele</button>
+          ${phone ? `<a href="https://wa.me/90${phone.replace(/^0/, '')}" target="_blank" class="ai-action-btn wa" style="text-decoration:none;">📲 WhatsApp</a>` : ''}
+        </div>
       `;
     }
 
-    // 2. Check specific stock name match
-    let matchedStockName = null;
-    const uniqueStockNames = [...new Set(stocks.map(s => s.name.toLowerCase()))];
-    for (const name of uniqueStockNames) {
-      if (q.includes(name)) {
-        matchedStockName = name;
+    // 8. SPECIFIC STOCK SEARCH
+    let matchedStock = null;
+    for (const s of stocks) {
+      if (q.includes((s.name || '').toLowerCase())) {
+        matchedStock = s;
         break;
       }
     }
-    if (matchedStockName) {
-      const matchingItems = stocks.filter(s => s.name.toLowerCase() === matchedStockName);
-      const totalQty = matchingItems.reduce((acc, item) => acc + Number(item.qty || 0), 0);
-      let html = `<strong>📦 Stok Arama Sonucu: "${escapeHtml(matchingItems[0].name)}"</strong><br>`;
-      html += `• Toplam Mevcut: <strong>${totalQty} ${matchingItems[0].unit || 'Birim'}</strong><br><br>`;
+    if (matchedStock) {
+      const sameItems = stocks.filter(s => s.name.toLowerCase() === matchedStock.name.toLowerCase());
+      const totalQ = sameItems.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+
+      let html = `<strong>📦 Stok Bilgisi: "${escapeHtml(matchedStock.name)}"</strong><br><br>`;
+      html += `• Toplam Mevcut: <strong style="color:#0f172a; font-size:1rem;">${totalQ} ${matchedStock.unit || 'Çift'}</strong><br>`;
+      html += `• Kritik Limit: ${matchedStock.limit || 0}<br><br>`;
       html += '<strong>Beden / Renk Detayları:</strong><br>';
-      html += '<table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-top:5px;">';
-      matchingItems.forEach(item => {
-        const detail = item.size ? ` Beden: ${item.size}` : '';
-        const color = item.color ? `, Renk: ${item.color}` : '';
-        html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.03);"><td style="padding:4px 0;">${escapeHtml(detail)}${escapeHtml(color)}</td><td style="text-align:right; font-weight:700;">${item.qty} ${item.unit}</td></tr>`;
+      html += '<table style="width:100%; border-collapse:collapse; font-size:0.82rem; margin-top:4px;">';
+      sameItems.forEach(it => {
+        html += `<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:4px 0;">Beden: ${escapeHtml(it.size || '-')} | Renk: ${escapeHtml(it.color || '-')}</td><td style="text-align:right; font-weight:700;">${it.qty} ${it.unit}</td></tr>`;
       });
       html += '</table>';
       return html;
     }
 
-    // 3. "tüm stoklar" / "stok listesi"
-    if ((q.includes('tüm') || q.includes('hepsi') || q.includes('listele') || q.includes('göster')) && q.includes('stok')) {
-      if (stocks.length === 0) return 'Atölyede kayıtlı herhangi bir stok bulunmamaktadır.';
-      const grouped = { sole: [], accessory: [], leather: [], raw: [] };
-      stocks.forEach(s => {
-        if (grouped[s.type]) grouped[s.type].push(s);
-      });
-      const typeTitles = { sole: 'Tabanlar', accessory: 'Aksesuarlar', leather: 'Deriler', raw: 'Ham Maddeler' };
-      let html = '<strong>📋 Tüm Stok Listesi (Genel Durum):</strong><br><br>';
-      for (const key in grouped) {
-        if (grouped[key].length === 0) continue;
-        html += `<strong>🔹 ${typeTitles[key]} (${grouped[key].length} Kalem):</strong><br>`;
-        html += '<table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:12px; margin-top:4px;">';
-        grouped[key].forEach(s => {
-          const detail = s.size ? ` (${s.size})` : '';
-          const colorDetail = s.color ? ` - ${s.color}` : '';
-          html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.03);"><td style="padding:4px 0;">${escapeHtml(s.name)}${escapeHtml(detail)}${escapeHtml(colorDetail)}</td><td style="text-align:right; font-weight:700;">${s.qty} ${s.unit}</td></tr>`;
-        });
-        html += '</table>';
-      }
-      return html;
-    }
-
-    // 4. "kritik stok" / "limit"
-    if (q.includes('limit') || q.includes('kritik')) {
-      const critical = stocks.filter(s => Number(s.qty || 0) <= Number(s.limit || 0));
-      if (critical.length === 0) {
-        return 'Sistemde kritik limitin altında herhangi bir stok kalemi bulunmuyor. Her şey yolunda patron! 👍';
-      }
-      let html = '<strong>⚠️ Kritik Limit Altındaki Stok Kalemleri:</strong><br><br>';
-      html += '<table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-top:5px;">';
-      html += '<tr style="border-bottom:1px solid var(--border-card); text-align:left; color:var(--text-muted);"><th style="padding:6px 0;">Malzeme</th><th style="text-align:right;">Mevcut</th><th style="text-align:right;">Kritik Limit</th></tr>';
-      critical.forEach(s => {
-        const typeText = s.type === 'sole' ? 'Taban' : s.type === 'accessory' ? 'Aksesuar' : s.type === 'leather' ? 'Deri' : 'Ham Madde';
-        const detail = s.size ? ` (${s.size})` : '';
-        html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.03);"><td style="padding:6px 0;">${escapeHtml(s.name)}${escapeHtml(detail)} <span style="font-size:0.75rem; color:var(--text-muted);">[${typeText}]</span></td><td style="text-align:right; color:var(--color-danger); font-weight:700;">${s.qty}</td><td style="text-align:right; color:var(--text-muted);">${s.limit}</td></tr>`;
-      });
-      html += '</table>';
-      return html;
-    }
-
-    // 5. "tüm cariler" / "müşteriler"
-    if ((q.includes('tüm') || q.includes('hepsi') || q.includes('listele') || q.includes('göster')) && (q.includes('cari') || q.includes('müşteri') || q.includes('tedarikçi'))) {
-      if (contacts.length === 0) return 'Atölyede kayıtlı cari hesap bulunmamaktadır.';
-      let html = '<strong>👥 Tüm Cari Hesap Listesi ve Bakiyeler:</strong><br><br>';
-      html += '<table style="width:100%; border-collapse:collapse; font-size:0.85rem;">';
-      contacts.forEach(c => {
-        const bal = getContactBalance(c.id);
-        const color = bal > 0 ? 'var(--color-success)' : bal < 0 ? 'var(--color-danger)' : 'var(--text-muted)';
-        const typeText = bal > 0 ? 'Alacak' : bal < 0 ? 'Borç' : 'Dengede';
-        html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.03);"><td style="padding:6px 0;">${escapeHtml(c.name)}</td><td style="text-align:right; color:${color}; font-weight:700;">${typeText}: ₺${Math.abs(bal).toLocaleString('tr-TR', {minimumFractionDigits:2})}</td></tr>`;
-      });
-      html += '</table>';
-      return html;
-    }
-
-    // 6. "alacak" / "borç" / "bakiye" general summary
-    if (q.includes('alacak') || q.includes('borç') || q.includes('bakiye') || q.includes('ekstre')) {
+    // 9. CARİLER LİSTESİ VEYA BAKİYE ÖZETİ
+    if (q.includes('cari') || q.includes('müşteri') || q.includes('alacak') || q.includes('borç')) {
       let totalReceivable = 0;
       let totalPayable = 0;
       contacts.forEach(c => {
@@ -375,68 +577,33 @@ const AiAssistant = {
         if (bal > 0) totalReceivable += bal;
         else if (bal < 0) totalPayable += Math.abs(bal);
       });
+
       return `
-        <strong>💰 Genel Borç / Alacak Dengesi:</strong><br><br>
-        • Toplam Alacağımız (Müşterilerden): <strong style="color:var(--color-success);">₺${totalReceivable.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</strong><br>
-        • Toplam Borcumuz (Tedarikçilere): <strong style="color:var(--color-danger);">₺${totalPayable.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</strong><br><br>
-        Detaylı liste için *"tüm cariler"* yazabilirsiniz.
+        <strong>💰 Cari Hesaplar Genel Dengesi:</strong><br><br>
+        • 🟢 <strong>Toplam Alacak:</strong> <strong style="color:#059669;">₺${totalReceivable.toLocaleString('tr-TR', {minimumFractionDigits:2})}</strong><br>
+        • 🔴 <strong>Toplam Borç:</strong> <strong style="color:#ef4444;">₺${totalPayable.toLocaleString('tr-TR', {minimumFractionDigits:2})}</strong><br>
+        • ⚖️ <strong>Net Durum:</strong> <strong>₺${(totalReceivable - totalPayable).toLocaleString('tr-TR', {minimumFractionDigits:2})}</strong><br><br>
+        Detaylı liste veya belirli bir cari için <em>"[Müşteri Adı] bakiye"</em> yazabilirsiniz.
+        <div class="ai-action-btn-row">
+          <button class="ai-action-btn" onclick="window.AiAssistant.navigateToPage('contacts')">👥 Cari Hesapları Aç</button>
+        </div>
       `;
     }
 
-    // 7. "tüm siparişler" / "sipariş listesi"
-    if (q.includes('sipariş') || q.includes('üretim') || q.includes('durum')) {
-      if (orders.length === 0) return 'Sistemde kayıtlı sipariş bulunmamaktadır.';
-      const active = orders.filter(o => o.status === 'beklemede');
-      const completed = orders.filter(o => o.status === 'tamamlandi');
-      const cancelled = orders.filter(o => o.status === 'iptal');
+    // Default fallback intelligence
+    return `
+      <strong>🤖 Atölyecim AI Copilot:</strong><br><br>
+      Sorunuzu doğrudan veritabanındaki kayıtlarla analiz ettim. Size yardımcı olabileceğim bazı konular:<br><br>
+      • 📊 <em>"günlük brifing"</em> -> Tüm atölye özetini döker.<br>
+      • ⚠️ <em>"kritik stoklar"</em> -> Biten ve azalan malzemeleri listeler.<br>
+      • ⏳ <em>"geciken siparişler"</em> -> Acil teslimatları listeler.<br>
+      • 💰 <em>"alacak borç dengesi"</em> -> Finansal durumu özetler.<br>
+      • 🔍 Model, cari veya malzeme ismi yazarak doğrudan detay alabilirsiniz.
+    `;
+  },
 
-      let html = '<strong>📋 Sipariş Durum Analiz Raporu:</strong><br><br>';
-      html += `• ⏳ **Üretimdeki Aktif Siparişler:** ${active.length} sipariş<br>`;
-      html += `• ✅ **Tamamlanan / Teslim Edilen:** ${completed.length} sipariş<br>`;
-      html += `• ❌ **İptal Edilen:** ${cancelled.length} sipariş<br><br>`;
-
-      if (orders.length > 0) {
-        html += '<strong>Sipariş Listesi (En Son 10 Kayıt):</strong><br>';
-        html += '<table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-top:5px;">';
-        orders.slice(-10).forEach(o => {
-          const client = contacts.find(c => c.id === o.contactId);
-          const cName = client ? client.name : 'Bilinmeyen Müşteri';
-          const statusText = o.status === 'beklemede' ? '⏳ Üretimde' : o.status === 'tamamlandi' ? '✅ Teslim Edildi' : '❌ İptal';
-          html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.03);"><td style="padding:6px 0;"><strong>${escapeHtml(o.modelCode)}</strong> <span style="font-size:0.75rem; color:var(--text-muted);">[${escapeHtml(cName)}]</span></td><td style="text-align:right;">${o.totalPair} Çift (${statusText})</td></tr>`;
-        });
-        html += '</table>';
-      }
-      return html;
-    }
-
-    // 8. "ürünler" / "modeller" / "katalog"
-    if (q.includes('ürün') || q.includes('model') || q.includes('katalog') || q.includes('fiyat')) {
-      if (products.length === 0) return 'Ürün kataloğunda henüz kayıtlı bir ürün bulunmuyor.';
-      let html = '<strong>👟 Ürün Katalog ve Fiyat Listesi:</strong><br><br>';
-      html += '<table style="width:100%; border-collapse:collapse; font-size:0.85rem;">';
-      products.forEach(p => {
-        html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.03);"><td style="padding:6px 0;"><strong>${escapeHtml(p.modelCode)}</strong> <span style="font-size:0.75rem; color:var(--text-muted);">(${escapeHtml(p.category || 'Kategori Yok')})</span></td><td style="text-align:right; font-weight:700; color:var(--text-accent);">₺${Number(p.price || 0).toLocaleString('tr-TR', {minimumFractionDigits:2})}</td></tr>`;
-      });
-      html += '</table>';
-      return html;
-    }
-
-    // 9. General summary / help / welcome
-    if (q.includes('özet') || q.includes('bugün') || q.includes('atölye') || q.includes('yardım') || q.includes('merhaba') || q.includes('selam')) {
-      return `
-        <strong>🤖 Atölyecim Yerel Akıllı Asistanı</strong><br><br>
-        Uygulama içerisindeki her türlü bilgiye doğrudan bu sohbet panelinden ulaşabilirsiniz. <br><br>
-        **Sorabileceğiniz Hızlı Şablonlar:**<br>
-        • 📦 *"tüm stoklarımı göster"* - Tüm envanteri listeler.<br>
-        • 💰 *"tüm cariler"* - Müşteri borç/alacak bakiyelerini döker.<br>
-        • 📋 *"tüm siparişler"* - Siparişlerin üretim süreçlerini raporlar.<br>
-        • 👟 *"ürün listesi"* - Kayıtlı modelleri fiyatlarıyla getirir.<br>
-        • 🔍 Bir stok adı yazarak (Örn: *"Comfort EVA"*) kalan çift adedini sorgulayabilirsiniz.<br>
-        • Bir cari ismi yazarak (Örn: *"Özkan Ayakkabı"*) güncel bakiyeyi öğrenebilirsiniz.
-      `;
-    }
-
-    return 'Üzgünüm, sorunuzu yerel modda tam olarak eşleştiremedim. Tüm envanteri sorgulamak için **"tüm stoklar"**, cari bakiyeleri için **"tüm cariler"**, sipariş durumları için **"tüm siparişler"** yazabilirsiniz.';
+  escape(str) {
+    return escapeHtml(str);
   }
 };
 

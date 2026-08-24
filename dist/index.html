@@ -43,9 +43,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/main-BQXpFBvR.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/index-OAUm8FPG.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-9A_m2IvD.css">
+  <script type="module" crossorigin src="/assets/main-CMX3aP5j.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/index-BSMXP3NV.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-BaIMr0zW.css">
 </head>
 <body>
   <!-- O21 Düzeltme: JS devre dışı bırakıldığında noscript uyarısı -->
@@ -154,6 +154,16 @@
     </button>
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
+    <!-- GLOBAL TOP-RIGHT AI ASSISTANT TRIGGER -->
+    <div id="global-header-bar" class="global-header-bar">
+      <button type="button" class="btn-top-ai-assistant" id="btn-top-ai-assistant" title="Atölyecim Akıllı Yapay Zeka Asistanı (Kısayol: Ctrl+K / Tıklayın)">
+        <span class="ai-sparkle-dot"></span>
+        <span class="ai-icon">🤖</span>
+        <span class="ai-title">Yapay Zeka Asistanı</span>
+        <span class="ai-shortcut-badge">Ctrl+K</span>
+      </button>
+    </div>
+
     <!-- SIDEBAR -->
     <nav id="sidebar">
       <div class="sidebar-header">
@@ -243,10 +253,6 @@
         <li class="nav-item" data-page="manager" role="menuitem" tabindex="0" aria-label="Yönetici Ayarları">
           <span class="sidebar-icon">⚙️</span>
           <span>Yönetici</span>
-        </li>
-        <li class="nav-item" data-page="ai-assistant" role="menuitem" tabindex="0" aria-label="🤖 Yapay Zeka">
-          <span class="sidebar-icon">🤖</span>
-          <span>Yapay Zeka</span>
         </li>
         <li class="nav-item" data-page="recycle" role="menuitem" tabindex="0" aria-label="Son Silinenler">
           <span class="sidebar-icon">🗑️</span>
@@ -3535,6 +3541,54 @@
 
   <!-- ============ TOAST NOTIFICATION ============ -->
   <div id="toast-container"></div>
+
+  <!-- ============ AI ASSISTANT COPILOT DRAWER ============ -->
+  <div class="ai-drawer-overlay" id="ai-drawer-overlay"></div>
+  <aside class="ai-copilot-drawer" id="ai-copilot-drawer" aria-label="Atölyecim Yapay Zeka Asistanı">
+    <!-- Header -->
+    <div class="ai-drawer-header">
+      <div class="ai-drawer-header-left">
+        <div class="ai-drawer-avatar">🤖</div>
+        <div>
+          <h3 class="ai-drawer-title">Atölyecim AI Copilot</h3>
+          <div class="ai-drawer-status">
+            <span class="ai-sparkle-dot"></span>
+            <span>Canlı Yerel Zeka & Analiz</span>
+          </div>
+        </div>
+      </div>
+      <div class="ai-drawer-header-actions">
+        <button type="button" class="ai-drawer-btn-icon" id="btn-ai-clear-chat" title="Sohbeti Temizle">🗑️</button>
+        <button type="button" class="ai-drawer-btn-icon" id="btn-ai-close-drawer" title="Kapat (ESC)">&times;</button>
+      </div>
+    </div>
+
+    <!-- Message Feed -->
+    <div class="ai-drawer-body" id="ai-drawer-chat-messages">
+      <!-- Dynamic Messages -->
+    </div>
+
+    <!-- Quick Questions & Input Bar -->
+    <div class="ai-drawer-footer">
+      <div class="ai-suggestions-scroll" id="ai-quick-suggestions">
+        <button type="button" class="ai-quick-chip" data-query="Bugünün genel atölye özeti ve yapılacaklar nedir?">📊 Günlük Brifing</button>
+        <button type="button" class="ai-quick-chip" data-query="Kritik ve biten malzemeleri listele">⚠️ Kritik Stoklar</button>
+        <button type="button" class="ai-quick-chip" data-query="Termini yaklaşan ve geciken siparişler hangileri?">⏳ Termin Durumu</button>
+        <button type="button" class="ai-quick-chip" data-query="Alacak ve borç dengesini özetle">💰 Cari Bakiyeler</button>
+        <button type="button" class="ai-quick-chip" data-query="Kesim, saya ve montajdaki işleri göster">✂️ İmalat Durumu</button>
+      </div>
+
+      <form id="ai-drawer-chat-form" style="margin: 0;">
+        <div class="ai-input-wrapper">
+          <input type="text" class="ai-input-field" id="ai-drawer-input" placeholder="Bir soru sorun veya işlem emri verin..." autocomplete="off">
+          <button type="button" class="ai-voice-btn" id="btn-ai-voice-input" title="Sesle Konuş (Mikrofon)">🎙️</button>
+          <button type="submit" class="ai-send-btn" id="btn-ai-send" title="Gönder">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  </aside>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" type="text/javascript"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
