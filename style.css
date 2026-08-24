@@ -979,6 +979,18 @@ body::before {
   flex-wrap: wrap;
 }
 
+/* --- FILTER BAR --- */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
+  flex-wrap: nowrap;
+  max-width: 100%;
+}
+
 .filter-btn {
   padding: 8px 16px;
   border: 1px solid var(--border-input);
@@ -989,6 +1001,8 @@ body::before {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all var(--transition-fast);
 }
 
@@ -1005,19 +1019,105 @@ body::before {
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
 }
 
-/* --- DATA TABLE --- */
+/* --- DATA TABLE CONTAINER & HORIZONTAL SCROLL --- */
 .table-container {
   background: #ffffff;
   border: 1px solid var(--border-card);
   border-radius: var(--radius-md);
-  overflow: hidden;
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
   box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+/* Evrensel Yatay ve Dikey Kaydırma Çubuğu (Scrollbar) Stilleri */
+.table-container::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar,
+.db-table-scroll::-webkit-scrollbar,
+.filter-bar::-webkit-scrollbar,
+.modal-card::-webkit-scrollbar,
+.modal-table-wrap::-webkit-scrollbar,
+.ledger-table-wrap::-webkit-scrollbar,
+.tx-items-table-wrap::-webkit-scrollbar,
+#as-sizes-grid::-webkit-scrollbar,
+#order-color-groups-container::-webkit-scrollbar,
+div[style*="overflow-x"]::-webkit-scrollbar,
+div[style*="overflow: auto"]::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.table-container::-webkit-scrollbar-track,
+.modal-body::-webkit-scrollbar-track,
+.db-table-scroll::-webkit-scrollbar-track,
+.filter-bar::-webkit-scrollbar-track,
+.modal-card::-webkit-scrollbar-track,
+.modal-table-wrap::-webkit-scrollbar-track,
+.ledger-table-wrap::-webkit-scrollbar-track,
+.tx-items-table-wrap::-webkit-scrollbar-track,
+#as-sizes-grid::-webkit-scrollbar-track,
+#order-color-groups-container::-webkit-scrollbar-track,
+div[style*="overflow-x"]::-webkit-scrollbar-track,
+div[style*="overflow: auto"]::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb,
+.modal-body::-webkit-scrollbar-thumb,
+.db-table-scroll::-webkit-scrollbar-thumb,
+.filter-bar::-webkit-scrollbar-thumb,
+.modal-card::-webkit-scrollbar-thumb,
+.modal-table-wrap::-webkit-scrollbar-thumb,
+.ledger-table-wrap::-webkit-scrollbar-thumb,
+.tx-items-table-wrap::-webkit-scrollbar-thumb,
+#as-sizes-grid::-webkit-scrollbar-thumb,
+#order-color-groups-container::-webkit-scrollbar-thumb,
+div[style*="overflow-x"]::-webkit-scrollbar-thumb,
+div[style*="overflow: auto"]::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover,
+.modal-body::-webkit-scrollbar-thumb:hover,
+.db-table-scroll::-webkit-scrollbar-thumb:hover,
+.filter-bar::-webkit-scrollbar-thumb:hover,
+.modal-card::-webkit-scrollbar-thumb:hover,
+.modal-table-wrap::-webkit-scrollbar-thumb:hover,
+.ledger-table-wrap::-webkit-scrollbar-thumb:hover,
+.tx-items-table-wrap::-webkit-scrollbar-thumb:hover,
+#as-sizes-grid::-webkit-scrollbar-thumb:hover,
+#order-color-groups-container::-webkit-scrollbar-thumb:hover,
+div[style*="overflow-x"]::-webkit-scrollbar-thumb:hover,
+div[style*="overflow: auto"]::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 
 .data-table {
   width: 100%;
+  min-width: 760px;
   border-collapse: collapse;
 }
+
+/* Sayfa bazlı özel minimum tablo genişlikleri */
+#orders-table { min-width: 880px; }
+#contacts-table { min-width: 740px; }
+#products-table { min-width: 820px; }
+#stocks-table { min-width: 760px; }
+#job-tickets-table { min-width: 860px; }
+#contractors-table { min-width: 780px; }
+#assortments-table { min-width: 650px; }
+#recycle-table { min-width: 700px; }
+.ledger-data-table { min-width: 750px; }
+#tx-items-table { min-width: 720px; }
+#recipe-table { min-width: 600px; }
+.db-table { min-width: 650px; }
+#contractor-ledger-table { min-width: 750px; }
 
 .data-table thead {
   background: #f8fafc;
@@ -1032,6 +1132,7 @@ body::before {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
 }
 
 .data-table td {
@@ -1040,6 +1141,7 @@ body::before {
   color: #0f172a;
   border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 .data-table tbody tr {
@@ -1225,6 +1327,10 @@ body::before {
 
 .modal-body {
   padding: 24px;
+  overflow-x: auto !important;
+  max-width: 100%;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-actions {
