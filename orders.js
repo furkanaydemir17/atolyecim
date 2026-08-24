@@ -833,17 +833,6 @@ const Orders = {
           const isStockOk = await this.verifyAndDeductStockForColors(o.colors);
           if (!isStockOk) return; // verification fails, keep old status
 
-          // Re-create transaction
-          const amount = parseFloat((o.qty * o.price).toFixed(2));
-          const tx = {
-            contactId: o.contactId,
-            type: 'alacak',
-            amount: amount,
-            description: `${o.modelCode} (${o.qty} Çift) Sipariş (Yeniden Aktif)`,
-            orderId: orderId,
-            date: new Date().toISOString()
-          };
-          await dbAdd('transactions', tx);
           showToast('Sipariş yeniden aktif edildi, stoklar düşüldü!', 'success');
         }
 
@@ -975,19 +964,6 @@ const Orders = {
           const msg = `Yeni Siparis Alindi! Siparis ID: #${orderId}, Musteri: ${customerName}, Model: ${modelCode}, Toplam Adet: ${totalQty} cift. Bol bereketli isler dileriz.`;
           window.sendNotificationAlert('new-order', msg);
         }
-
-        // Add transaction to contact
-        const amount = parseFloat((totalQty * price).toFixed(2));
-        const tx = {
-          contactId,
-          type: 'alacak',
-          amount: amount,
-          currency: currency,
-          description: `${modelCode} — ${totalQty} Çift Çoklu Renk Sipariş`,
-          orderId: orderId,
-          date: new Date().toISOString()
-        };
-        await dbAdd('transactions', tx);
 
         showToast('Sipariş başarıyla alındı!', 'success');
       }
