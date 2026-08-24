@@ -863,155 +863,157 @@ _İyi çalışmalar dileriz._`;window.WhatsAppManager.openModal({title:"🧵 Fas
           `}).join("")}
       </div>
     `,this.calcTotalQty()},calcTotalQty(){let t=0;document.querySelectorAll(".jt-size-val-input").forEach(o=>{const n=parseInt(o.value,10);!isNaN(n)&&n>0&&(t+=n)});const a=document.getElementById("jt-total-pairs");a&&(a.value=t)},getNextSerialNo(){const t=this.activeTickets||[];if(t.length===0)return"№ 00001";let e="№ ",a=0,o=5;for(const n of t){const r=String(n.serialNo||"").trim().match(/^(.*?)(\d+)([^\d]*)$/);if(r){const s=r[1],l=r[2],c=parseInt(l,10);c>a&&(a=c,e=s,o=Math.max(o,l.length))}}if(a>0){const n=a+1,i=String(n).padStart(o,"0");return`${e}${i}`}return"№ 00001"},async openModal(t=null){this.editingId=t;const e=document.getElementById("job-ticket-modal"),a=document.getElementById("job-ticket-modal-title"),o=document.getElementById("job-ticket-form");if(!(!e||!o)){if(o.reset(),document.getElementById("jt-id").value="",t){a&&(a.textContent="İş Takip Fişi Düzenle ✏️");let n=this.activeTickets&&this.activeTickets.find(i=>String(i.id)===String(t));if(n||(n=await window.dbGet("job_tickets",t)),n){document.getElementById("jt-id").value=n.id,document.getElementById("jt-serial-no").value=n.serialNo||"",document.getElementById("jt-customer").value=n.customer||"",document.getElementById("jt-delivery-date").value=n.deliveryDate||"",document.getElementById("jt-model").value=n.modelCode||"",document.getElementById("jt-leather").value=n.leather||"",document.getElementById("jt-lining").value=n.lining||"",document.getElementById("jt-thread").value=n.thread||"",document.getElementById("jt-last-no").value=n.lastNo||"",document.getElementById("jt-sole").value=n.sole||"",document.getElementById("jt-cutter").value=n.cutter||"",document.getElementById("jt-stitcher").value=n.stitcher||"",document.getElementById("jt-assembler").value=n.assembler||"",document.getElementById("jt-emboss").value=n.emboss||"",document.getElementById("jt-order-placer").value=n.orderPlacer||"",document.getElementById("jt-notes").value=n.notes||"",document.getElementById("jt-packaging").value=n.packaging||"",document.getElementById("jt-stage").value=n.stage||"kesim",document.getElementById("jt-total-pairs").value=n.totalPairs||0;const i=n.sizeType||"kadin",r=document.getElementById("jt-size-range-type");r&&(r.value=i),this.renderSizeGridInputs(i,n.sizes||{})}}else{a&&(a.textContent="Yeni İş Takip Fişi Kes 📋"),document.getElementById("jt-serial-no").value=this.getNextSerialNo();const n=document.getElementById("jt-size-range-type"),i=n?n.value:"kadin";this.renderSizeGridInputs(i,{})}window.openModalById&&window.openModalById("job-ticket-modal")}},async saveTicket(){const t=document.getElementById("jt-id").value,e={};document.querySelectorAll(".jt-size-val-input").forEach(i=>{const r=i.dataset.size,s=parseInt(i.value,10);!isNaN(s)&&s>0&&(e[r]=s)});const o=parseInt(document.getElementById("jt-total-pairs").value,10)||0,n={serialNo:document.getElementById("jt-serial-no").value.trim()||"№ 00001",customer:document.getElementById("jt-customer").value.trim(),deliveryDate:document.getElementById("jt-delivery-date").value,modelCode:document.getElementById("jt-model").value.trim(),leather:document.getElementById("jt-leather").value.trim(),lining:document.getElementById("jt-lining").value.trim(),thread:document.getElementById("jt-thread").value.trim(),lastNo:document.getElementById("jt-last-no").value.trim(),sole:document.getElementById("jt-sole").value.trim(),cutter:document.getElementById("jt-cutter").value.trim(),stitcher:document.getElementById("jt-stitcher").value.trim(),assembler:document.getElementById("jt-assembler").value.trim(),emboss:document.getElementById("jt-emboss").value.trim(),orderPlacer:document.getElementById("jt-order-placer").value.trim(),notes:document.getElementById("jt-notes").value.trim(),packaging:document.getElementById("jt-packaging").value.trim(),stage:document.getElementById("jt-stage").value||"kesim",sizeType:document.getElementById("jt-size-range-type").value||"kadin",sizes:e,totalPairs:o,updatedAt:new Date().toISOString()};if(!n.customer&&!n.modelCode){window.showToast&&window.showToast("Müşteri veya Model Kodu zorunludur!","error");return}try{t?(n.id=parseInt(t,10)||t,await window.dbUpdate("job_tickets",n),window.showToast&&window.showToast("İş takip fişi güncellendi.","success")):(n.createdAt=new Date().toISOString(),await window.dbAdd("job_tickets",n),window.showToast&&window.showToast("Yeni iş takip fişi oluşturuldu!","success")),window.closeModalById&&window.closeModalById("job-ticket-modal"),await this.loadTickets()}catch(i){console.error(i),window.showToast&&window.showToast("Kayıt hatası: "+i.message,"error")}},async changeStage(t,e){try{let a=this.activeTickets&&this.activeTickets.find(o=>String(o.id)===String(t));a||(a=await window.dbGet("job_tickets",t)),a?(a.stage=e,a.updatedAt=new Date().toISOString(),await window.dbUpdate("job_tickets",a),window.showToast&&window.showToast("İş aşaması güncellendi.","success"),await this.loadTickets()):window.showToast&&window.showToast("İş fişi bulunamadı!","error")}catch(a){console.error(a),window.showToast&&window.showToast("Aşama değiştirilemedi: "+a.message,"error")}},async deleteTicket(t){if(confirm("Bu iş takip fişini silmek istediğinizden emin misiniz?"))try{await window.dbDelete("job_tickets",t),window.showToast&&window.showToast("İş takip fişi silindi.","info"),await this.loadTickets()}catch(e){console.error(e),window.showToast&&window.showToast("Silme hatası: "+e.message,"error")}},async printA5Ticket(t){try{let e=this.activeTickets&&this.activeTickets.find(u=>String(u.id)===String(t));if(e||(e=await window.dbGet("job_tickets",t)),!e){window.showToast&&window.showToast("Yazdırılacak iş fişi bulunamadı!","error");return}const a=document.getElementById("job-ticket-print-area");if(!a){console.error("job-ticket-print-area element not found");return}const o=localStorage.getItem("atolyecim_auth_company")||"Atölyecim Master",n=e.deliveryDate?e.deliveryDate.split("-").reverse().join("."):"",i=e.sizes||{},r=["35","36","37","38","39","40","41"];e.sizeType==="erkek"?r.splice(0,r.length,"39","40","41","42","43","44","45"):e.sizeType==="cocuk"&&r.splice(0,r.length,"26","27","28","29","30","31","32","33","34","35");const s=r.map((u,p)=>`<th style="border: 1px solid #000; border-top: none; ${p===0?"border-left: none;":""} padding: 2px 1px; text-align: center; font-weight: 700; font-size: 10px;">${u}</th>`).join(""),l=r.map((u,p)=>`<td style="border: 1px solid #000; ${p===0?"border-left: none;":""} padding: 2px 1px; text-align: center; font-weight: 800; font-size: 12px; font-family: 'Courier New', monospace;">${i[u]!==void 0&&i[u]!==""?i[u]:""}</td>`).join(""),c=r.map(u=>`<th style="border: 0.5px solid #000; padding: 1px 0.5px; font-size: 7.5px; text-align: center;">${u}</th>`).join(""),d=r.map(u=>`<td style="border: 0.5px solid #000; padding: 1px 0.5px; font-size: 8px; font-weight: 700; text-align: center;">${i[u]||""}</td>`).join("");a.innerHTML=`
-        <div class="a5-job-ticket-wrapper" style="width: 202mm; max-width: 202mm; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; border: 1.5px solid #000; box-sizing: border-box; display: flex; flex-direction: row; margin: 0 auto; overflow: hidden; padding: 0;">
+        <div class="a5-job-ticket-wrapper" style="width: 202mm; max-width: 202mm; min-height: 136mm; height: 136mm; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; border: 1.5px solid #000; box-sizing: border-box; display: flex; flex-direction: row; margin: 0 auto; overflow: hidden; padding: 0;">
           
-          <!-- ================= SOL ANA FİŞ BÖLÜMÜ (SIKIŞTIRILMIŞ & BİTİŞİK) ================= -->
-          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; border-right: 2px dashed #000; box-sizing: border-box;">
+          <!-- ================= SOL ANA FİŞ BÖLÜMÜ (GENİŞLETİLMİŞ & FERAH) ================= -->
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; border-right: 2px dashed #000; box-sizing: border-box;">
             
-            <!-- Üst Bilgi Satırı (Seri No, Müşteri, Teslim Tarihi) -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 4px 8px; border-bottom: 1.5px solid #000; box-sizing: border-box;">
-              <div style="display: flex; align-items: baseline; gap: 4px;">
-                <span style="font-size: 11px; font-weight: 700;">Seri No :</span>
-                <span style="font-size: 16px; font-weight: 900; color: #c00; font-family: 'Courier New', monospace; letter-spacing: 0.5px;">${x(e.serialNo||"№ 00000")}</span>
+            <div>
+              <!-- Üst Bilgi Satırı (Seri No, Müşteri, Teslim Tarihi) -->
+              <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 6px 10px; border-bottom: 1.5px solid #000; box-sizing: border-box;">
+                <div style="display: flex; align-items: baseline; gap: 4px;">
+                  <span style="font-size: 12px; font-weight: 700;">Seri No :</span>
+                  <span style="font-size: 18px; font-weight: 900; color: #c00; font-family: 'Courier New', monospace; letter-spacing: 0.5px;">${x(e.serialNo||"№ 00000")}</span>
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 4px;">
+                  <span style="font-size: 12.5px; font-weight: 700;">Müşteri :</span>
+                  <span style="font-size: 15px; font-weight: 900; text-decoration: underline; text-underline-offset: 2px;">${x(e.customer||"")}</span>
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 4px;">
+                  <span style="font-size: 11.5px; font-weight: 700;">Teslim Tarihi :</span>
+                  <span style="font-size: 13px; font-weight: 800;">${n}</span>
+                </div>
               </div>
-              <div style="display: flex; align-items: baseline; gap: 4px;">
-                <span style="font-size: 12px; font-weight: 700;">Müşteri :</span>
-                <span style="font-size: 14px; font-weight: 900; text-decoration: underline; text-underline-offset: 2px;">${x(e.customer||"")}</span>
-              </div>
-              <div style="display: flex; align-items: baseline; gap: 4px;">
-                <span style="font-size: 11px; font-weight: 700;">Teslim Tarihi :</span>
-                <span style="font-size: 12px; font-weight: 800;">${n}</span>
-              </div>
+
+              <!-- Model & Malzeme Özellikleri Tablosu -->
+              <table style="width: 100%; border-collapse: collapse; margin: 0; font-size: 11.5px; border: none; border-bottom: 1.5px solid #000;">
+                <thead>
+                  <tr style="background: #f0f0f0;">
+                    <th style="border: 1px solid #000; border-top: none; border-left: none; padding: 5px 4px; width: 17%; text-align: center; font-weight: 700;">Model</th>
+                    <th style="border: 1px solid #000; border-top: none; padding: 5px 4px; width: 23%; text-align: center; font-weight: 700;">Deri</th>
+                    <th style="border: 1px solid #000; border-top: none; padding: 5px 4px; width: 20%; text-align: center; font-weight: 700;">Astar</th>
+                    <th style="border: 1px solid #000; border-top: none; padding: 5px 4px; width: 12%; text-align: center; font-weight: 700;">İp</th>
+                    <th style="border: 1px solid #000; border-top: none; padding: 5px 4px; width: 14%; text-align: center; font-weight: 700;">Kalıp</th>
+                    <th style="border: 1px solid #000; border-top: none; border-right: none; padding: 5px 4px; width: 14%; text-align: center; font-weight: 700;">Taban</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="height: 38px;">
+                    <td style="border: 1px solid #000; border-left: none; padding: 4px; text-align: center; font-weight: 800; font-size: 14px;">${x(e.modelCode||"")}</td>
+                    <td style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: 700; font-size: 12.5px;">${x(e.leather||"")}</td>
+                    <td style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: 600; font-size: 11.5px;">${x(e.lining||"")}</td>
+                    <td style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: 600; font-size: 11.5px;">${x(e.thread||"")}</td>
+                    <td style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: 800; font-size: 13px;">${x(e.lastNo||"")}</td>
+                    <td style="border: 1px solid #000; border-right: none; padding: 4px; text-align: center; font-weight: 700; font-size: 12.5px;">${x(e.sole||"")}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Asorti / Numara Cetveli & Usta İsimleri Tablosu -->
+              <table style="width: 100%; border-collapse: collapse; margin: 0; font-size: 11px; border: none; border-bottom: 1.5px solid #000;">
+                <thead>
+                  <tr style="background: #f0f0f0;">
+                    ${s}
+                    <th style="border: 1px solid #000; border-top: none; padding: 5px 2px; width: 44px; text-align: center; font-weight: 800;">Toplam</th>
+                    <th style="border: 1px solid #000; border-top: none; padding: 5px 2px; width: 66px; text-align: center; font-weight: 700;">Kesici</th>
+                    <th style="border: 1px solid #000; border-top: none; padding: 5px 2px; width: 66px; text-align: center; font-weight: 700;">Sayacı</th>
+                    <th style="border: 1px solid #000; border-top: none; border-right: none; padding: 5px 2px; width: 66px; text-align: center; font-weight: 700;">Kalfa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="height: 42px;">
+                    ${l}
+                    <td style="border: 1px solid #000; padding: 4px 2px; text-align: center; font-weight: 900; font-size: 15px; background: #fafafa;">${e.totalPairs||0}</td>
+                    <td style="border: 1px solid #000; padding: 4px 2px; text-align: center; font-weight: 700; font-size: 12px;">${x(e.cutter||"")}</td>
+                    <td style="border: 1px solid #000; padding: 4px 2px; text-align: center; font-weight: 700; font-size: 12px;">${x(e.stitcher||"")}</td>
+                    <td style="border: 1px solid #000; border-right: none; padding: 4px 2px; text-align: center; font-weight: 700; font-size: 12px;">${x(e.assembler||"")}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
-            <!-- Model & Malzeme Özellikleri Tablosu (Bitişik) -->
-            <table style="width: 100%; border-collapse: collapse; margin: 0; font-size: 11px; border: none; border-bottom: 1px solid #000;">
-              <thead>
-                <tr style="background: #f0f0f0;">
-                  <th style="border: 1px solid #000; border-top: none; border-left: none; padding: 3px 4px; width: 17%; text-align: center; font-weight: 700;">Model</th>
-                  <th style="border: 1px solid #000; border-top: none; padding: 3px 4px; width: 23%; text-align: center; font-weight: 700;">Deri</th>
-                  <th style="border: 1px solid #000; border-top: none; padding: 3px 4px; width: 20%; text-align: center; font-weight: 700;">Astar</th>
-                  <th style="border: 1px solid #000; border-top: none; padding: 3px 4px; width: 12%; text-align: center; font-weight: 700;">İp</th>
-                  <th style="border: 1px solid #000; border-top: none; padding: 3px 4px; width: 14%; text-align: center; font-weight: 700;">Kalıp</th>
-                  <th style="border: 1px solid #000; border-top: none; border-right: none; padding: 3px 4px; width: 14%; text-align: center; font-weight: 700;">Taban</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="height: 28px;">
-                  <td style="border: 1px solid #000; border-left: none; padding: 3px 4px; text-align: center; font-weight: 800; font-size: 13px;">${x(e.modelCode||"")}</td>
-                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center; font-weight: 700; font-size: 12px;">${x(e.leather||"")}</td>
-                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center; font-weight: 600; font-size: 11px;">${x(e.lining||"")}</td>
-                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center; font-weight: 600; font-size: 11px;">${x(e.thread||"")}</td>
-                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center; font-weight: 800; font-size: 12px;">${x(e.lastNo||"")}</td>
-                  <td style="border: 1px solid #000; border-right: none; padding: 3px 4px; text-align: center; font-weight: 700; font-size: 12px;">${x(e.sole||"")}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <!-- Asorti / Numara Cetveli & Usta İsimleri Tablosu (Bitişik) -->
-            <table style="width: 100%; border-collapse: collapse; margin: 0; font-size: 10.5px; border: none; border-bottom: 1.5px solid #000;">
-              <thead>
-                <tr style="background: #f0f0f0;">
-                  ${s}
-                  <th style="border: 1px solid #000; border-top: none; padding: 3px 2px; width: 44px; text-align: center; font-weight: 800;">Toplam</th>
-                  <th style="border: 1px solid #000; border-top: none; padding: 3px 2px; width: 66px; text-align: center; font-weight: 700;">Kesici</th>
-                  <th style="border: 1px solid #000; border-top: none; padding: 3px 2px; width: 66px; text-align: center; font-weight: 700;">Sayacı</th>
-                  <th style="border: 1px solid #000; border-top: none; border-right: none; padding: 3px 2px; width: 66px; text-align: center; font-weight: 700;">Kalfa</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="height: 30px;">
-                  ${l}
-                  <td style="border: 1px solid #000; padding: 3px 2px; text-align: center; font-weight: 900; font-size: 14px; background: #fafafa;">${e.totalPairs||0}</td>
-                  <td style="border: 1px solid #000; padding: 3px 2px; text-align: center; font-weight: 700; font-size: 11px;">${x(e.cutter||"")}</td>
-                  <td style="border: 1px solid #000; padding: 3px 2px; text-align: center; font-weight: 700; font-size: 11px;">${x(e.stitcher||"")}</td>
-                  <td style="border: 1px solid #000; border-right: none; padding: 3px 2px; text-align: center; font-weight: 700; font-size: 11px;">${x(e.assembler||"")}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <!-- Alt Açıklama & Klişe Bölümü (Doğrudan Tablonun Altında) -->
-            <div style="padding: 5px 8px; font-size: 10.5px; line-height: 1.35; box-sizing: border-box;">
-              <div style="display: grid; grid-template-columns: 1.2fr 1fr 1.5fr; gap: 8px; margin-bottom: 4px;">
-                <div><strong>KLİŞE :</strong> <span style="font-weight: 800; font-size: 11.5px;">${x(e.emboss||e.customer||"")}</span></div>
+            <!-- Alt Açıklama & Klişe Bölümü (Genişletilmiş Alt Alan) -->
+            <div style="padding: 8px 10px; font-size: 11px; line-height: 1.45; box-sizing: border-box; background: #fff;">
+              <div style="display: grid; grid-template-columns: 1.2fr 1fr 1.5fr; gap: 10px; margin-bottom: 6px;">
+                <div><strong>KLİŞE :</strong> <span style="font-weight: 800; font-size: 12px; color: #0284c7;">${x(e.emboss||e.customer||"")}</span></div>
                 <div><strong>SİPARİŞ VEREN :</strong> <span>${x(e.orderPlacer||"")}</span></div>
                 <div><strong>NOT :</strong> <span>${x(e.notes||"")}</span></div>
               </div>
-              <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #ccc; padding-top: 5px;">
                 <div><strong>AMBALAJ :</strong> <span>${x(e.packaging||"Standart Kutu / Koli")}</span></div>
-                <div style="font-size: 8.5px; color: #555; font-style: italic;">${x(o)} İmalat Takip Sistemi</div>
+                <div style="font-size: 9.5px; color: #555; font-style: italic;">${x(o)} İmalat Takip Sistemi</div>
               </div>
             </div>
 
           </div>
 
-          <!-- ================= SAĞ KESİKLİ KOÇAN / 4 KUPON BÖLÜMÜ ================= -->
-          <div style="width: 78mm; min-width: 78mm; max-width: 78mm; display: flex; flex-direction: row; background: #fafafa; box-sizing: border-box;">
+          <!-- ================= SAĞ KESİKLİ KOÇAN / 4 KUPON BÖLÜMÜ (UZATILMIŞ) ================= -->
+          <div style="width: 78mm; min-width: 78mm; max-width: 78mm; height: 100%; display: flex; flex-direction: row; background: #fafafa; box-sizing: border-box;">
             
             <!-- 1. KUPON: KESİM -->
-            <div style="flex: 1; border-right: 1px dashed #555; padding: 4px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 8.5px; line-height: 1.2; box-sizing: border-box;">
+            <div style="flex: 1; border-right: 1px dashed #555; padding: 6px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; line-height: 1.3; box-sizing: border-box;">
               <div>
-                <div style="text-align: center; font-weight: 900; font-size: 9.5px; border-bottom: 1px solid #000; padding-bottom: 1px; margin-bottom: 3px; background: #eee;">KESİM</div>
+                <div style="text-align: center; font-weight: 900; font-size: 10.5px; border-bottom: 1px solid #000; padding: 2px 0; margin-bottom: 4px; background: #e2e8f0;">KESİM</div>
                 <div><strong>Seri:</strong> <span style="color: #c00; font-weight: 800;">${x(e.serialNo||"")}</span></div>
                 <div><strong>Müşteri:</strong> ${x(e.customer||"")}</div>
                 <div><strong>Model:</strong> <b>${x(e.modelCode||"")}</b></div>
                 <div><strong>Deri:</strong> ${x(e.leather||"")}</div>
-                <div style="margin-top: 3px; font-weight: 800; font-size: 9px;">Çift: ${e.totalPairs||0}</div>
+                <div style="margin-top: 4px; font-weight: 800; font-size: 10px;">Çift: ${e.totalPairs||0}</div>
               </div>
-              <div style="border-top: 0.5px solid #888; padding-top: 2px; font-size: 8px; text-align: center; color: #444;">
+              <div style="border-top: 0.5px solid #888; padding-top: 4px; font-size: 8.5px; text-align: center; color: #444; height: 26px; display: flex; align-items: flex-end; justify-content: center;">
                 Kesim Paraf
               </div>
             </div>
 
             <!-- 2. KUPON: ŞİLTE (Astar + Renk) -->
-            <div style="flex: 1.3; border-right: 1px dashed #555; padding: 4px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 8.5px; line-height: 1.2; box-sizing: border-box;">
+            <div style="flex: 1.3; border-right: 1px dashed #555; padding: 6px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; line-height: 1.3; box-sizing: border-box;">
               <div>
-                <div style="text-align: center; font-weight: 900; font-size: 9.5px; border-bottom: 1px solid #000; padding-bottom: 1px; margin-bottom: 3px; background: #eee;">ŞİLTE</div>
+                <div style="text-align: center; font-weight: 900; font-size: 10.5px; border-bottom: 1px solid #000; padding: 2px 0; margin-bottom: 4px; background: #e2e8f0;">ŞİLTE</div>
                 <div><strong>Seri:</strong> <span style="color: #c00; font-weight: 800;">${x(e.serialNo||"")}</span></div>
                 <div><strong>Müşteri:</strong> ${x(e.customer||"")}</div>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 2px; margin-bottom: 2px;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 3px; margin-bottom: 3px;">
                   <thead><tr>${c}</tr></thead>
                   <tbody><tr>${d}</tr></tbody>
                 </table>
                 <div><strong>Astar:</strong> ${x(e.lining||"-")}</div>
                 <div><strong>Renk:</strong> ${x(e.leather||"-")}</div>
-                <div style="margin-top: 1px; font-weight: 800; font-size: 9px;">Çift: ${e.totalPairs||0}</div>
+                <div style="margin-top: 2px; font-weight: 800; font-size: 10px;">Çift: ${e.totalPairs||0}</div>
               </div>
-              <div style="border-top: 0.5px solid #888; padding-top: 2px; font-size: 8px; text-align: center; color: #444;">
+              <div style="border-top: 0.5px solid #888; padding-top: 4px; font-size: 8.5px; text-align: center; color: #444; height: 26px; display: flex; align-items: flex-end; justify-content: center;">
                 Şilte Paraf
               </div>
             </div>
 
             <!-- 3. KUPON: SAYA -->
-            <div style="flex: 1; border-right: 1px dashed #555; padding: 4px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 8.5px; line-height: 1.2; box-sizing: border-box;">
+            <div style="flex: 1; border-right: 1px dashed #555; padding: 6px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; line-height: 1.3; box-sizing: border-box;">
               <div>
-                <div style="text-align: center; font-weight: 900; font-size: 9.5px; border-bottom: 1px solid #000; padding-bottom: 1px; margin-bottom: 3px; background: #eee;">SAYA</div>
+                <div style="text-align: center; font-weight: 900; font-size: 10.5px; border-bottom: 1px solid #000; padding: 2px 0; margin-bottom: 4px; background: #e2e8f0;">SAYA</div>
                 <div><strong>Seri:</strong> <span style="color: #c00; font-weight: 800;">${x(e.serialNo||"")}</span></div>
                 <div><strong>Müşteri:</strong> ${x(e.customer||"")}</div>
                 <div><strong>Model:</strong> <b>${x(e.modelCode||"")}</b></div>
                 <div><strong>Deri:</strong> ${x(e.leather||"")}</div>
                 <div><strong>Astar:</strong> ${x(e.lining||"")}</div>
                 <div><strong>İp:</strong> ${x(e.thread||"")}</div>
-                <div style="margin-top: 3px; font-weight: 800; font-size: 9px;">Çift: ${e.totalPairs||0}</div>
+                <div style="margin-top: 4px; font-weight: 800; font-size: 10px;">Çift: ${e.totalPairs||0}</div>
               </div>
-              <div style="border-top: 0.5px solid #888; padding-top: 2px; font-size: 8px; text-align: center; color: #444;">
+              <div style="border-top: 0.5px solid #888; padding-top: 4px; font-size: 8.5px; text-align: center; color: #444; height: 26px; display: flex; align-items: flex-end; justify-content: center;">
                 Saya Paraf
               </div>
             </div>
 
             <!-- 4. KUPON: MONTAJ (KALFA) -->
-            <div style="flex: 1; padding: 4px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 8.5px; line-height: 1.2; box-sizing: border-box;">
+            <div style="flex: 1; padding: 6px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; line-height: 1.3; box-sizing: border-box;">
               <div>
-                <div style="text-align: center; font-weight: 900; font-size: 9.5px; border-bottom: 1px solid #000; padding-bottom: 1px; margin-bottom: 3px; background: #eee;">MONTAJ</div>
+                <div style="text-align: center; font-weight: 900; font-size: 10.5px; border-bottom: 1px solid #000; padding: 2px 0; margin-bottom: 4px; background: #e2e8f0;">MONTAJ</div>
                 <div><strong>Seri:</strong> <span style="color: #c00; font-weight: 800;">${x(e.serialNo||"")}</span></div>
                 <div><strong>Müşteri:</strong> ${x(e.customer||"")}</div>
                 <div><strong>Model:</strong> <b>${x(e.modelCode||"")}</b></div>
                 <div><strong>Deri:</strong> ${x(e.leather||"")}</div>
                 <div><strong>Kalıp:</strong> ${x(e.lastNo||"")}</div>
                 <div><strong>Taban:</strong> ${x(e.sole||"")}</div>
-                <div style="margin-top: 3px; font-weight: 800; font-size: 9px;">Çift: ${e.totalPairs||0}</div>
+                <div style="margin-top: 4px; font-weight: 800; font-size: 10px;">Çift: ${e.totalPairs||0}</div>
               </div>
-              <div style="border-top: 0.5px solid #888; padding-top: 2px; font-size: 8px; text-align: center; color: #444;">
+              <div style="border-top: 0.5px solid #888; padding-top: 4px; font-size: 8.5px; text-align: center; color: #444; height: 26px; display: flex; align-items: flex-end; justify-content: center;">
                 Montaj Paraf
               </div>
             </div>

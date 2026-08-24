@@ -507,155 +507,157 @@ export const JobTickets = {
       const couponSizeQtyHtml = sizeKeys.map(k => `<td style="border: 0.5px solid #000; padding: 1px 0.5px; font-size: 8px; font-weight: 700; text-align: center;">${sizes[k] || ''}</td>`).join('');
 
       printArea.innerHTML = `
-        <div class="a5-job-ticket-wrapper" style="width: 202mm; max-width: 202mm; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; border: 1.5px solid #000; box-sizing: border-box; display: flex; flex-direction: row; margin: 0 auto; overflow: hidden; padding: 0;">
+        <div class="a5-job-ticket-wrapper" style="width: 202mm; max-width: 202mm; min-height: 136mm; height: 136mm; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; border: 1.5px solid #000; box-sizing: border-box; display: flex; flex-direction: row; margin: 0 auto; overflow: hidden; padding: 0;">
           
-          <!-- ================= SOL ANA FİŞ BÖLÜMÜ (SIKIŞTIRILMIŞ & BİTİŞİK) ================= -->
-          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; border-right: 2px dashed #000; box-sizing: border-box;">
+          <!-- ================= SOL ANA FİŞ BÖLÜMÜ (GENİŞLETİLMİŞ & FERAH) ================= -->
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; border-right: 2px dashed #000; box-sizing: border-box;">
             
-            <!-- Üst Bilgi Satırı (Seri No, Müşteri, Teslim Tarihi) -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 4px 8px; border-bottom: 1.5px solid #000; box-sizing: border-box;">
-              <div style="display: flex; align-items: baseline; gap: 4px;">
-                <span style="font-size: 11px; font-weight: 700;">Seri No :</span>
-                <span style="font-size: 16px; font-weight: 900; color: #c00; font-family: 'Courier New', monospace; letter-spacing: 0.5px;">${escapeHtml(ticket.serialNo || '№ 00000')}</span>
+            <div>
+              <!-- Üst Bilgi Satırı (Seri No, Müşteri, Teslim Tarihi) -->
+              <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 6px 10px; border-bottom: 1.5px solid #000; box-sizing: border-box;">
+                <div style="display: flex; align-items: baseline; gap: 4px;">
+                  <span style="font-size: 12px; font-weight: 700;">Seri No :</span>
+                  <span style="font-size: 18px; font-weight: 900; color: #c00; font-family: 'Courier New', monospace; letter-spacing: 0.5px;">${escapeHtml(ticket.serialNo || '№ 00000')}</span>
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 4px;">
+                  <span style="font-size: 12.5px; font-weight: 700;">Müşteri :</span>
+                  <span style="font-size: 15px; font-weight: 900; text-decoration: underline; text-underline-offset: 2px;">${escapeHtml(ticket.customer || '')}</span>
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 4px;">
+                  <span style="font-size: 11.5px; font-weight: 700;">Teslim Tarihi :</span>
+                  <span style="font-size: 13px; font-weight: 800;">${deliveryDateStr}</span>
+                </div>
               </div>
-              <div style="display: flex; align-items: baseline; gap: 4px;">
-                <span style="font-size: 12px; font-weight: 700;">Müşteri :</span>
-                <span style="font-size: 14px; font-weight: 900; text-decoration: underline; text-underline-offset: 2px;">${escapeHtml(ticket.customer || '')}</span>
-              </div>
-              <div style="display: flex; align-items: baseline; gap: 4px;">
-                <span style="font-size: 11px; font-weight: 700;">Teslim Tarihi :</span>
-                <span style="font-size: 12px; font-weight: 800;">${deliveryDateStr}</span>
-              </div>
+
+              <!-- Model & Malzeme Özellikleri Tablosu -->
+              <table style="width: 100%; border-collapse: collapse; margin: 0; font-size: 11.5px; border: none; border-bottom: 1.5px solid #000;">
+                <thead>
+                  <tr style="background: #f0f0f0;">
+                    <th style="border: 1px solid #000; border-top: none; border-left: none; padding: 5px 4px; width: 17%; text-align: center; font-weight: 700;">Model</th>
+                    <th style="border: 1px solid #000; border-top: none; padding: 5px 4px; width: 23%; text-align: center; font-weight: 700;">Deri</th>
+                    <th style="border: 1px solid #000; border-top: none; padding: 5px 4px; width: 20%; text-align: center; font-weight: 700;">Astar</th>
+                    <th style="border: 1px solid #000; border-top: none; padding: 5px 4px; width: 12%; text-align: center; font-weight: 700;">İp</th>
+                    <th style="border: 1px solid #000; border-top: none; padding: 5px 4px; width: 14%; text-align: center; font-weight: 700;">Kalıp</th>
+                    <th style="border: 1px solid #000; border-top: none; border-right: none; padding: 5px 4px; width: 14%; text-align: center; font-weight: 700;">Taban</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="height: 38px;">
+                    <td style="border: 1px solid #000; border-left: none; padding: 4px; text-align: center; font-weight: 800; font-size: 14px;">${escapeHtml(ticket.modelCode || '')}</td>
+                    <td style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: 700; font-size: 12.5px;">${escapeHtml(ticket.leather || '')}</td>
+                    <td style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: 600; font-size: 11.5px;">${escapeHtml(ticket.lining || '')}</td>
+                    <td style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: 600; font-size: 11.5px;">${escapeHtml(ticket.thread || '')}</td>
+                    <td style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: 800; font-size: 13px;">${escapeHtml(ticket.lastNo || '')}</td>
+                    <td style="border: 1px solid #000; border-right: none; padding: 4px; text-align: center; font-weight: 700; font-size: 12.5px;">${escapeHtml(ticket.sole || '')}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Asorti / Numara Cetveli & Usta İsimleri Tablosu -->
+              <table style="width: 100%; border-collapse: collapse; margin: 0; font-size: 11px; border: none; border-bottom: 1.5px solid #000;">
+                <thead>
+                  <tr style="background: #f0f0f0;">
+                    ${mainSizeHeaderHtml}
+                    <th style="border: 1px solid #000; border-top: none; padding: 5px 2px; width: 44px; text-align: center; font-weight: 800;">Toplam</th>
+                    <th style="border: 1px solid #000; border-top: none; padding: 5px 2px; width: 66px; text-align: center; font-weight: 700;">Kesici</th>
+                    <th style="border: 1px solid #000; border-top: none; padding: 5px 2px; width: 66px; text-align: center; font-weight: 700;">Sayacı</th>
+                    <th style="border: 1px solid #000; border-top: none; border-right: none; padding: 5px 2px; width: 66px; text-align: center; font-weight: 700;">Kalfa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="height: 42px;">
+                    ${mainSizeQtyHtml}
+                    <td style="border: 1px solid #000; padding: 4px 2px; text-align: center; font-weight: 900; font-size: 15px; background: #fafafa;">${ticket.totalPairs || 0}</td>
+                    <td style="border: 1px solid #000; padding: 4px 2px; text-align: center; font-weight: 700; font-size: 12px;">${escapeHtml(ticket.cutter || '')}</td>
+                    <td style="border: 1px solid #000; padding: 4px 2px; text-align: center; font-weight: 700; font-size: 12px;">${escapeHtml(ticket.stitcher || '')}</td>
+                    <td style="border: 1px solid #000; border-right: none; padding: 4px 2px; text-align: center; font-weight: 700; font-size: 12px;">${escapeHtml(ticket.assembler || '')}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
-            <!-- Model & Malzeme Özellikleri Tablosu (Bitişik) -->
-            <table style="width: 100%; border-collapse: collapse; margin: 0; font-size: 11px; border: none; border-bottom: 1px solid #000;">
-              <thead>
-                <tr style="background: #f0f0f0;">
-                  <th style="border: 1px solid #000; border-top: none; border-left: none; padding: 3px 4px; width: 17%; text-align: center; font-weight: 700;">Model</th>
-                  <th style="border: 1px solid #000; border-top: none; padding: 3px 4px; width: 23%; text-align: center; font-weight: 700;">Deri</th>
-                  <th style="border: 1px solid #000; border-top: none; padding: 3px 4px; width: 20%; text-align: center; font-weight: 700;">Astar</th>
-                  <th style="border: 1px solid #000; border-top: none; padding: 3px 4px; width: 12%; text-align: center; font-weight: 700;">İp</th>
-                  <th style="border: 1px solid #000; border-top: none; padding: 3px 4px; width: 14%; text-align: center; font-weight: 700;">Kalıp</th>
-                  <th style="border: 1px solid #000; border-top: none; border-right: none; padding: 3px 4px; width: 14%; text-align: center; font-weight: 700;">Taban</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="height: 28px;">
-                  <td style="border: 1px solid #000; border-left: none; padding: 3px 4px; text-align: center; font-weight: 800; font-size: 13px;">${escapeHtml(ticket.modelCode || '')}</td>
-                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center; font-weight: 700; font-size: 12px;">${escapeHtml(ticket.leather || '')}</td>
-                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center; font-weight: 600; font-size: 11px;">${escapeHtml(ticket.lining || '')}</td>
-                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center; font-weight: 600; font-size: 11px;">${escapeHtml(ticket.thread || '')}</td>
-                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center; font-weight: 800; font-size: 12px;">${escapeHtml(ticket.lastNo || '')}</td>
-                  <td style="border: 1px solid #000; border-right: none; padding: 3px 4px; text-align: center; font-weight: 700; font-size: 12px;">${escapeHtml(ticket.sole || '')}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <!-- Asorti / Numara Cetveli & Usta İsimleri Tablosu (Bitişik) -->
-            <table style="width: 100%; border-collapse: collapse; margin: 0; font-size: 10.5px; border: none; border-bottom: 1.5px solid #000;">
-              <thead>
-                <tr style="background: #f0f0f0;">
-                  ${mainSizeHeaderHtml}
-                  <th style="border: 1px solid #000; border-top: none; padding: 3px 2px; width: 44px; text-align: center; font-weight: 800;">Toplam</th>
-                  <th style="border: 1px solid #000; border-top: none; padding: 3px 2px; width: 66px; text-align: center; font-weight: 700;">Kesici</th>
-                  <th style="border: 1px solid #000; border-top: none; padding: 3px 2px; width: 66px; text-align: center; font-weight: 700;">Sayacı</th>
-                  <th style="border: 1px solid #000; border-top: none; border-right: none; padding: 3px 2px; width: 66px; text-align: center; font-weight: 700;">Kalfa</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="height: 30px;">
-                  ${mainSizeQtyHtml}
-                  <td style="border: 1px solid #000; padding: 3px 2px; text-align: center; font-weight: 900; font-size: 14px; background: #fafafa;">${ticket.totalPairs || 0}</td>
-                  <td style="border: 1px solid #000; padding: 3px 2px; text-align: center; font-weight: 700; font-size: 11px;">${escapeHtml(ticket.cutter || '')}</td>
-                  <td style="border: 1px solid #000; padding: 3px 2px; text-align: center; font-weight: 700; font-size: 11px;">${escapeHtml(ticket.stitcher || '')}</td>
-                  <td style="border: 1px solid #000; border-right: none; padding: 3px 2px; text-align: center; font-weight: 700; font-size: 11px;">${escapeHtml(ticket.assembler || '')}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <!-- Alt Açıklama & Klişe Bölümü (Doğrudan Tablonun Altında) -->
-            <div style="padding: 5px 8px; font-size: 10.5px; line-height: 1.35; box-sizing: border-box;">
-              <div style="display: grid; grid-template-columns: 1.2fr 1fr 1.5fr; gap: 8px; margin-bottom: 4px;">
-                <div><strong>KLİŞE :</strong> <span style="font-weight: 800; font-size: 11.5px;">${escapeHtml(ticket.emboss || ticket.customer || '')}</span></div>
+            <!-- Alt Açıklama & Klişe Bölümü (Genişletilmiş Alt Alan) -->
+            <div style="padding: 8px 10px; font-size: 11px; line-height: 1.45; box-sizing: border-box; background: #fff;">
+              <div style="display: grid; grid-template-columns: 1.2fr 1fr 1.5fr; gap: 10px; margin-bottom: 6px;">
+                <div><strong>KLİŞE :</strong> <span style="font-weight: 800; font-size: 12px; color: #0284c7;">${escapeHtml(ticket.emboss || ticket.customer || '')}</span></div>
                 <div><strong>SİPARİŞ VEREN :</strong> <span>${escapeHtml(ticket.orderPlacer || '')}</span></div>
                 <div><strong>NOT :</strong> <span>${escapeHtml(ticket.notes || '')}</span></div>
               </div>
-              <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #ccc; padding-top: 5px;">
                 <div><strong>AMBALAJ :</strong> <span>${escapeHtml(ticket.packaging || 'Standart Kutu / Koli')}</span></div>
-                <div style="font-size: 8.5px; color: #555; font-style: italic;">${escapeHtml(companyName)} İmalat Takip Sistemi</div>
+                <div style="font-size: 9.5px; color: #555; font-style: italic;">${escapeHtml(companyName)} İmalat Takip Sistemi</div>
               </div>
             </div>
 
           </div>
 
-          <!-- ================= SAĞ KESİKLİ KOÇAN / 4 KUPON BÖLÜMÜ ================= -->
-          <div style="width: 78mm; min-width: 78mm; max-width: 78mm; display: flex; flex-direction: row; background: #fafafa; box-sizing: border-box;">
+          <!-- ================= SAĞ KESİKLİ KOÇAN / 4 KUPON BÖLÜMÜ (UZATILMIŞ) ================= -->
+          <div style="width: 78mm; min-width: 78mm; max-width: 78mm; height: 100%; display: flex; flex-direction: row; background: #fafafa; box-sizing: border-box;">
             
             <!-- 1. KUPON: KESİM -->
-            <div style="flex: 1; border-right: 1px dashed #555; padding: 4px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 8.5px; line-height: 1.2; box-sizing: border-box;">
+            <div style="flex: 1; border-right: 1px dashed #555; padding: 6px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; line-height: 1.3; box-sizing: border-box;">
               <div>
-                <div style="text-align: center; font-weight: 900; font-size: 9.5px; border-bottom: 1px solid #000; padding-bottom: 1px; margin-bottom: 3px; background: #eee;">KESİM</div>
+                <div style="text-align: center; font-weight: 900; font-size: 10.5px; border-bottom: 1px solid #000; padding: 2px 0; margin-bottom: 4px; background: #e2e8f0;">KESİM</div>
                 <div><strong>Seri:</strong> <span style="color: #c00; font-weight: 800;">${escapeHtml(ticket.serialNo || '')}</span></div>
                 <div><strong>Müşteri:</strong> ${escapeHtml(ticket.customer || '')}</div>
                 <div><strong>Model:</strong> <b>${escapeHtml(ticket.modelCode || '')}</b></div>
                 <div><strong>Deri:</strong> ${escapeHtml(ticket.leather || '')}</div>
-                <div style="margin-top: 3px; font-weight: 800; font-size: 9px;">Çift: ${ticket.totalPairs || 0}</div>
+                <div style="margin-top: 4px; font-weight: 800; font-size: 10px;">Çift: ${ticket.totalPairs || 0}</div>
               </div>
-              <div style="border-top: 0.5px solid #888; padding-top: 2px; font-size: 8px; text-align: center; color: #444;">
+              <div style="border-top: 0.5px solid #888; padding-top: 4px; font-size: 8.5px; text-align: center; color: #444; height: 26px; display: flex; align-items: flex-end; justify-content: center;">
                 Kesim Paraf
               </div>
             </div>
 
             <!-- 2. KUPON: ŞİLTE (Astar + Renk) -->
-            <div style="flex: 1.3; border-right: 1px dashed #555; padding: 4px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 8.5px; line-height: 1.2; box-sizing: border-box;">
+            <div style="flex: 1.3; border-right: 1px dashed #555; padding: 6px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; line-height: 1.3; box-sizing: border-box;">
               <div>
-                <div style="text-align: center; font-weight: 900; font-size: 9.5px; border-bottom: 1px solid #000; padding-bottom: 1px; margin-bottom: 3px; background: #eee;">ŞİLTE</div>
+                <div style="text-align: center; font-weight: 900; font-size: 10.5px; border-bottom: 1px solid #000; padding: 2px 0; margin-bottom: 4px; background: #e2e8f0;">ŞİLTE</div>
                 <div><strong>Seri:</strong> <span style="color: #c00; font-weight: 800;">${escapeHtml(ticket.serialNo || '')}</span></div>
                 <div><strong>Müşteri:</strong> ${escapeHtml(ticket.customer || '')}</div>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 2px; margin-bottom: 2px;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 3px; margin-bottom: 3px;">
                   <thead><tr>${couponSizeHeaderHtml}</tr></thead>
                   <tbody><tr>${couponSizeQtyHtml}</tr></tbody>
                 </table>
                 <div><strong>Astar:</strong> ${escapeHtml(ticket.lining || '-')}</div>
                 <div><strong>Renk:</strong> ${escapeHtml(ticket.leather || '-')}</div>
-                <div style="margin-top: 1px; font-weight: 800; font-size: 9px;">Çift: ${ticket.totalPairs || 0}</div>
+                <div style="margin-top: 2px; font-weight: 800; font-size: 10px;">Çift: ${ticket.totalPairs || 0}</div>
               </div>
-              <div style="border-top: 0.5px solid #888; padding-top: 2px; font-size: 8px; text-align: center; color: #444;">
+              <div style="border-top: 0.5px solid #888; padding-top: 4px; font-size: 8.5px; text-align: center; color: #444; height: 26px; display: flex; align-items: flex-end; justify-content: center;">
                 Şilte Paraf
               </div>
             </div>
 
             <!-- 3. KUPON: SAYA -->
-            <div style="flex: 1; border-right: 1px dashed #555; padding: 4px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 8.5px; line-height: 1.2; box-sizing: border-box;">
+            <div style="flex: 1; border-right: 1px dashed #555; padding: 6px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; line-height: 1.3; box-sizing: border-box;">
               <div>
-                <div style="text-align: center; font-weight: 900; font-size: 9.5px; border-bottom: 1px solid #000; padding-bottom: 1px; margin-bottom: 3px; background: #eee;">SAYA</div>
+                <div style="text-align: center; font-weight: 900; font-size: 10.5px; border-bottom: 1px solid #000; padding: 2px 0; margin-bottom: 4px; background: #e2e8f0;">SAYA</div>
                 <div><strong>Seri:</strong> <span style="color: #c00; font-weight: 800;">${escapeHtml(ticket.serialNo || '')}</span></div>
                 <div><strong>Müşteri:</strong> ${escapeHtml(ticket.customer || '')}</div>
                 <div><strong>Model:</strong> <b>${escapeHtml(ticket.modelCode || '')}</b></div>
                 <div><strong>Deri:</strong> ${escapeHtml(ticket.leather || '')}</div>
                 <div><strong>Astar:</strong> ${escapeHtml(ticket.lining || '')}</div>
                 <div><strong>İp:</strong> ${escapeHtml(ticket.thread || '')}</div>
-                <div style="margin-top: 3px; font-weight: 800; font-size: 9px;">Çift: ${ticket.totalPairs || 0}</div>
+                <div style="margin-top: 4px; font-weight: 800; font-size: 10px;">Çift: ${ticket.totalPairs || 0}</div>
               </div>
-              <div style="border-top: 0.5px solid #888; padding-top: 2px; font-size: 8px; text-align: center; color: #444;">
+              <div style="border-top: 0.5px solid #888; padding-top: 4px; font-size: 8.5px; text-align: center; color: #444; height: 26px; display: flex; align-items: flex-end; justify-content: center;">
                 Saya Paraf
               </div>
             </div>
 
             <!-- 4. KUPON: MONTAJ (KALFA) -->
-            <div style="flex: 1; padding: 4px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 8.5px; line-height: 1.2; box-sizing: border-box;">
+            <div style="flex: 1; padding: 6px 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; line-height: 1.3; box-sizing: border-box;">
               <div>
-                <div style="text-align: center; font-weight: 900; font-size: 9.5px; border-bottom: 1px solid #000; padding-bottom: 1px; margin-bottom: 3px; background: #eee;">MONTAJ</div>
+                <div style="text-align: center; font-weight: 900; font-size: 10.5px; border-bottom: 1px solid #000; padding: 2px 0; margin-bottom: 4px; background: #e2e8f0;">MONTAJ</div>
                 <div><strong>Seri:</strong> <span style="color: #c00; font-weight: 800;">${escapeHtml(ticket.serialNo || '')}</span></div>
                 <div><strong>Müşteri:</strong> ${escapeHtml(ticket.customer || '')}</div>
                 <div><strong>Model:</strong> <b>${escapeHtml(ticket.modelCode || '')}</b></div>
                 <div><strong>Deri:</strong> ${escapeHtml(ticket.leather || '')}</div>
                 <div><strong>Kalıp:</strong> ${escapeHtml(ticket.lastNo || '')}</div>
                 <div><strong>Taban:</strong> ${escapeHtml(ticket.sole || '')}</div>
-                <div style="margin-top: 3px; font-weight: 800; font-size: 9px;">Çift: ${ticket.totalPairs || 0}</div>
+                <div style="margin-top: 4px; font-weight: 800; font-size: 10px;">Çift: ${ticket.totalPairs || 0}</div>
               </div>
-              <div style="border-top: 0.5px solid #888; padding-top: 2px; font-size: 8px; text-align: center; color: #444;">
+              <div style="border-top: 0.5px solid #888; padding-top: 4px; font-size: 8.5px; text-align: center; color: #444; height: 26px; display: flex; align-items: flex-end; justify-content: center;">
                 Montaj Paraf
               </div>
             </div>
