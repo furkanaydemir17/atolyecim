@@ -379,15 +379,15 @@ const Products = {
 
   async deleteProduct(id) {
     try {
-      // K10 Düzeltme: Aktif sipariş kontrolü
       const allOrders = await dbGetAll('orders');
       const linkedOrders = allOrders.filter(o => o.productId === id || (o.colors && o.colors.some(c => c.productId === id)));
+      
+      let confirmMsg = 'Bu modeli silmek istediğinizden emin misiniz?';
       if (linkedOrders.length > 0) {
-        showToast(`Bu ürünün ${linkedOrders.length} aktif siparişi var. Önce siparişleri silin veya iptal edin.`, 'error');
-        return;
+        confirmMsg = `Bu modelle ilişkili ${linkedOrders.length} adet sipariş kaydı bulunmaktadır.\n\nModeli katalogdan silmek mevcut siparişlerinizi ve iş takip fişlerinizi ETKİLEMEZ (siparişleriniz korunur).\n\nBu modeli ürün kataloğunuzdan silmek istediğinize emin misiniz?`;
       }
 
-      if (!confirm('Bu ürünü silmek istediğinizden emin misiniz?')) return;
+      if (!confirm(confirmMsg)) return;
 
       // Reçeteyi sil
       const recipes = await dbGetAll('recipes');
@@ -397,7 +397,7 @@ const Products = {
       }
 
       await dbDelete('products', id);
-      showToast('Ürün silindi.', 'info');
+      showToast('Model katalogdan başarıyla silindi.', 'info');
       await this.loadProducts();
       if (window.Dashboard && typeof window.Dashboard.render === 'function') {
         await window.Dashboard.render();
