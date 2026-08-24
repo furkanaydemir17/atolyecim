@@ -1863,17 +1863,6 @@ const Orders = {
         })
       }).catch(err => console.warn('Client push notification failed on approval:', err));
 
-      // Add financial transaction to the customer
-      const amount = parseFloat((o.qty * o.price).toFixed(2));
-      const tx = {
-        contactId: contactId,
-        type: 'alacak',
-        amount: amount,
-        description: `${o.modelCode} — ${o.qty} Çift (Katalogdan Gelen Sipariş Onayı)`,
-        orderId: o.id,
-        date: new Date().toISOString()
-      };
-      await dbAdd('transactions', tx);
       closeModalById('incoming-order-approve-modal');
       showToast('Sipariş başarıyla onaylandı ve üretime alındı! 🚀', 'success');
 
@@ -2073,18 +2062,6 @@ const Orders = {
 
     const orderId = await dbAdd('orders', orderData);
 
-    const amount = parseFloat((totalQty * price).toFixed(2));
-    const tx = {
-      contactId,
-      type: 'alacak',
-      amount,
-      currency,
-      description: `${modelCode} (${color}) — ${totalQty} Çift Hızlı Sipariş`,
-      orderId,
-      date: new Date().toISOString()
-    };
-    await dbAdd('transactions', tx);
-
     if (window.sendNotificationAlert) {
       const contactSelect = document.getElementById('quick-order-contact-id');
       const customerName = contactSelect.options[contactSelect.selectedIndex]?.text || 'Bilinmeyen Müşteri';
@@ -2106,11 +2083,13 @@ const Orders = {
     const resultCard = document.getElementById('email-parse-result-card');
     if (resultCard) resultCard.style.display = 'none';
 
+    // Populate all customers (musteri and ikisi)
     const contacts = await dbGetAll('contacts');
-    const customers = contacts.filter(c => c.type === 'musteri');
+    const customers = contacts.filter(c => c.type === 'musteri' || c.type === 'ikisi');
     const contactSelect = document.getElementById('email-parsed-contact');
     if (contactSelect) {
-      contactSelect.innerHTML = '<option value="">Seçiniz</option>' + customers.map(c => `<option value="${c.id}">${this.escape(c.name)}</option>`).join('');
+      contactSelect.innerHTML = '<option value="">-- Müşteri (Cari) Seçiniz --</option>' + 
+        customers.map(c => `<option value="${c.id}">${this.escape(c.name)}${c.phone ? ` (${c.phone})` : ''}</option>`).join('');
     }
 
     const deadlineInput = document.getElementById('email-parsed-deadline');
@@ -2126,10 +2105,11 @@ const Orders = {
       parseBtn.addEventListener('click', () => this.parseEmailContent());
     }
 
+    // Realistic sample templates
     const samples = {
-      'sample-1': `Konu: Sipariş Talebi - Ahmet Kundura\n\nMerhaba,\nA-102 model kodlu Siyah ayakkabıdan aşağıdaki numaralara göre sipariş vermek istiyoruz:\n\n38 numara: 5 çift\n39 numara: 10 çift\n40 numara: 8 çift\n41 numara: 2 çift\n\nEn kısa sürede teslim edilmesini rica ederiz.\n\nİyi çalışmalar,\nAhmet Kundura`,
-      'sample-2': `Gönderen: Furkan Mağazacılık <furkan@email.com>\nTarih: 23 Temmuz 2026 14:20\n\nYeni sipariş:\nModel: M-420 Kahverengi\n\nDağılım:\n38 numara -> 3 çift\n40 numara -> 5 çift\n41 numara -> 5 çift\n42 numara -> 10 çift\n43 numara -> 2 çift\n\nSevk Adresi: İstanbul İstoç Depo\nBirim fiyatı 450 TL olarak anlaştığımız gibi.\n\nTeşekkürler.`,
-      'sample-3': `Müşteri Adı: Ayakkabı Dünyası\nSipariş Detayı:\nModel: B-310 Beyaz\nAdetler:\n36: 10\n37: 15\n38: 15\n39: 10\n40: 5\n\nFiyat: 600 TL`
+      'sample-1': `Konu: Sipariş Talebi - Ahmet Kundura\n\nMerhaba Atölye,\nA-102 model kodlu Siyah rugan ayakkabıdan aşağıdaki numaralara göre acil sipariş vermek istiyoruz:\n\n38 numara: 5 çift\n39 numara: 10 çift\n40 numara: 12 çift\n41 numara: 8 çift\n42 numara: 3 çift\n\nBirim fiyat: 550 TL\nTermin: 15.09.2026\n\nİyi çalışmalar,\nAhmet Kundura\nTel: 0532 555 0011`,
+      'sample-2': `Gönderen: Furkan Mağazacılık <furkan@magaza.com>\nTarih: 24 Ağustos 2026\n\nSelamlar usta,\nModel: M-420 Kahverengi\n\nDağılımımız:\n4 çift 38 numara\n6 çift 39 numara\n10 çift 40 numara\n10 çift 41 numara\n4 çift 42 numara\n2 çift 43 numara\n\nFiyatı 650 ₺ olarak onaylamıştık.\nTeslimat: 2026-09-10\nAdres: İstanbul İstoç Depo`,
+      'sample-3': `Müşteri: Ayakkabı Dünyası\nModel Kodu: B-310 Beyaz\nAdetler: 36/10 37/15 38/20 39/20 40/15 41/10\nBirim Fiyat: 480 TL\nTermin: 10 gün içinde`
     };
 
     Object.entries(samples).forEach(([id, text]) => {
@@ -2137,233 +2117,684 @@ const Orders = {
       if (btn && !btn._bound) {
         btn._bound = true;
         btn.addEventListener('click', () => {
-          if (textarea) textarea.value = text;
+          if (textarea) {
+            textarea.value = text;
+            showToast('Örnek sipariş metni yüklendi!', 'info');
+          }
         });
       }
     });
 
-    // PDF File upload handler
-    const pdfInput = document.getElementById('email-pdf-file');
-    if (pdfInput && !pdfInput._bound) {
-      pdfInput._bound = true;
-      pdfInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+    // Setup File Upload & Drag-and-Drop Handler
+    const dropzone = document.getElementById('email-pdf-dropzone');
+    const fileInput = document.getElementById('email-pdf-file');
 
-        if (file.type !== 'application/pdf') {
-          showToast('Lütfen geçerli bir PDF dosyası seçin!', 'error');
-          return;
-        }
+    if (dropzone && !dropzone._dropBound) {
+      dropzone._dropBound = true;
 
-        showToast('PDF yükleniyor ve okunuyor...', 'info');
+      dropzone.addEventListener('click', () => {
+        if (fileInput) fileInput.click();
+      });
 
-        try {
-          const arrayBuffer = await file.arrayBuffer();
-          const pdfjsLib = window['pdfjs-dist/build/pdf'];
-          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-          
-          const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-          const pdf = await loadingTask.promise;
-          
-          let extractedText = '';
-          
-          for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const textContent = await page.getTextContent();
-            const textItems = textContent.items;
-            let lastY = -1;
-            let pageText = '';
-            
-            for (const item of textItems) {
-              if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 5) {
-                pageText += '\n';
-              }
-              pageText += item.str + ' ';
-              lastY = item.transform[5];
-            }
-            extractedText += pageText + '\n';
-          }
-          
-          if (textarea) {
-            textarea.value = extractedText.trim();
-            showToast('PDF metni başarıyla okundu! Şimdi tarıyoruz...', 'success');
-            this.parseEmailContent();
-          }
-        } catch (err) {
-          console.error(err);
-          showToast('PDF okunurken bir hata oluştu: ' + err.message, 'error');
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = '#0f172a';
+        dropzone.style.background = '#f1f5f9';
+      });
+
+      dropzone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = '#94a3b8';
+        dropzone.style.background = '#f8fafc';
+      });
+
+      dropzone.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = '#94a3b8';
+        dropzone.style.background = '#f8fafc';
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          await this.handleEmailFileImport(e.dataTransfer.files[0]);
         }
       });
     }
 
-    const saveBtn = document.getElementById('btn-email-save-incoming');
-    if (saveBtn && !saveBtn._bound) {
-      saveBtn._bound = true;
-      saveBtn.addEventListener('click', () => this.saveEmailParsedOrder());
+    if (fileInput && !fileInput._bound) {
+      fileInput._bound = true;
+      fileInput.addEventListener('change', async (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          await this.handleEmailFileImport(e.target.files[0]);
+        }
+      });
+    }
+
+    // Add Size button in preview
+    const addSizeBtn = document.getElementById('btn-email-add-size');
+    if (addSizeBtn && !addSizeBtn._bound) {
+      addSizeBtn._bound = true;
+      addSizeBtn.addEventListener('click', () => {
+        this.addEmailParsedSizeRow();
+      });
+    }
+
+    // Save Buttons
+    const saveIncomingBtn = document.getElementById('btn-email-save-incoming');
+    if (saveIncomingBtn && !saveIncomingBtn._bound) {
+      saveIncomingBtn._bound = true;
+      saveIncomingBtn.addEventListener('click', () => this.saveEmailParsedOrder('gelen'));
+    }
+
+    const saveActiveBtn = document.getElementById('btn-email-save-active');
+    if (saveActiveBtn && !saveActiveBtn._bound) {
+      saveActiveBtn._bound = true;
+      saveActiveBtn.addEventListener('click', () => this.saveEmailParsedOrder('aktif'));
     }
 
     openModalById('email-order-modal');
   },
 
+  async handleEmailFileImport(file) {
+    const textarea = document.getElementById('email-order-text');
+    if (!file) return;
+
+    const fileName = file.name.toLowerCase();
+    showToast(`"${file.name}" dosyası işleniyor...`, 'info');
+
+    try {
+      if (fileName.endsWith('.txt') || fileName.endsWith('.csv') || fileName.endsWith('.eml') || fileName.endsWith('.json')) {
+        const text = await file.text();
+        if (textarea) {
+          textarea.value = text;
+          showToast('Metin dosyası başarıyla yüklendi, taranıyor...', 'success');
+          await this.parseEmailContent();
+        }
+        return;
+      }
+
+      if (fileName.endsWith('.pdf') || file.type === 'application/pdf') {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfjsLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
+        
+        if (!pdfjsLib) {
+          showToast('PDF okuyucu kütüphanesi yüklenemedi. Lütfen metni kopyalayıp yapıştırın.', 'error');
+          return;
+        }
+
+        try {
+          if (pdfjsLib.GlobalWorkerOptions) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+          }
+        } catch (we) {}
+
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+        let extractedText = '';
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const textItems = textContent.items;
+          let lastY = -1;
+          let pageText = '';
+
+          for (const item of textItems) {
+            if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 5) {
+              pageText += '\n';
+            }
+            pageText += item.str + ' ';
+            lastY = item.transform[5];
+          }
+          extractedText += pageText + '\n\n';
+        }
+
+        if (textarea) {
+          textarea.value = extractedText.trim();
+          showToast('PDF sipariş metni başarıyla okundu! Şimdi ayrıştırılıyor...', 'success');
+          await this.parseEmailContent();
+        }
+        return;
+      }
+
+      // Default try text
+      const fallbackText = await file.text();
+      if (textarea) {
+        textarea.value = fallbackText;
+        await this.parseEmailContent();
+      }
+    } catch (err) {
+      console.error('File import error:', err);
+      showToast('Dosya okunurken hata oluştu: ' + err.message, 'error');
+    }
+  },
+
   async parseEmailContent() {
-    const text = document.getElementById('email-order-text').value.trim();
+    const textarea = document.getElementById('email-order-text');
+    const text = (textarea ? textarea.value : '').trim();
     if (!text) {
-      showToast('Lütfen e-posta içeriğini yapıştırın!', 'error');
+      showToast('Lütfen e-posta veya sipariş metnini yapıştırın!', 'warning');
       return;
     }
 
-    let matchedContactId = "";
+    const normalizeTr = (str) => {
+      return (str || '')
+        .replace(/İ/g, 'i').replace(/I/g, 'ı').replace(/ı/g, 'i')
+        .replace(/Ğ/g, 'g').replace(/ğ/g, 'g')
+        .replace(/Ü/g, 'u').replace(/ü/g, 'u')
+        .replace(/Ş/g, 's').replace(/ş/g, 's')
+        .replace(/Ö/g, 'o').replace(/ö/g, 'o')
+        .replace(/Ç/g, 'c').replace(/ç/g, 'c')
+        .toLowerCase();
+    };
+
+    const normText = normalizeTr(text);
     const contacts = await dbGetAll('contacts');
-    const customers = contacts.filter(c => c.type === 'musteri');
+    const products = await dbGetAll('products');
+
+    // 1. MATCH CUSTOMER (CARİ EŞLEŞTİRME)
+    let matchedContactId = "";
     
-    for (const c of customers) {
-      const regex = new RegExp(c.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
-      if (regex.test(text)) {
-        matchedContactId = c.id;
-        break;
-      }
+    // Check specific header patterns first: "Kimden:", "Gönderen:", "From:", "Müşteri:", "Firma:"
+    const custHeaderRegex = /(?:kimden|gönderen|from|müşteri|musteri|firma|alici|alıcı|sayın|sayin)\s*[:=\-]?\s*([^\n\r<,]+)/i;
+    const custHeaderMatch = text.match(custHeaderRegex);
+    if (custHeaderMatch) {
+      const candidateName = normalizeTr(custHeaderMatch[1].trim());
+      const match = contacts.find(c => candidateName.includes(normalizeTr(c.name)) || normalizeTr(c.name).includes(candidateName));
+      if (match) matchedContactId = match.id;
     }
 
-    let modelCode = "";
-    const modelRegex = /(?:model(?:\s*kodu)?:?\s*|\b)([A-Z]{1,3}[-_\s]?[0-9]{2,4})\b/i;
-    const modelMatch = text.match(modelRegex);
-    if (modelMatch) {
-      modelCode = modelMatch[1].toUpperCase().replace(/\s+/, '-');
-    }
-
-    let color = "Siyah";
-    const colors = ["Siyah", "Beyaz", "Kahverengi", "Taba", "Lacivert", "Kırmızı", "Mavi", "Yeşil", "Gri", "Bej", "Bordo", "Vizon", "Taba"];
-    for (const col of colors) {
-      const colReg = new RegExp(`\\b${col}\\b`, 'i');
-      if (colReg.test(text)) {
-        color = col;
-        break;
-      }
-    }
-
-    let price = "";
-    const priceRegex = /(?:birim\s*)?fiyat(?:ı|u)?:?\s*(\d+(?:[.,]\d+)?)\s*(?:tl|₺|lira)?|(\d+(?:[.,]\d+)?)\s*(?:tl|₺|lira)/i;
-    const priceMatch = text.match(priceRegex);
-    if (priceMatch) {
-      price = parseFloat((priceMatch[1] || priceMatch[2]).replace(',', '.'));
-    }
-
-    const sizes = [];
-    const tempMap = {};
-    const lines = text.split(/\r?\n/);
-
-    for (let line of lines) {
-      line = line.trim();
-      if (!line) continue;
-
-      // Skip header lines or pure price lines
-      if (/^(gönderen|tarih|konu|sevk adresi|müşteri adı|sipariş detay)/i.test(line)) {
-        continue;
-      }
-      if (/(birim fiyat|fiyatı|fiyat:)\s*\d+/i.test(line) && !/(3[5-9]|4[0-8])\s*[:->]/i.test(line)) {
-        continue;
-      }
-
-      // Find all size and quantity patterns in line
-      const sizeRegex = /\b(3[5-9]|4[0-8])\b(?:[^\d\n]*?)\b(\d{1,4})\b/g;
-      let m;
-      while ((m = sizeRegex.exec(line)) !== null) {
-        const size = m[1];
-        const qty = parseInt(m[2], 10);
-        
-        if (qty > 0 && qty < 5000 && !tempMap[size]) {
-          if (qty >= 2020 && qty <= 2030) continue; // Skip years like 2026
-          tempMap[size] = qty;
-          sizes.push({ size, qty });
+    // If not matched by header, search contacts across the entire text
+    if (!matchedContactId) {
+      let longestMatchLen = 0;
+      for (const c of contacts) {
+        const normName = normalizeTr(c.name);
+        if (normName.length >= 3 && normText.includes(normName)) {
+          if (normName.length > longestMatchLen) {
+            longestMatchLen = normName.length;
+            matchedContactId = c.id;
+          }
         }
       }
     }
 
+    // 2. MATCH MODEL CODE (MODEL KODU EŞLEŞTİRME)
+    let modelCode = "";
+    
+    // Check if any existing product model code is mentioned in text
+    if (products.length > 0) {
+      const sortedProds = [...products].sort((a, b) => (b.modelCode || '').length - (a.modelCode || '').length);
+      for (const p of sortedProds) {
+        if (!p.modelCode || p.modelCode.trim().length < 2) continue;
+        const normModel = normalizeTr(p.modelCode);
+        const regex = new RegExp(`\\b${normModel.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
+        if (regex.test(normText)) {
+          modelCode = p.modelCode;
+          break;
+        }
+      }
+    }
+
+    // If not found in DB products, extract via model keywords and patterns
+    if (!modelCode) {
+      const modelKeywordsRegex = /(?:model(?:\s*kodu|\s*no|\s*adı)?|ürün(?:\s*kodu)?|kod|ref)\s*[:=\-]?\s*([A-Za-z0-9\-_./]{2,20})\b/i;
+      const kwMatch = text.match(modelKeywordsRegex);
+      if (kwMatch) {
+        modelCode = kwMatch[1].toUpperCase();
+      } else {
+        const standardCodeRegex = /\b([A-Z]{1,4}[-_\s]?[0-9]{2,5}[A-Z]?)\b/i;
+        const stdMatch = text.match(standardCodeRegex);
+        if (stdMatch && !['TL', 'USD', 'EUR', 'TRY', 'PDF'].includes(stdMatch[1].toUpperCase())) {
+          modelCode = stdMatch[1].toUpperCase();
+        }
+      }
+    }
+
+    // 3. MATCH COLOR (RENK EŞLEŞTİRME)
+    let color = "Siyah";
+    const shoeColors = [
+      "Siyah", "Beyaz", "Kahverengi", "Taba", "Lacivert", "Bej", "Vizon", "Bordo", 
+      "Haki", "Ten", "Pudra", "Füme", "Hardal", "Antrasit", "Camel", "Nude", 
+      "Altın", "Gümüş", "Dore", "Lame", "Yeşil", "Kırmızı", "Mavi", "Sarı", 
+      "Pembe", "Turuncu", "Mor", "Krem", "Ekru", "Kum", "Taş", "Platin", "Bronz"
+    ];
+
+    const colorKeywordRegex = /(?:renk(?:leri|i)?|colour|color)\s*[:=\-]?\s*([^\n\r,.;]+)/i;
+    const colorKeywordMatch = text.match(colorKeywordRegex);
+    if (colorKeywordMatch) {
+      const extractedColor = colorKeywordMatch[1].trim();
+      for (const col of shoeColors) {
+        if (normalizeTr(extractedColor).includes(normalizeTr(col))) {
+          color = col;
+          break;
+        }
+      }
+      if (!color && extractedColor.length < 25) color = extractedColor;
+    } else {
+      for (const col of shoeColors) {
+        const colReg = new RegExp(`\\b${normalizeTr(col)}\\b`, 'i');
+        if (colReg.test(normText)) {
+          color = col;
+          break;
+        }
+      }
+    }
+
+    // 4. MATCH PRICE & CURRENCY (FİYAT VE PARA BİRİMİ)
+    let price = "";
+    let currency = "TRY";
+
+    if (normText.includes('$') || normText.includes('usd') || normText.includes('dolar')) {
+      currency = 'USD';
+    } else if (normText.includes('€') || normText.includes('eur') || normText.includes('euro')) {
+      currency = 'EUR';
+    }
+
+    const priceRegexes = [
+      /(?:birim\s*)?fiyat(?:ı|u)?\s*[:=\-]?\s*(\d+(?:[.,]\d+)?)\s*(?:tl|₺|lira|usd|\$|eur|€)?/i,
+      /(\d+(?:[.,]\d+)?)\s*(?:tl|₺|lira)/i,
+      /(?:\$|usd)\s*(\d+(?:[.,]\d+)?)/i,
+      /(\d+(?:[.,]\d+)?)\s*(?:\$|usd)/i,
+      /(?:€|eur)\s*(\d+(?:[.,]\d+)?)/i,
+      /(\d+(?:[.,]\d+)?)\s*(?:€|eur)/i
+    ];
+
+    for (const pr of priceRegexes) {
+      const m = text.match(pr);
+      if (m && m[1]) {
+        const parsedVal = parseFloat(m[1].replace(',', '.'));
+        if (parsedVal > 0 && parsedVal < 100000) {
+          price = parsedVal;
+          break;
+        }
+      }
+    }
+
+    // If price not found in text, check catalog product price
+    if (!price && modelCode) {
+      const matchedProd = products.find(p => (p.modelCode || '').toLowerCase() === modelCode.toLowerCase());
+      if (matchedProd && matchedProd.price) {
+        price = matchedProd.price;
+        if (matchedProd.currency) currency = matchedProd.currency;
+      }
+    }
+
+    // 5. MATCH DEADLINE (TERMİN TARİHİ)
+    let deadline = "";
+    const dateRegexes = [
+      /(?:termin|teslim(?:at)?|tarih)\s*[:=\-]?\s*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2,4})/i,
+      /\b(\d{1,2})[.\/-](\d{1,2})[.\/-](202[5-9])\b/
+    ];
+
+    for (const dr of dateRegexes) {
+      const m = text.match(dr);
+      if (m) {
+        let day = parseInt(m[1], 10);
+        let month = parseInt(m[2], 10);
+        let year = parseInt(m[3], 10);
+        if (year < 100) year += 2000;
+        if (day > 0 && day <= 31 && month > 0 && month <= 12) {
+          deadline = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          break;
+        }
+      }
+    }
+
+    if (!deadline) {
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 15);
+      deadline = defaultDate.toISOString().split('T')[0];
+    }
+
+    // 6. ROBUST SIZE & QUANTITY EXTRACTION (BEDEN VE ADETLERİ AYRIŞTIRMA)
+    const sizesMap = {};
+    const lines = text.split(/\r?\n/);
+
+    for (let rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) continue;
+
+      // Skip lines that are purely headers or metadata
+      if (/^(konu|kimden|gönderen|from|tarih|date|sevk adresi|sevk|fatura|tel|telefon|e-posta|email|saygılar|iyi çalışmalar|teşekkür)/i.test(line)) {
+        continue;
+      }
+
+      // Check Pattern 1 (Qty first): e.g. "5 çift 38 numara", "10 adet 39", "8 çift 40 numara"
+      const qtyFirstRegex = /\b(\d{1,4})\s*(?:çift|adet|tane|cift|pr|prs|pairs?)?\s*(?:numara|no|nmr|beden)?\s*[:=\-]?\s*\b([2-5][0-9])\s*(?:numara|no|nmr|beden)?\b/gi;
+      let qm;
+      let matchedInLine = false;
+      while ((qm = qtyFirstRegex.exec(line)) !== null) {
+        const qty = parseInt(qm[1], 10);
+        const sz = qm[2];
+        if (qty > 0 && qty < 5000 && parseInt(sz) >= 20 && parseInt(sz) <= 50) {
+          if (!(qty >= 2020 && qty <= 2035)) { // ignore years
+            sizesMap[sz] = (sizesMap[sz] || 0) + qty;
+            matchedInLine = true;
+          }
+        }
+      }
+
+      // Check Pattern 2 (Size first): e.g. "38: 5", "38 numara: 5 çift", "38/5", "38-5", "38 -> 10", "38lik 4 cift"
+      if (!matchedInLine) {
+        const sizeFirstRegex = /\b([2-5][0-9])\s*(?:numara|no|nmr|beden|lik|lik|lük|luk)?\s*[:=\->\/]\s*(\d{1,4})\s*(?:çift|adet|tane|cift)?\b/gi;
+        let sm;
+        while ((sm = sizeFirstRegex.exec(line)) !== null) {
+          const sz = sm[1];
+          const qty = parseInt(sm[2], 10);
+          if (qty > 0 && qty < 5000 && parseInt(sz) >= 20 && parseInt(sz) <= 50) {
+            if (!(qty >= 2020 && qty <= 2035)) {
+              sizesMap[sz] = (sizesMap[sz] || 0) + qty;
+              matchedInLine = true;
+            }
+          }
+        }
+      }
+
+      // Check Pattern 3 (Simple space separated pairs on dedicated lines, e.g. "38 numara 5 çift")
+      if (!matchedInLine) {
+        const sizeSpaceRegex = /\b([2-5][0-9])\s*(?:numara|no|nmr|beden)\s*(\d{1,4})\s*(?:çift|adet|tane|cift)?\b/gi;
+        let ssm;
+        while ((ssm = sizeSpaceRegex.exec(line)) !== null) {
+          const sz = ssm[1];
+          const qty = parseInt(ssm[2], 10);
+          if (qty > 0 && qty < 5000 && parseInt(sz) >= 20 && parseInt(sz) <= 50) {
+            sizesMap[sz] = (sizesMap[sz] || 0) + qty;
+            matchedInLine = true;
+          }
+        }
+      }
+
+      // Check Pattern 4 (Compact slash or dash format: "36/10 37/15 38/20" or "36-10, 37-15")
+      if (!matchedInLine) {
+        const compactRegex = /\b([2-5][0-9])[\/\-](\d{1,4})\b/g;
+        let cm;
+        while ((cm = compactRegex.exec(line)) !== null) {
+          const sz = cm[1];
+          const qty = parseInt(cm[2], 10);
+          if (qty > 0 && qty < 5000 && parseInt(sz) >= 20 && parseInt(sz) <= 50) {
+            sizesMap[sz] = (sizesMap[sz] || 0) + qty;
+            matchedInLine = true;
+          }
+        }
+      }
+    }
+
+    // Convert map to sorted array
+    const parsedSizes = Object.keys(sizesMap)
+      .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
+      .map(sz => ({ size: sz, qty: sizesMap[sz] }));
+
+    // Populate Modal Form Fields
     const contactSelect = document.getElementById('email-parsed-contact');
     if (contactSelect && matchedContactId) {
       contactSelect.value = matchedContactId;
     }
 
     const modelInput = document.getElementById('email-parsed-model');
-    if (modelInput) {
-      modelInput.value = modelCode;
-    }
+    if (modelInput) modelInput.value = modelCode || '';
+
+    const colorInput = document.getElementById('email-parsed-color');
+    if (colorInput) colorInput.value = color || 'Siyah';
 
     const priceInput = document.getElementById('email-parsed-price');
-    if (priceInput) {
-      if (price) {
-        priceInput.value = price;
-      } else {
-        const products = await dbGetAll('products');
-        const prod = products.find(p => (p.modelCode || '').toLowerCase() === modelCode.toLowerCase());
-        priceInput.value = prod ? prod.price : '';
-      }
-    }
+    if (priceInput) priceInput.value = price ? Number(price).toFixed(2) : '';
 
-    const previewDiv = document.getElementById('email-parsed-items-preview');
-    if (previewDiv) {
-      if (sizes.length === 0) {
-        previewDiv.innerHTML = `<span style="color: var(--color-danger); font-weight: bold;">Hata: Numara/adet dağılımı ayrıştırılamadı. Lütfen kontrol edin!</span>`;
-      } else {
-        const total = sizes.reduce((acc, s) => acc + s.qty, 0);
-        previewDiv.innerHTML = `
-          <strong>Renk:</strong> <input type="text" id="email-parsed-color" value="${color}" style="background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 2px 6px; color: var(--text-accent); font-weight: 700; width: 80px; text-align: center;"><br>
-          <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px;">
-            ${sizes.map(s => `<span style="background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px;"><strong>${s.size}</strong>: ${s.qty} çift</span>`).join('')}
-          </div>
-          <div style="margin-top: 10px; font-weight: bold; color: var(--accent-primary);">Toplam: ${total} çift</div>
-        `;
-        previewDiv.tempSizes = sizes;
-      }
-    }
+    const currSelect = document.getElementById('email-parsed-currency');
+    if (currSelect) currSelect.value = currency || 'TRY';
+
+    const deadlineInputEl = document.getElementById('email-parsed-deadline');
+    if (deadlineInputEl) deadlineInputEl.value = deadline;
+
+    // Render interactive sizes grid
+    this.renderEmailParsedSizes(parsedSizes);
 
     const resultCard = document.getElementById('email-parse-result-card');
     if (resultCard) {
       resultCard.style.display = 'block';
+      resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-    showToast('E-posta başarıyla tarandı!', 'success');
+
+    if (parsedSizes.length > 0) {
+      showToast(`E-posta başarıyla ayrıştırıldı: ${modelCode || 'Model'} (${color}) — Toplam ${parsedSizes.reduce((a, s) => a + s.qty, 0)} Çift`, 'success');
+    } else {
+      showToast('E-posta okundu ancak numara dağılımı bulunamadı. "+ Beden Ekle" ile numaraları elle girebilirsiniz.', 'info');
+    }
   },
 
-  async saveEmailParsedOrder() {
-    const contactId = parseInt(document.getElementById('email-parsed-contact').value, 10);
-    const modelCode = document.getElementById('email-parsed-model').value.trim();
-    const price = parseFloat(document.getElementById('email-parsed-price').value) || 0;
-    const deadline = document.getElementById('email-parsed-deadline').value;
-    const color = document.getElementById('email-parsed-color')?.value?.trim() || 'Siyah';
-
+  renderEmailParsedSizes(sizes = []) {
     const previewDiv = document.getElementById('email-parsed-items-preview');
-    const sizes = previewDiv ? previewDiv.tempSizes : [];
+    if (!previewDiv) return;
 
-    if (!contactId || !modelCode || price <= 0 || !deadline || !sizes || sizes.length === 0) {
-      showToast('Lütfen önizleme alanındaki tüm bilgileri eksiksiz doldurun ve geçerli numara dağılımı girildiğinden emin olun!', 'error');
+    if (sizes.length === 0) {
+      previewDiv.innerHTML = `
+        <div style="text-align: center; padding: 10px; color: var(--text-muted);">
+          Numara dağılımı otomatik tespit edilemedi. Lütfen yukarıdaki <strong>"+ Beden Ekle"</strong> butonuna basarak numaraları ekleyin.
+        </div>
+      `;
+      previewDiv.tempSizes = [];
+      this.recalcEmailParsedTotals();
       return;
     }
 
-    const totalQty = sizes.reduce((acc, s) => acc + s.qty, 0);
+    previewDiv.tempSizes = sizes;
+    previewDiv.innerHTML = `
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px;" id="email-parsed-sizes-grid">
+        ${sizes.map((s, idx) => `
+          <div class="email-size-chip" data-index="${idx}" style="background: #ffffff; border: 1px solid var(--border-card); border-radius: 6px; padding: 6px 8px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative;">
+            <button type="button" class="btn-remove-email-size" data-index="${idx}" style="position: absolute; top: 2px; right: 4px; border: none; background: transparent; color: #ef4444; font-size: 14px; cursor: pointer; line-height: 1; padding: 0;" title="Sil">&times;</button>
+            <span style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 2px;">${this.escape(s.size)}</span>
+            <div style="display: flex; align-items: center; gap: 2px; width: 100%;">
+              <input type="number" class="email-size-qty-input" data-index="${idx}" min="1" max="5000" value="${s.qty}" style="width: 100%; text-align: center; padding: 3px 2px; font-size: 12px; font-weight: 700; border-radius: 4px; height: 26px;">
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
 
-    const incomingOrderData = {
-      contactId,
-      modelCode,
-      colors: [{
+    // Bind size input change listeners
+    previewDiv.querySelectorAll('.email-size-qty-input').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const idx = parseInt(e.target.dataset.index, 10);
+        const val = parseInt(e.target.value, 10) || 0;
+        if (previewDiv.tempSizes[idx]) {
+          previewDiv.tempSizes[idx].qty = val;
+        }
+        this.recalcEmailParsedTotals();
+      });
+    });
+
+    // Bind size remove listeners
+    previewDiv.querySelectorAll('.btn-remove-email-size').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(e.target.dataset.index, 10);
+        previewDiv.tempSizes.splice(idx, 1);
+        this.renderEmailParsedSizes(previewDiv.tempSizes);
+      });
+    });
+
+    this.recalcEmailParsedTotals();
+  },
+
+  addEmailParsedSizeRow() {
+    const previewDiv = document.getElementById('email-parsed-items-preview');
+    if (!previewDiv) return;
+
+    const currentSizes = previewDiv.tempSizes || [];
+    let nextSize = 36;
+    if (currentSizes.length > 0) {
+      const lastSize = parseInt(currentSizes[currentSizes.length - 1].size, 10);
+      if (!isNaN(lastSize)) nextSize = lastSize + 1;
+    }
+
+    const customSize = prompt('Eklemek istediğiniz ayakkabı numarasını girin:', String(nextSize));
+    if (!customSize) return;
+
+    const customQty = parseInt(prompt(`${customSize} numara için çift adedi:`, '5'), 10) || 1;
+
+    currentSizes.push({ size: customSize.trim(), qty: customQty });
+    this.renderEmailParsedSizes(currentSizes);
+  },
+
+  recalcEmailParsedTotals() {
+    const previewDiv = document.getElementById('email-parsed-items-preview');
+    const badge = document.getElementById('email-parsed-total-badge');
+    const priceInput = document.getElementById('email-parsed-price');
+    const currSelect = document.getElementById('email-parsed-currency');
+
+    const sizes = previewDiv ? (previewDiv.tempSizes || []) : [];
+    const totalPairs = sizes.reduce((sum, s) => sum + (parseInt(s.qty, 10) || 0), 0);
+    const price = parseFloat(priceInput?.value || '0') || 0;
+    const sym = { TRY: '₺', USD: '$', EUR: '€' }[currSelect?.value || 'TRY'] || '₺';
+
+    const totalPrice = totalPairs * price;
+
+    if (badge) {
+      badge.textContent = `${totalPairs} Çift ${totalPrice > 0 ? `• ${sym}${totalPrice.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` : ''}`;
+    }
+  },
+
+  async saveEmailParsedOrder(targetStatus = 'gelen') {
+    const contactSelect = document.getElementById('email-parsed-contact');
+    const contactId = contactSelect ? parseInt(contactSelect.value, 10) : null;
+    const modelCode = document.getElementById('email-parsed-model')?.value?.trim() || '';
+    const color = document.getElementById('email-parsed-color')?.value?.trim() || 'Siyah';
+    const price = parseFloat(document.getElementById('email-parsed-price')?.value || '0') || 0;
+    const currency = document.getElementById('email-parsed-currency')?.value || 'TRY';
+    const deadline = document.getElementById('email-parsed-deadline')?.value || '';
+
+    const previewDiv = document.getElementById('email-parsed-items-preview');
+    const sizes = previewDiv ? (previewDiv.tempSizes || []).filter(s => s.qty > 0) : [];
+
+    if (!contactId) {
+      showToast('Lütfen siparişin ait olduğu Müşteriyi (Cari) seçin!', 'warning');
+      return;
+    }
+    if (!modelCode) {
+      showToast('Lütfen Model Kodunu girin!', 'warning');
+      return;
+    }
+    if (price <= 0) {
+      showToast('Lütfen geçerli bir Birim Fiyat girin!', 'warning');
+      return;
+    }
+    if (!deadline) {
+      showToast('Lütfen Termin Tarihini belirleyin!', 'warning');
+      return;
+    }
+    if (sizes.length === 0) {
+      showToast('Lütfen en az bir beden ve adet girin!', 'warning');
+      return;
+    }
+
+    const totalQty = sizes.reduce((sum, s) => sum + (parseInt(s.qty, 10) || 0), 0);
+
+    try {
+      // Find or create product in products catalog
+      const products = await dbGetAll('products');
+      let match = products.find(p => 
+        (p.modelCode || '').toLowerCase() === modelCode.toLowerCase() && 
+        (p.color || '').toLowerCase() === color.toLowerCase()
+      );
+
+      if (!match) {
+        const templateProduct = products.find(p => (p.modelCode || '').toLowerCase() === modelCode.toLowerCase());
+        const newProduct = {
+          modelCode,
+          color,
+          category: templateProduct ? templateProduct.category : 'Ayakkabı',
+          size: templateProduct ? templateProduct.size : '36-45',
+          soleMaterial: templateProduct ? templateProduct.soleMaterial : '',
+          leatherLining: templateProduct ? templateProduct.leatherLining : '',
+          leatherUpper: templateProduct ? templateProduct.leatherUpper : '',
+          leatherType: templateProduct ? templateProduct.leatherType : '',
+          price,
+          currency,
+          barcode: '',
+          photo: '',
+          accessoryPhoto: ''
+        };
+        const newProductId = await dbAdd('products', newProduct);
+        if (templateProduct) {
+          const templateRecipe = await dbGet('recipes', templateProduct.id);
+          if (templateRecipe) {
+            const newRecipe = {
+              productId: newProductId,
+              materials: JSON.parse(JSON.stringify(templateRecipe.materials))
+            };
+            await dbAdd('recipes', newRecipe);
+          }
+        }
+        match = { id: newProductId, color };
+      }
+
+      const colorsForDb = [{
+        productId: match.id,
         color,
         qty: totalQty,
         sizes
-      }],
-      qty: totalQty,
-      price,
-      deadline,
-      status: 'gelen',
-      date: new Date().toISOString()
-    };
+      }];
 
-    await dbAdd('orders', incomingOrderData);
+      if (targetStatus === 'aktif') {
+        // Verify and deduct stock
+        const isStockOk = await this.verifyAndDeductStockForColors(colorsForDb);
+        if (!isStockOk) return; // User cancelled stock warning
 
-    showToast('Sipariş başarıyla "Gelen Siparişler" sekmesine eklendi!', 'success');
-    closeModalById('email-order-modal');
-    await this.render();
-    
-    const tabIncoming = document.getElementById('btn-tab-incoming-orders');
-    if (tabIncoming) tabIncoming.click();
+        const activeOrderData = {
+          contactId,
+          modelCode,
+          colors: colorsForDb,
+          qty: totalQty,
+          price,
+          currency,
+          deadline,
+          status: 'beklemede',
+          date: new Date().toISOString()
+        };
+
+        const orderId = await dbAdd('orders', activeOrderData);
+
+        if (window.sendNotificationAlert) {
+          const customerName = contactSelect.options[contactSelect.selectedIndex]?.text || 'Bilinmeyen Müşteri';
+          window.sendNotificationAlert('new-order', `E-Posta Siparişi Alındı! Sipariş ID: #${orderId}, Müşteri: ${customerName}, Model: ${modelCode}, Toplam: ${totalQty} çift.`);
+        }
+
+        showToast(`Sipariş başarıyla aktif imalata alındı! (#${orderId}) 🚀`, 'success');
+        closeModalById('email-order-modal');
+        await this.render();
+
+        const tabActive = document.getElementById('btn-tab-active-orders');
+        if (tabActive) tabActive.click();
+
+      } else {
+        // Save as incoming pending order
+        const incomingOrderData = {
+          contactId,
+          customerName: contactSelect.options[contactSelect.selectedIndex]?.text || 'Müşteri',
+          modelCode,
+          colors: colorsForDb,
+          qty: totalQty,
+          price,
+          currency,
+          deadline,
+          note: 'E-posta içe aktarma aracı ile alındı',
+          status: 'gelen',
+          date: new Date().toISOString()
+        };
+
+        await dbAdd('orders', incomingOrderData);
+
+        showToast('Sipariş başarıyla "Gelen Siparişler" sekmesine eklendi!', 'success');
+        closeModalById('email-order-modal');
+        await this.render();
+
+        const tabIncoming = document.getElementById('btn-tab-incoming-orders');
+        if (tabIncoming) tabIncoming.click();
+      }
+
+      if (window.Dashboard && typeof window.Dashboard.render === 'function') {
+        await window.Dashboard.render();
+      }
+    } catch (err) {
+      console.error('Save email parsed order error:', err);
+      showToast('Sipariş kaydedilirken hata oluştu: ' + err.message, 'error');
+    }
   },
 
   escape(str) {

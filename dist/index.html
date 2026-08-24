@@ -43,7 +43,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/main-iir0IBMn.js"></script>
+  <script type="module" crossorigin src="/assets/main-C9B5XYE1.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/index-OAUm8FPG.js">
   <link rel="stylesheet" crossorigin href="/assets/index-9A_m2IvD.css">
 </head>
@@ -2919,65 +2919,91 @@
           <button type="button" class="btn btn-sm btn-ghost" id="btn-email-sample-3" style="font-size: 11px; padding: 4px 10px;">📄 Örnek 3 (Çoklu Model)</button>
         </div>
 
-        <!-- PDF File Dropzone -->
-        <div class="form-group" style="border: 2px dashed rgba(99,102,241,0.25); padding: 16px; border-radius: 8px; text-align: center; background: rgba(99,102,241,0.02); margin-bottom: 4px; cursor: pointer; transition: all 0.2s ease;" id="email-pdf-dropzone" onclick="document.getElementById('email-pdf-file').click()">
-          <span style="font-size: 24px; display: block; margin-bottom: 8px;">📂</span>
-          <span style="font-weight: 700; font-size: 13px; color: var(--text-accent); display: block;">PDF Sipariş Dosyası Seç veya Sürükle</span>
-          <span style="font-size: 11px; color: var(--text-muted);">PDF dosyasındaki metinler otomatik okunacaktır</span>
-          <input type="file" id="email-pdf-file" accept="application/pdf" style="display: none;">
+        <!-- PDF / Belge File Dropzone -->
+        <div class="form-group" style="border: 2px dashed #94a3b8; padding: 18px; border-radius: 8px; text-align: center; background: #f8fafc; margin-bottom: 4px; cursor: pointer; transition: all 0.2s ease;" id="email-pdf-dropzone">
+          <span style="font-size: 26px; display: block; margin-bottom: 6px;">📂</span>
+          <span style="font-weight: 700; font-size: 13px; color: var(--text-primary); display: block;">PDF / Metin Dosyası Seç veya Sürükle Bırak</span>
+          <span style="font-size: 11px; color: var(--text-muted);">PDF, TXT veya Word metin dosyalarındaki siparişler otomatik ayrıştırılır</span>
+          <input type="file" id="email-pdf-file" accept=".pdf,.txt,.csv,.doc,.docx" style="display: none;">
         </div>
 
         <div class="form-group">
-          <label for="email-order-text" style="font-weight: 600; display: block; margin-bottom: 6px;">E-posta İçeriği</label>
-          <textarea id="email-order-text" rows="8" placeholder="E-posta sipariş detaylarını buraya yapıştırın..." style="width: 100%; font-family: monospace; font-size: 13px; box-sizing: border-box; resize: vertical;" maxlength="5000"></textarea>
+          <label for="email-order-text" style="font-weight: 600; display: block; margin-bottom: 6px;">E-posta / Sipariş Metni</label>
+          <textarea id="email-order-text" rows="8" placeholder="Müşterinizden gelen e-posta veya WhatsApp sipariş metnini buraya yapıştırın..." style="width: 100%; font-family: monospace; font-size: 13px; box-sizing: border-box; resize: vertical;" maxlength="10000"></textarea>
         </div>
 
-        <button type="button" class="btn btn-primary" id="btn-email-parse" style="width: 100%; justify-content: center; padding: 12px; font-weight: 700;">
-          🔍 E-postayı Tara ve Ayrıştır
+        <button type="button" class="btn btn-primary" id="btn-email-parse" style="width: 100%; justify-content: center; padding: 12px; font-weight: 700; font-size: 14px;">
+          🔍 E-postayı Tara ve Akıllı Ayrıştır
         </button>
 
         <!-- Ayrıştırma Sonuçları Paneli -->
-        <div id="email-parse-result-card" style="display: none; background: rgba(99,102,241,0.05); border: 1px solid rgba(99,102,241,0.2); border-radius: var(--radius-md); padding: 16px; margin-top: 6px;">
-          <h4 style="margin-top: 0; margin-bottom: 12px; color: var(--text-accent); font-weight: 700; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
-            📋 Ayrıştırılan Sipariş Önizlemesi
-          </h4>
+        <div id="email-parse-result-card" style="display: none; background: #ffffff; border: 1px solid var(--border-card); border-radius: var(--radius-md); padding: 18px; margin-top: 6px; box-shadow: var(--shadow-sm);">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px; margin-bottom: 14px;">
+            <h4 style="margin: 0; color: var(--text-primary); font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px;">
+              <span>📋</span> Ayrıştırılan Sipariş Detayları
+            </h4>
+            <span id="email-parsed-total-badge" style="background: #0f172a; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">0 Çift</span>
+          </div>
           
-          <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; flex-direction: column; gap: 14px;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-              <div class="form-group">
-                <label style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Eşleşen Müşteri (Cari)</label>
-                <select id="email-parsed-contact" style="width: 100%;"></select>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Eşleşen Müşteri (Cari Kart)</label>
+                <select id="email-parsed-contact" style="width: 100%;" required></select>
               </div>
-              <div class="form-group">
+              <div class="form-group" style="margin-bottom: 0;">
                 <label style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Model Kodu</label>
-                <input type="text" id="email-parsed-model" style="width: 100%; font-weight: 700;">
+                <input type="text" id="email-parsed-model" style="width: 100%; font-weight: 700;" placeholder="Örn: A-102">
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-              <div class="form-group">
-                <label style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Birim Fiyat (₺)</label>
-                <input type="number" id="email-parsed-price" min="0.01" step="0.01" style="width: 100%;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Renk</label>
+                <input type="text" id="email-parsed-color" style="width: 100%; font-weight: 600;" value="Siyah">
               </div>
-              <div class="form-group">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Birim Fiyat & Para Birimi</label>
+                <div style="display: flex; gap: 4px;">
+                  <input type="number" id="email-parsed-price" min="0.01" step="0.01" style="width: 65%; font-weight: 700;" placeholder="0.00">
+                  <select id="email-parsed-currency" style="width: 35%; padding: 0 4px; font-size: 12px;">
+                    <option value="TRY">₺</option>
+                    <option value="USD">$</option>
+                    <option value="EUR">€</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
                 <label style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Termin Tarihi</label>
                 <input type="date" id="email-parsed-deadline" style="width: 100%;">
               </div>
             </div>
 
-            <!-- Numaralar Önizleme -->
-            <div class="form-group">
-              <label style="font-size: 11px; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 6px;">Sipariş Dağılımı</label>
-              <div id="email-parsed-items-preview" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-card); border-radius: var(--radius-sm); padding: 10px; font-size: 12.5px;">
+            <!-- Numaralar Önizleme & Düzenleme -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Beden & Çift Dağılımı</label>
+                <button type="button" class="btn btn-sm btn-ghost" id="btn-email-add-size" style="padding: 2px 8px; font-size: 11px;">+ Beden Ekle</button>
+              </div>
+              <div id="email-parsed-items-preview" style="background: #f8fafc; border: 1px solid var(--border-card); border-radius: var(--radius-sm); padding: 12px; font-size: 12.5px;">
                 <!-- Dinamik olarak doldurulacak -->
               </div>
             </div>
 
-            <button type="button" class="btn btn-secondary" id="btn-email-save-incoming" style="width: 100%; justify-content: center; background: #10b981; border-color: #10b981; color: #fff; padding: 12px; font-weight: 700; margin-top: 8px;">
-              📥 Siparişi Gelen Siparişlerime Ekle
-            </button>
+            <!-- Aksiyon Butonları -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
+              <button type="button" class="btn btn-secondary" id="btn-email-save-incoming" style="justify-content: center; background: #f1f5f9; border-color: #cbd5e1; color: #0f172a; padding: 12px; font-weight: 700; font-size: 12px;">
+                📥 Gelen Siparişlere Ekle
+              </button>
+              <button type="button" class="btn btn-primary" id="btn-email-save-active" style="justify-content: center; background: #059669; border-color: #059669; color: #fff; padding: 12px; font-weight: 700; font-size: 12px;">
+                ⚡ Doğrudan Aktif Siparişe Al
+              </button>
+            </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
       </div>
     </div>
   </div>
