@@ -482,22 +482,61 @@ export const JobTickets = {
         return;
       }
 
-      const printArea = document.getElementById('job-ticket-print-area');
+      let printArea = document.getElementById('job-ticket-print-area');
       if (!printArea) {
-        console.error('job-ticket-print-area element not found');
-        return;
+        printArea = document.createElement('div');
+        printArea.id = 'job-ticket-print-area';
+        document.body.appendChild(printArea);
       }
 
       const companyName = localStorage.getItem('atolyecim_auth_company') || 'Atölyecim Master';
       const deliveryDateStr = ticket.deliveryDate ? ticket.deliveryDate.split('-').reverse().join('.') : '';
       const sizes = ticket.sizes || {};
 
-      const sizeKeys = ['35','36','37','38','39','40','41'];
-      if (ticket.sizeType === 'erkek') {
-        sizeKeys.splice(0, sizeKeys.length, '39','40','41','42','43','44','45');
-      } else if (ticket.sizeType === 'cocuk') {
-        sizeKeys.splice(0, sizeKeys.length, '26','27','28','29','30','31','32','33','34','35');
+      // Determine sizeKeys intelligently from actual sizes present
+      const presentSizeNumbers = Object.keys(sizes)
+        .map(k => parseInt(k, 10))
+        .filter(n => !isNaN(n) && Number(sizes[n]) > 0)
+        .sort((a, b) => a - b);
+
+      let sizeKeys = [];
+      if (presentSizeNumbers.length > 0) {
+        const minSz = presentSizeNumbers[0];
+        const maxSz = presentSizeNumbers[presentSizeNumbers.length - 1];
+        if (minSz >= 35 && maxSz <= 41) {
+          sizeKeys = ['35','36','37','38','39','40','41'];
+        } else if (minSz >= 39 && maxSz <= 45) {
+          sizeKeys = ['39','40','41','42','43','44','45'];
+        } else if (maxSz <= 35) {
+          sizeKeys = ['26','27','28','29','30','31','32','33','34','35'];
+        } else {
+          for (let s = minSz; s <= maxSz; s++) {
+            sizeKeys.push(String(s));
+          }
+        }
+      } else {
+        if (ticket.sizeType === 'erkek') {
+          sizeKeys = ['39','40','41','42','43','44','45'];
+        } else if (ticket.sizeType === 'cocuk') {
+          sizeKeys = ['26','27','28','29','30','31','32','33','34','35'];
+        } else {
+          sizeKeys = ['35','36','37','38','39','40','41'];
+        }
       }
+
+      // Calculate exact total sum of all size cells
+      let sumOfSizes = 0;
+      sizeKeys.forEach(k => {
+        const val = parseInt(sizes[k], 10);
+        if (!isNaN(val) && val > 0) sumOfSizes += val;
+      });
+      Object.keys(sizes).forEach(k => {
+        if (!sizeKeys.includes(String(k))) {
+          const val = parseInt(sizes[k], 10);
+          if (!isNaN(val) && val > 0) sumOfSizes += val;
+        }
+      });
+      const displayTotalPairs = Number(ticket.totalPairs) || sumOfSizes || 0;
 
       // Build main size cells & coupon size cells
       const mainSizeHeaderHtml = sizeKeys.map((k, idx) => `<th style="border: 1px solid #000; border-top: none; ${idx === 0 ? 'border-left: none;' : ''} padding: 2px 1px; text-align: center; font-weight: 700; font-size: 10px;">${k}</th>`).join('');
@@ -567,7 +606,7 @@ export const JobTickets = {
                 <tbody>
                   <tr style="height: 42px;">
                     ${mainSizeQtyHtml}
-                    <td style="border: 1px solid #000; padding: 4px 2px; text-align: center; font-weight: 900; font-size: 15px; background: #fafafa;">${ticket.totalPairs || 0}</td>
+                    <td style="border: 1px solid #000; padding: 4px 2px; text-align: center; font-weight: 900; font-size: 15px; background: #fafafa;">${displayTotalPairs}</td>
                     <td style="border: 1px solid #000; padding: 4px 2px; text-align: center; font-weight: 700; font-size: 12px;">${escapeHtml(ticket.cutter || '')}</td>
                     <td style="border: 1px solid #000; padding: 4px 2px; text-align: center; font-weight: 700; font-size: 12px;">${escapeHtml(ticket.stitcher || '')}</td>
                     <td style="border: 1px solid #000; border-right: none; padding: 4px 2px; text-align: center; font-weight: 700; font-size: 12px;">${escapeHtml(ticket.assembler || '')}</td>

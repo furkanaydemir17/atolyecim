@@ -1297,6 +1297,92 @@ const Orders = {
     }
   },
 
+  generateColorSplitPlan(order, batchSize, startSerialNum) {
+    const splitPlan = [];
+    let serialCounter = startSerialNum;
+
+    // Normalizing colors list from order
+    let colorsList = [];
+    if (Array.isArray(order.colors) && order.colors.length > 0) {
+      colorsList = order.colors;
+    } else {
+      colorsList = [{
+        color: order.color || 'Standart',
+        qty: Number(order.qty) || 1,
+        sizes: Array.isArray(order.sizes) ? order.sizes : [{ size: '38', qty: Number(order.qty) || 1 }]
+      }];
+    }
+
+    colorsList.forEach(c => {
+      const colorName = c.color || 'Standart';
+      
+      // Calculate color quantity
+      let colorTotalQty = Number(c.qty) || 0;
+      if (colorTotalQty <= 0 && Array.isArray(c.sizes)) {
+        colorTotalQty = c.sizes.reduce((sum, s) => sum + (Number(s.qty) || 0), 0);
+      }
+      if (colorTotalQty <= 0) return;
+
+      const numBatchesForColor = Math.ceil(colorTotalQty / batchSize);
+      let remainingColorQty = colorTotalQty;
+
+      // Extract valid original sizes for this color
+      let validSizes = [];
+      if (Array.isArray(c.sizes) && c.sizes.length > 0) {
+        validSizes = c.sizes.filter(s => Number(s.qty) > 0);
+      }
+
+      if (validSizes.length === 0) {
+        validSizes = [{ size: '38', qty: colorTotalQty }];
+      }
+
+      const totalOriginalSizesQty = validSizes.reduce((sum, s) => sum + Number(s.qty), 0) || colorTotalQty;
+
+      for (let bIdx = 1; bIdx <= numBatchesForColor; bIdx++) {
+        const ticketQty = Math.min(remainingColorQty, batchSize);
+        remainingColorQty -= ticketQty;
+        const serialStr = '№ ' + String(serialCounter++).padStart(5, '0');
+
+        // Perfect proportional distribution with Largest Remainder Method (Hare-Niemeyer)
+        const ticketSizes = {};
+        let allocatedSum = 0;
+        const remainders = [];
+
+        validSizes.forEach(s => {
+          const rawAlloc = (Number(s.qty) / totalOriginalSizesQty) * ticketQty;
+          const floorAlloc = Math.floor(rawAlloc);
+          ticketSizes[s.size] = floorAlloc;
+          allocatedSum += floorAlloc;
+          remainders.push({
+            size: s.size,
+            remainder: rawAlloc - floorAlloc
+          });
+        });
+
+        // Distribute unallocated pairs to sizes with highest fractional remainders
+        let unallocated = ticketQty - allocatedSum;
+        remainders.sort((a, b) => b.remainder - a.remainder);
+
+        for (let i = 0; i < unallocated; i++) {
+          const targetSize = remainders[i % remainders.length].size;
+          ticketSizes[targetSize] = (ticketSizes[targetSize] || 0) + 1;
+        }
+
+        splitPlan.push({
+          serialStr,
+          colorName,
+          batchIndex: bIdx,
+          totalBatchesForColor: numBatchesForColor,
+          ticketQty,
+          sizes: ticketSizes,
+          productId: c.productId || order.productId
+        });
+      }
+    });
+
+    return splitPlan;
+  },
+
   async openSplitModal(orderId) {
     try {
       const order = await dbGet('orders', orderId);
@@ -1319,7 +1405,7 @@ const Orders = {
       if (colorsSummaryEl) {
         if (order.colors && order.colors.length > 0) {
           colorsSummaryEl.innerHTML = '<strong>Renk ve Asorti Dağılımı:</strong><br>' + order.colors.map(c => {
-            const sz = (c.sizes || []).map(s => `${s.size}:${s.qty}`).join(', ');
+            const sz = (c.sizes || []).filter(s => Number(s.qty) > 0).map(s => `${s.size}:${s.qty}`).join(', ');
             return `• <strong>${c.color}:</strong> ${c.qty} Çift (${sz || 'Standart'})`;
           }).join('<br>');
         } else {
@@ -1348,30 +1434,34 @@ const Orders = {
         }
         if (batchSize <= 0) batchSize = 24;
 
-        const totalQty = order.qty || 0;
-        const numTickets = Math.ceil(totalQty / batchSize);
-        document.getElementById('split-preview-ticket-count').textContent = numTickets;
+        let currentSerialNum = parseInt(document.getElementById('split-starting-ticket-no').value.replace(/\D/g, '')) || 1885;
+        const splitPlan = this.generateColorSplitPlan(order, batchSize, currentSerialNum);
+        
+        document.getElementById('split-preview-ticket-count').textContent = splitPlan.length;
 
         const previewContainer = document.getElementById('split-tickets-preview-list');
         previewContainer.innerHTML = '';
 
-        let currentSerialNum = parseInt(document.getElementById('split-starting-ticket-no').value.replace(/\D/g, '')) || 1885;
-
-        let remaining = totalQty;
-        for (let i = 1; i <= numTickets; i++) {
-          const ticketQty = Math.min(remaining, batchSize);
-          remaining -= ticketQty;
-          const serialStr = '№ ' + String(currentSerialNum + (i - 1)).padStart(5, '0');
+        splitPlan.forEach((item) => {
+          const szSummary = Object.entries(item.sizes)
+            .filter(([_, q]) => q > 0)
+            .map(([s, q]) => `${s}:${q}`)
+            .join(', ');
 
           const row = document.createElement('div');
-          row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12.5px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);';
+          row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12.5px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); flex-wrap: wrap; gap: 8px;';
           row.innerHTML = `
-            <span style="font-weight: 600; color: #0f172a;"><strong style="color: #0284c7; font-size: 13px;">${serialStr}</strong> — Parti ${i}/${numTickets}</span>
-            <span style="color: #334155; font-weight: 600; background: #f1f5f9; padding: 3px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">Model: ${this.escape(order.modelCode)}</span>
-            <strong style="color: #d97706; font-size: 13px; font-weight: 800; background: #fffbeb; padding: 3px 8px; border-radius: 4px; border: 1px solid #fde68a;">${ticketQty} Çift</strong>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <strong style="color: #0284c7; font-size: 13.5px; font-family: monospace;">${item.serialStr}</strong>
+              <span style="background: #f1f5f9; color: #0f172a; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11.5px; border: 1px solid #cbd5e1;">${this.escape(item.colorName)} (Parti ${item.batchIndex}/${item.totalBatchesForColor})</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 12px; color: #475569; font-weight: 600;">Asorti: <span style="color: #0f172a;">${szSummary || '-'}</span></span>
+              <strong style="color: #d97706; font-size: 13px; font-weight: 800; background: #fffbeb; padding: 3px 10px; border-radius: 6px; border: 1px solid #fde68a;">${item.ticketQty} Çift</strong>
+            </div>
           `;
           previewContainer.appendChild(row);
-        }
+        });
       };
 
       chips.forEach(chip => {
@@ -1405,40 +1495,45 @@ const Orders = {
           }
           if (batchSize <= 0) batchSize = 24;
 
-          const totalQty = order.qty || 0;
-          const numTickets = Math.ceil(totalQty / batchSize);
           let startSerialNum = parseInt(document.getElementById('split-starting-ticket-no').value.replace(/\D/g, '')) || 1885;
           const deliveryDate = document.getElementById('split-delivery-date').value;
 
-          // Pro-rate sizes across tickets if colors exist
-          let remainingTotal = totalQty;
-          for (let i = 1; i <= numTickets; i++) {
-            const ticketQty = Math.min(remainingTotal, batchSize);
-            remainingTotal -= ticketQty;
-            const serialStr = '№ ' + String(startSerialNum + (i - 1)).padStart(5, '0');
+          const splitPlan = this.generateColorSplitPlan(order, batchSize, startSerialNum);
+          if (splitPlan.length === 0) {
+            showToast('Üretilecek fiş planı oluşturulamadı!', 'warning');
+            return;
+          }
 
-            // Calculate sizes proportional to this batch
-            const proRatedSizes = {};
-            if (order.colors && order.colors.length > 0) {
-              order.colors.forEach(c => {
-                (c.sizes || []).forEach(s => {
-                  const proportion = (s.qty / totalQty);
-                  const alloc = Math.round(proportion * ticketQty) || 1;
-                  proRatedSizes[s.size] = (proRatedSizes[s.size] || 0) + alloc;
-                });
-              });
+          // Fetch product catalog to enrich job ticket details
+          const products = await dbGetAll('products') || [];
+          const matchedProduct = products.find(p => (p.modelCode || '').toLowerCase() === (order.modelCode || '').toLowerCase());
+
+          for (const item of splitPlan) {
+            const sizeNumbers = Object.keys(item.sizes).map(Number).filter(n => !isNaN(n));
+            let gender = 'kadin';
+            if (sizeNumbers.length > 0) {
+              const maxS = Math.max(...sizeNumbers);
+              if (maxS > 41) gender = 'erkek';
+              else if (maxS <= 35) gender = 'cocuk';
             }
 
             const ticketData = {
-              serialNo: serialStr,
+              serialNo: item.serialStr,
               customer: customerName,
               modelCode: order.modelCode,
-              leather: order.colors && order.colors[0] ? order.colors[0].color : 'Standart',
-              sole: '-',
-              mold: '-',
-              gender: 'kadin',
-              totalPairs: ticketQty,
-              sizes: proRatedSizes,
+              leather: item.colorName || (matchedProduct ? matchedProduct.leatherType : 'Standart'),
+              sole: (matchedProduct && matchedProduct.soleMaterial) ? matchedProduct.soleMaterial : '-',
+              lining: (matchedProduct && matchedProduct.leatherLining) ? matchedProduct.leatherLining : 'Deri / Meş',
+              thread: '1. Sınıf Saya İpliği',
+              lastNo: (matchedProduct && matchedProduct.size) ? matchedProduct.size : '-',
+              gender: gender,
+              sizeType: gender,
+              totalPairs: item.ticketQty,
+              sizes: item.sizes,
+              emboss: order.klise || customerName || '',
+              orderPlacer: customerName,
+              packaging: 'Standart Kutu / Koli',
+              notes: `Sipariş #${order.id} | Renk: ${item.colorName} (Parti ${item.batchIndex}/${item.totalBatchesForColor})`,
               stage: 'kesim',
               orderId: order.id,
               deliveryDate: deliveryDate,
@@ -1448,7 +1543,7 @@ const Orders = {
             await dbAdd('job_tickets', ticketData);
           }
 
-          showToast(`${numTickets} adet iş takip fişi başarıyla üretildi ve imalata alındı! 🚀`, 'success');
+          showToast(`Toplam ${splitPlan.length} adet iş takip fişi renklerine göre başarıyla üretildi ve imalata alındı! 🚀`, 'success');
           closeModalById('order-split-modal');
 
           if (window.JobTickets && typeof window.JobTickets.loadTickets === 'function') {
