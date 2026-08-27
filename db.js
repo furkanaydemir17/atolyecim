@@ -347,6 +347,8 @@ function getCurrentTenantCompany() {
 
 function getSupabaseTableName(storeName) {
   if (storeName === 'job_tickets') return 'contractor_jobs';
+  if (storeName === 'material_suppliers') return 'contacts';
+  if (storeName === 'material_prices') return 'stocks';
   return storeName;
 }
 
@@ -363,6 +365,18 @@ function filterByTenant(storeName, items) {
     if (storeName === 'contractor_jobs') {
       return item._type !== 'job_ticket' && item.serialNo === undefined;
     }
+    if (storeName === 'material_suppliers') {
+      return item._type === 'material_supplier';
+    }
+    if (storeName === 'contacts') {
+      return item._type !== 'material_supplier';
+    }
+    if (storeName === 'material_prices') {
+      return item._type === 'material_price';
+    }
+    if (storeName === 'stocks') {
+      return item._type !== 'material_price';
+    }
     return true;
   });
 }
@@ -371,6 +385,12 @@ async function dbAdd(storeName, data) {
   data._ownerCompany = data._ownerCompany || getCurrentTenantCompany();
   if (storeName === 'job_tickets') {
     data._type = 'job_ticket';
+  }
+  if (storeName === 'material_suppliers') {
+    data._type = 'material_supplier';
+  }
+  if (storeName === 'material_prices') {
+    data._type = 'material_price';
   }
 
   if (useSupabase) {
@@ -573,6 +593,15 @@ async function dbGet(storeName, id) {
 
 async function dbUpdate(storeName, data) {
   data._ownerCompany = data._ownerCompany || getCurrentTenantCompany();
+  if (storeName === 'job_tickets') {
+    data._type = 'job_ticket';
+  }
+  if (storeName === 'material_suppliers') {
+    data._type = 'material_supplier';
+  }
+  if (storeName === 'material_prices') {
+    data._type = 'material_price';
+  }
 
   let resultId;
   if (useSupabase) {
