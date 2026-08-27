@@ -250,47 +250,69 @@ body::before {
 
 .form-group input,
 .form-group select,
-.form-group textarea {
+.form-group textarea,
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+select,
+textarea {
   width: 100%;
-  padding: 11px 14px;
-  background: #ffffff;
-  border: 1px solid var(--border-input);
+  padding: 10px 14px;
+  background: #ffffff !important;
+  border: 1px solid var(--border-input, #cbd5e1) !important;
   border-radius: var(--radius-sm);
-  color: var(--text-primary);
+  color: #0f172a !important;
+  caret-color: #0f172a !important;
   font-family: var(--font-family);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   transition: all var(--transition-fast);
   outline: none;
 }
 
 .form-group input:focus,
 .form-group select:focus,
-.form-group textarea:focus {
-  background: #ffffff;
-  border-color: var(--border-input-focus);
-  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+.form-group textarea:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #0f172a !important;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1) !important;
 }
 
-.form-group input::placeholder {
-  color: #94a3b8;
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
 }
 
-.form-group select {
+input:read-only,
+textarea:read-only,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background: #f8fafc !important;
+  color: #334155 !important;
+  border-color: #e2e8f0 !important;
+}
+
+.form-group select,
+select {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23475569' fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23475569' fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 16px !important;
   padding-right: 28px !important;
-  padding-left: 8px !important;
+  padding-left: 10px !important;
   cursor: pointer;
 }
 
-.form-group select option {
-  background: #ffffff;
-  color: var(--text-primary);
+.form-group select option,
+select option {
+  background: #ffffff !important;
+  color: #0f172a !important;
 }
 
 .form-row {

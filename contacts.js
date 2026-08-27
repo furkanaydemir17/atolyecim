@@ -954,8 +954,8 @@ const Contacts = {
             `;
           } else {
             itemsHtml = `
-              <div style="padding: 10px 15px; background: rgba(0, 0, 0, 0.15); border-radius: 6px; border: 1px solid var(--border-card); font-size: 0.85rem; color: var(--text-muted); word-break: break-word; white-space: normal; margin-top: 5px; margin-bottom: 5px;">
-                <strong>Genel Açıklama:</strong> ${escapeHtml(tx.description || 'Herhangi bir detay veya genel açıklama girilmemiş.')}
+              <div style="padding: 10px 15px; background: #f8fafc; border-radius: 6px; border: 1px solid var(--border-card); font-size: 0.85rem; color: var(--text-primary); word-break: break-word; white-space: normal; margin-top: 5px; margin-bottom: 5px;">
+                <strong style="color: var(--text-secondary);">Genel Açıklama:</strong> ${escapeHtml(tx.description || 'Herhangi bir detay veya genel açıklama girilmemiş.')}
               </div>
             `;
           }
@@ -1741,10 +1741,10 @@ function openPdfReviewModal(transactions) {
   tbody.innerHTML = parsedTransactions.map((tx, idx) => `
     <tr class="pdf-row" data-index="${idx}">
       <td style="text-align:center;"><input type="checkbox" class="chk-pdf-row" data-index="${idx}" checked style="transform: scale(1.2); cursor: pointer;"></td>
-      <td><input type="date" class="txt-pdf-date" value="${tx.date || new Date().toISOString().split('T')[0]}" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-card); border-radius: 4px; color:#fff; width:125px; padding: 2px 4px; font-size:12px;"></td>
-      <td><input type="text" class="txt-pdf-desc" value="${escapeHtml(tx.description || 'Ekstre Satırı')}" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-card); border-radius: 4px; color:#fff; width:95%; padding: 2px 4px; font-size:12px;"></td>
+      <td><input type="date" class="txt-pdf-date" value="${tx.date || new Date().toISOString().split('T')[0]}" style="background: #ffffff; border: 1px solid var(--border-input); border-radius: 4px; color: var(--text-primary); width:125px; padding: 4px 6px; font-size:12px;"></td>
+      <td><input type="text" class="txt-pdf-desc" value="${escapeHtml(tx.description || 'Ekstre Satırı')}" style="background: #ffffff; border: 1px solid var(--border-input); border-radius: 4px; color: var(--text-primary); width:95%; padding: 4px 6px; font-size:12px;"></td>
       <td>
-        <select class="sel-pdf-type" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-card); border-radius: 4px; color:#fff; width:100px; padding: 2px; font-size:12px;">
+        <select class="sel-pdf-type" style="background: #ffffff; border: 1px solid var(--border-input); border-radius: 4px; color: var(--text-primary); width:100px; padding: 4px 6px; font-size:12px;">
           <option value="alacak" ${tx.type === 'alacak' ? 'selected' : ''}>Alacak</option>
           <option value="borc" ${tx.type === 'borc' ? 'selected' : ''}>Borç</option>
           <option value="tahsilat" ${tx.type === 'tahsilat' ? 'selected' : ''}>Tahsilat</option>
@@ -1752,13 +1752,13 @@ function openPdfReviewModal(transactions) {
         </select>
       </td>
       <td>
-        <select class="sel-pdf-curr" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-card); border-radius: 4px; color:#fff; width:60px; padding: 2px; font-size:12px;">
+        <select class="sel-pdf-curr" style="background: #ffffff; border: 1px solid var(--border-input); border-radius: 4px; color: var(--text-primary); width:65px; padding: 4px 6px; font-size:12px;">
           <option value="TRY" ${tx.currency === 'TRY' ? 'selected' : ''}>TRY</option>
           <option value="USD" ${tx.currency === 'USD' ? 'selected' : ''}>USD</option>
           <option value="EUR" ${tx.currency === 'EUR' ? 'selected' : ''}>EUR</option>
         </select>
       </td>
-      <td><input type="number" class="txt-pdf-amount" value="${tx.amount || 0}" step="0.01" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-card); border-radius: 4px; color:#fff; text-align:right; width:80px; padding: 2px 4px; font-size:12px;"></td>
+      <td><input type="number" class="txt-pdf-amount" value="${tx.amount || 0}" step="0.01" style="background: #ffffff; border: 1px solid var(--border-input); border-radius: 4px; color: var(--text-primary); text-align:right; width:85px; padding: 4px 6px; font-size:12px; font-weight:700;"></td>
     </tr>
   `).join('');
 

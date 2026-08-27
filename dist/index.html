@@ -43,9 +43,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/main-DmvZWxdP.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/index-PRoYYhxM.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-Dmpbn3Ly.css">
+  <script type="module" crossorigin src="/assets/main-Bp5utYOH.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/index-iZenVp0M.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-B6zce_9N.css">
 </head>
 <body>
   <!-- O21 Düzeltme: JS devre dışı bırakıldığında noscript uyarısı -->
@@ -1064,7 +1064,7 @@
               <div class="form-group">
                 <label style="font-weight: 600; margin-bottom: 8px; display: block; color: var(--text-accent);">Size Özel Katalog Linki</label>
                 <div style="display: flex; gap: 8px;">
-                  <input type="text" id="manager-b2b-url" readonly style="width: 100%; background: rgba(255,255,255,0.05); cursor: default; font-size: 12px; font-family: monospace;">
+                  <input type="text" id="manager-b2b-url" readonly style="width: 100%; background: #f8fafc; color: #0f172a; border: 1px solid var(--border-input); cursor: default; font-size: 12px; font-family: monospace;">
                   <button type="button" id="btn-copy-b2b-url" class="btn btn-primary" style="padding: 0 16px; font-weight: 600; display: flex; align-items: center; gap: 4px; background: var(--accent-primary); border-color: var(--accent-primary);">📋 Kopyala</button>
                 </div>
                 <span style="font-size: 11px; color: var(--text-muted); margin-top: 6px; display: block;">Bu linki müşterilerinize göndererek sipariş toplayabilirsiniz.</span>
@@ -1285,7 +1285,7 @@
           <div class="form-row" style="align-items: flex-end;">
             <div class="form-group" style="flex: 2; margin-bottom: 0;">
               <label for="admin-global-gemini-key" style="font-weight: 600; font-size: 13px; color: var(--text-accent);">Sistem Geneli (Master) Gemini API Key</label>
-              <input type="password" id="admin-global-gemini-key" placeholder="Ortak API Anahtarı girin (AIzaSy...)" style="width: 100%; height: 38px; border-radius: 6px; padding: 0 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-card); color: #fff;">
+              <input type="password" id="admin-global-gemini-key" placeholder="Ortak API Anahtarı girin (AIzaSy...)" style="width: 100%; height: 38px; border-radius: 6px; padding: 0 10px; background: #ffffff; border: 1px solid var(--border-input); color: #0f172a;">
               <p style="margin: 4px 0 0 0; font-size: 11px; color: var(--text-muted);">Müşteriler kendi anahtarlarını girmediklerinde bu ortak anahtar PDF ekstre okuma için otomatik kullanılır.</p>
             </div>
             <div class="form-group" style="flex: 1; margin-bottom: 0;">
@@ -2584,22 +2584,22 @@
       <div class="modal-body" style="padding: 20px;">
         
         <!-- Order Summary Box -->
-        <div style="background: rgba(15,23,42,0.6); border: 1px solid var(--border-card); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
           <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 12.5px;">
             <div>
               <span style="color: var(--text-muted); font-size: 11px; display: block;">Model Kodu:</span>
-              <strong id="split-modal-model" style="color: #fff; font-size: 14px;">-</strong>
+              <strong id="split-modal-model" style="color: #0f172a; font-size: 14px;">-</strong>
             </div>
             <div>
               <span style="color: var(--text-muted); font-size: 11px; display: block;">Müşteri / Cari:</span>
-              <strong id="split-modal-customer" style="color: #fff;">-</strong>
+              <strong id="split-modal-customer" style="color: #0f172a;">-</strong>
             </div>
             <div>
               <span style="color: var(--text-muted); font-size: 11px; display: block;">Toplam Miktar:</span>
               <strong id="split-modal-total-qty" style="color: var(--color-warning); font-size: 14px;">0 Çift</strong>
             </div>
           </div>
-          <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 12px; color: var(--text-secondary);" id="split-modal-colors-summary">
+          <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #e2e8f0; font-size: 12px; color: var(--text-secondary);" id="split-modal-colors-summary">
             <!-- Colors and sizes -->
           </div>
         </div>
@@ -2870,7 +2870,7 @@
         
         <div class="form-group">
           <label style="font-weight: 600; display: block; margin-bottom: 6px; color: var(--text-secondary);">Müşteri Bildirimi (Giriş Yapılan):</label>
-          <span id="approve-customer-raw" style="background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: var(--radius-sm); display: block; color: var(--text-accent); font-weight: bold; border: 1px solid var(--border-card);">Ahmet Kundura</span>
+          <span id="approve-customer-raw" style="background: #f1f5f9; padding: 10px 14px; border-radius: var(--radius-sm); display: block; color: #0f172a; font-weight: bold; border: 1px solid var(--border-card);">Ahmet Kundura</span>
         </div>
 
         <div class="form-group">
@@ -3483,15 +3483,15 @@
       <div class="modal-body" style="padding: 20px;">
         
         <!-- Recipient Bar -->
-        <div style="background: rgba(15,23,42,0.6); border: 1px solid var(--border-card); border-radius: 8px; padding: 12px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="background: #f8fafc; border: 1px solid var(--border-card); border-radius: 8px; padding: 12px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px;">
           <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
             <span style="color: var(--text-muted);">Alıcı / Cari:</span>
-            <strong id="wa-recipient-name" style="color: #fff; font-size: 13px;">-</strong>
+            <strong id="wa-recipient-name" style="color: #0f172a; font-size: 13px;">-</strong>
           </div>
           <div class="form-group" style="margin-bottom: 0;">
             <label for="wa-recipient-phone" style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px;">WhatsApp Telefon Numarası</label>
             <div style="position: relative;">
-              <input type="text" id="wa-recipient-phone" placeholder="05XX XXX XX XX veya 905XXXXXXXXX" style="padding-left: 36px; font-weight: 600; font-family: monospace;">
+              <input type="text" id="wa-recipient-phone" placeholder="05XX XXX XX XX veya 905XXXXXXXXX" style="padding-left: 36px; font-weight: 600; font-family: monospace; background: #ffffff; color: #0f172a;">
               <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px;">📞</span>
             </div>
             <span style="font-size: 10.5px; color: var(--text-muted); margin-top: 3px; display: block;">Numara başında 0 veya +90 olması fark etmez, sistem otomatik düzenler.</span>
@@ -3510,11 +3510,11 @@
             <label for="wa-message-content" style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary); margin: 0;">Mesaj Metni (Canlı Düzenlenebilir)</label>
             <span style="font-size: 10px; color: var(--text-muted);">*İstediğiniz bilgiyi ekleyip silebilirsiniz</span>
           </div>
-          <textarea id="wa-message-content" rows="9" style="width: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12.5px; line-height: 1.5; resize: vertical; min-height: 160px; padding: 12px; background: rgba(3,7,18,0.7); border: 1px solid var(--border-input); border-radius: 6px; color: #fff;"></textarea>
+          <textarea id="wa-message-content" rows="9" style="width: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12.5px; line-height: 1.5; resize: vertical; min-height: 160px; padding: 12px; background: #ffffff; border: 1px solid var(--border-input); border-radius: 6px; color: #0f172a;"></textarea>
         </div>
 
         <!-- Actions -->
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; border-top: 1px solid var(--border-subtle); padding-top: 15px;">
           <button type="button" class="btn btn-ghost" id="btn-wa-copy-text" style="font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
             📋 Metni Kopyala
           </button>

@@ -282,23 +282,23 @@ const Orders = {
         </div>
 
         <!-- Hızlı Asorti Butonları (Tek Tıkla Seri Doldur) -->
-        <div style="display: flex; gap: 5px; flex-wrap: wrap; align-items: center; background: rgba(255,255,255,0.03); padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+        <div style="display: flex; gap: 5px; flex-wrap: wrap; align-items: center; background: #f8fafc; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
           <span style="font-size: 10.5px; font-weight: 700; color: var(--text-secondary); margin-right: 4px;">⚡ HIZLI DOLDUR:</span>
-          <button type="button" class="btn btn-sm btn-quick-asorti" data-type="kadin8" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: rgba(99,102,241,0.15); color: var(--text-accent); border: 1px solid rgba(99,102,241,0.3); font-weight: 600;">👠 Kadın (8 Çift)</button>
-          <button type="button" class="btn btn-sm btn-quick-asorti" data-type="kadin12" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: rgba(99,102,241,0.15); color: var(--text-accent); border: 1px solid rgba(99,102,241,0.3); font-weight: 600;">👠 Kadın (12'li)</button>
-          <button type="button" class="btn btn-sm btn-quick-asorti" data-type="erkek8" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-weight: 600;">👞 Erkek (8 Çift)</button>
-          <button type="button" class="btn btn-sm btn-quick-asorti" data-type="erkek12" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-weight: 600;">👞 Erkek (12'li)</button>
-          <button type="button" class="btn btn-sm btn-quick-asorti" data-type="cocuk" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); font-weight: 600;">🧒 Çocuk (10'lu)</button>
+          <button type="button" class="btn btn-sm btn-quick-asorti" data-type="kadin8" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; font-weight: 600;">👠 Kadın (8 Çift)</button>
+          <button type="button" class="btn btn-sm btn-quick-asorti" data-type="kadin12" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; font-weight: 600;">👠 Kadın (12'li)</button>
+          <button type="button" class="btn btn-sm btn-quick-asorti" data-type="erkek8" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-weight: 600;">👞 Erkek (8 Çift)</button>
+          <button type="button" class="btn btn-sm btn-quick-asorti" data-type="erkek12" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-weight: 600;">👞 Erkek (12'li)</button>
+          <button type="button" class="btn btn-sm btn-quick-asorti" data-type="cocuk" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: #fffbeb; color: #d97706; border: 1px solid #fde68a; font-weight: 600;">🧒 Çocuk (10'lu)</button>
         </div>
         
         <!-- Özel Asorti Şablonu & Koli Çarpanı -->
-        <div class="asorti-helper-row" style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.02); padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+        <div class="asorti-helper-row" style="display: flex; align-items: center; gap: 6px; background: #f8fafc; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
           <span style="font-size: 11px; font-weight: 600; color: var(--text-secondary); white-space: nowrap;">📦 ŞABLON / KOLİ:</span>
-          <select class="color-group-asorti-select" style="flex: 2; padding: 4px 6px; font-size: 11px; border-radius: 4px; height: 28px;">
+          <select class="color-group-asorti-select" style="flex: 2; padding: 4px 6px; font-size: 11px; border-radius: 4px; height: 28px; background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1;">
             <option value="">Kayıtlı Şablon Seçin</option>
           </select>
-          <input type="number" class="color-group-asorti-qty" value="1" min="1" placeholder="Koli" style="width: 50px; padding: 4px 6px; font-size: 11px; text-align: center; border-radius: 4px; height: 28px; margin-bottom: 0;">
-          <button type="button" class="btn btn-sm btn-apply-asorti" style="padding: 4px 8px; font-size: 11px; height: 28px; font-weight: 600; background: var(--accent-primary); border-color: var(--accent-primary);">Uygula</button>
+          <input type="number" class="color-group-asorti-qty" value="1" min="1" placeholder="Koli" style="width: 50px; padding: 4px 6px; font-size: 11px; text-align: center; border-radius: 4px; height: 28px; margin-bottom: 0; background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1;">
+          <button type="button" class="btn btn-sm btn-apply-asorti" style="padding: 4px 8px; font-size: 11px; height: 28px; font-weight: 600; background: var(--accent-primary); border-color: var(--accent-primary); color: #fff;">Uygula</button>
         </div>
       </div>
 
@@ -1621,7 +1621,7 @@ const Orders = {
           div.style.cssText = 'display: flex; flex-direction: column; align-items: center; width: 45px;';
           div.innerHTML = `
             <span style="font-size: 11px; font-weight: bold; margin-bottom: 2px; color: var(--text-accent);">${this.escape(s.size)}</span>
-            <input type="number" class="size-qty-input" data-size="${this.escape(s.size)}" min="0" value="${s.qty}" style="width: 100%; text-align: center; padding: 4px; border-radius: 4px; border: 1px solid var(--border-card); background: var(--bg-primary); color: var(--text-primary); font-size: 12px;">
+            <input type="number" class="size-qty-input" data-size="${this.escape(s.size)}" min="0" value="${s.qty}" style="width: 100%; text-align: center; padding: 4px; border-radius: 4px; border: 1px solid var(--border-input); background: #ffffff; color: #0f172a; font-size: 12px; font-weight: 700;">
           `;
           sizeContainer.appendChild(div);
         });

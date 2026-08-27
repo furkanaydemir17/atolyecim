@@ -190,7 +190,7 @@ export const JobTickets = {
             ${t.emboss ? `<div style="font-size: 11px; color: var(--text-accent);">Klişe: ${escapeHtml(t.emboss)}</div>` : ''}
           </td>
           <td>
-            <span style="font-weight: 700; color: #fff;">${escapeHtml(t.modelCode || '-')}</span>
+            <span style="font-weight: 700; color: var(--text-primary);">${escapeHtml(t.modelCode || '-')}</span>
             <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(t.leather || '-')} | Taban: ${escapeHtml(t.sole || '-')}</div>
           </td>
           <td>
@@ -257,7 +257,7 @@ export const JobTickets = {
           return `
             <div>
               <label style="font-size: 11px; font-weight: 700; color: var(--text-accent); display: block; margin-bottom: 3px;">${sz}</label>
-              <input type="number" class="jt-size-val-input" data-size="${sz}" value="${val}" min="0" placeholder="" style="width: 100%; text-align: center; padding: 6px 2px; font-size: 12px; font-weight: 700; border-radius: 4px; border: 1px solid var(--border-card); background: var(--bg-card); color: #fff;">
+              <input type="number" class="jt-size-val-input" data-size="${sz}" value="${val}" min="0" placeholder="" style="width: 100%; text-align: center; padding: 6px 2px; font-size: 12px; font-weight: 700; border-radius: 4px; border: 1px solid var(--border-input); background: #ffffff; color: var(--text-primary);">
             </div>
           `;
         }).join('')}
