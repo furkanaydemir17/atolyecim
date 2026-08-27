@@ -335,6 +335,18 @@ function invalidateCache(storeName) {
   if (memoryCache[storeName]) {
     delete memoryCache[storeName];
   }
+  if (storeName === 'material_suppliers') {
+    delete memoryCache['contacts'];
+  }
+  if (storeName === 'contacts') {
+    delete memoryCache['material_suppliers'];
+  }
+  if (storeName === 'material_prices') {
+    delete memoryCache['stocks'];
+  }
+  if (storeName === 'stocks') {
+    delete memoryCache['material_prices'];
+  }
 }
 
 // Bind to window for debugging or manual cache bust
