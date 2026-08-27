@@ -43,9 +43,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/main-Bp5utYOH.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/index-iZenVp0M.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-B6zce_9N.css">
+  <script type="module" crossorigin src="/assets/main-I-qIfbLD.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/index-CWr6tc_4.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-D8FKvGyR.css">
 </head>
 <body>
   <!-- O21 Düzeltme: JS devre dışı bırakıldığında noscript uyarısı -->
@@ -2013,18 +2013,18 @@
           </div>
 
           <!-- RENK / NUMARA / ADET DAĞILIMI (Birleşik Bölüm) -->
-          <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-card); margin-bottom: 18px;">
+          <div class="form-group" style="background: #f8fafc; padding: 14px; border-radius: var(--radius-md); border: 1px solid #e2e8f0; margin-bottom: 18px;">
             <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-              <span style="font-weight: 700; font-size: 0.9rem; color: var(--text-accent);">RENK / NUMARA / ADET DAĞILIMI</span>
+              <span style="font-weight: 700; font-size: 0.9rem; color: #0f172a;">RENK / NUMARA / ADET DAĞILIMI</span>
               <button type="button" class="btn btn-sm btn-accent" id="btn-order-add-color-group" style="padding: 5px 12px; font-size: 0.75rem;">+ Renk Ekle</button>
             </label>
             <div id="order-color-groups-container">
               <!-- Dynamic color groups will be inserted here by JS -->
             </div>
             <!-- Genel Toplam -->
-            <div id="order-grand-total" style="margin-top: 14px; padding: 10px 14px; background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.10)); border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 1rem; color: var(--text-accent);">
+            <div id="order-grand-total" style="margin-top: 14px; padding: 12px 16px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 1.05rem; color: #0f172a; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
               <span>GENEL TOPLAM</span>
-              <span id="order-grand-total-value">0 Çift</span>
+              <span id="order-grand-total-value" style="color: #059669;">0 Çift</span>
             </div>
           </div>
 
@@ -2194,30 +2194,30 @@
         </div>
 
         <!-- Bottom Cost Summary Bar -->
-        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15,23,42,0.7); border: 1px solid var(--border-card); border-radius: 8px; padding: 12px 16px; margin-top: 14px;">
-          <div style="display: flex; gap: 20px; font-size: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-top: 14px;">
+          <div style="display: flex; gap: 20px; font-size: 12.5px;">
             <div>
               <span style="color: var(--text-muted);">Deri / Kumaş:</span>
-              <strong id="recipe-sum-leather" style="color: var(--text-accent); margin-left: 4px;">₺0,00</strong>
+              <strong id="recipe-sum-leather" style="color: #0f172a; margin-left: 4px; font-weight: 700;">₺0,00</strong>
             </div>
             <div>
               <span style="color: var(--text-muted);">Taban & Aksesuar:</span>
-              <strong id="recipe-sum-sole" style="color: var(--text-accent); margin-left: 4px;">₺0,00</strong>
+              <strong id="recipe-sum-sole" style="color: #0f172a; margin-left: 4px; font-weight: 700;">₺0,00</strong>
             </div>
             <div>
               <span style="color: var(--text-muted);">Kimyasal & Diğer:</span>
-              <strong id="recipe-sum-other" style="color: var(--text-accent); margin-left: 4px;">₺0,00</strong>
+              <strong id="recipe-sum-other" style="color: #0f172a; margin-left: 4px; font-weight: 700;">₺0,00</strong>
             </div>
           </div>
           <div style="text-align: right;">
-            <span style="font-size: 11px; color: var(--text-muted); display: block;">1 ÇİFT TOPLAM MALİYET</span>
-            <strong id="recipe-sum-grand-total" style="font-size: 16px; color: var(--color-success); font-weight: 800;">₺0,00</strong>
+            <span style="font-size: 11px; color: var(--text-muted); display: block; font-weight: 600;">1 ÇİFT TOPLAM MALİYET</span>
+            <strong id="recipe-sum-grand-total" style="font-size: 17px; color: #059669; font-weight: 800;">₺0,00</strong>
           </div>
         </div>
 
         <div class="modal-actions" style="margin-top: 18px; display: flex; justify-content: space-between; align-items: center;">
           <button type="button" class="btn btn-ghost" data-modal="recipe-modal">Kapat</button>
-          <button type="button" class="btn btn-primary" id="btn-save-recipe" style="padding: 0 24px; font-weight: 700; background: var(--color-primary);">
+          <button type="button" class="btn btn-primary" id="btn-save-recipe" style="padding: 10px 24px; font-weight: 700; background: #0f172a !important; color: #ffffff !important; border-radius: 6px; box-shadow: 0 4px 12px rgba(15,23,42,0.25);">
             💾 Reçeteyi Kaydet
           </button>
         </div>
@@ -2605,15 +2605,15 @@
         </div>
 
         <!-- Split Configuration Form -->
-        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-card); border-radius: 8px; padding: 15px; margin-bottom: 16px;">
-          <label style="font-size: 12px; font-weight: 700; color: var(--text-accent); display: block; margin-bottom: 8px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 16px;">
+          <label style="font-size: 12px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
             ⚙️ Parti / Fiş Boyutu Seçin (Her Fiş Kaç Çift Olacak?):
           </label>
           <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;" id="split-preset-chips">
-            <button type="button" class="btn btn-sm btn-ghost split-chip active" data-batch="24" style="font-weight: 700;">📦 24 Çiftlik Partiler</button>
-            <button type="button" class="btn btn-sm btn-ghost split-chip" data-batch="12" style="font-weight: 700;">📦 12 Çiftlik Partiler</button>
-            <button type="button" class="btn btn-sm btn-ghost split-chip" data-batch="8" style="font-weight: 700;">📦 8 Çiftlik Partiler</button>
-            <button type="button" class="btn btn-sm btn-ghost split-chip" data-batch="custom" style="font-weight: 700;">✏️ Özel Adet</button>
+            <button type="button" class="btn btn-sm split-chip active" data-batch="24">📦 24 Çiftlik Partiler</button>
+            <button type="button" class="btn btn-sm split-chip" data-batch="12">📦 12 Çiftlik Partiler</button>
+            <button type="button" class="btn btn-sm split-chip" data-batch="8">📦 8 Çiftlik Partiler</button>
+            <button type="button" class="btn btn-sm split-chip" data-batch="custom">✏️ Özel Adet</button>
           </div>
 
           <div class="form-row" id="split-custom-batch-row" style="display: none; margin-bottom: 10px;">
@@ -2638,11 +2638,11 @@
         <!-- Generated Tickets Preview -->
         <div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary); margin: 0;">
-              📋 Üretilecek İş Takip Fişleri Önizlemesi (<span id="split-preview-ticket-count" style="color: var(--color-success); font-weight: 800;">0</span> Fiş):
+            <label style="font-size: 12.5px; font-weight: 700; color: #0f172a; margin: 0;">
+              📋 Üretilecek İş Takip Fişleri Önizlemesi (<span id="split-preview-ticket-count" style="color: #059669; font-weight: 800;">0</span> Fiş):
             </label>
           </div>
-          <div id="split-tickets-preview-list" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; background: rgba(3,7,18,0.5); border: 1px solid var(--border-card); border-radius: 6px; padding: 8px;">
+          <div id="split-tickets-preview-list" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
             <!-- Generated preview rows -->
           </div>
         </div>
@@ -2650,7 +2650,7 @@
         <!-- Modal Actions -->
         <div class="modal-actions" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
           <button type="button" class="btn btn-ghost" data-modal="order-split-modal">İptal</button>
-          <button type="button" class="btn btn-primary" id="btn-split-confirm-generate" style="background: var(--color-primary); font-weight: 700; padding: 0 24px; display: inline-flex; align-items: center; gap: 8px;">
+          <button type="button" class="btn btn-primary" id="btn-split-confirm-generate" style="background: #0f172a !important; color: #ffffff !important; font-weight: 700; padding: 10px 24px; display: inline-flex; align-items: center; gap: 8px; border-radius: 6px; box-shadow: 0 4px 12px rgba(15,23,42,0.25);">
             <span>🚀</span> Fişleri Üret ve İmalata Al
           </button>
         </div>
@@ -2672,8 +2672,8 @@
         <div class="label-wizard-container" style="display: grid; grid-template-columns: 1fr 1.1fr; gap: 20px; align-items: start;">
           
           <!-- Left: Settings Form -->
-          <div class="label-settings-panel" style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid var(--border-card);">
-            <h4 style="margin-top: 0; margin-bottom: 12px; color: var(--text-accent); font-size: 14px; border-bottom: 1px solid var(--border-card); padding-bottom: 6px;">Etiket Yapılandırma</h4>
+          <div class="label-settings-panel" style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; font-size: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">Etiket Yapılandırma</h4>
             
             <div class="form-group">
               <label for="label-input-sender">Gönderici Firma (Atölye Adı)</label>
@@ -2727,7 +2727,7 @@
 
             <div class="form-group">
               <label style="margin-bottom: 6px; display: block;">Asorti (Beden Çift Sayısı)</label>
-              <div id="label-size-inputs-container" style="display: flex; flex-wrap: wrap; gap: 8px; background: rgba(0,0,0,0.15); padding: 8px; border-radius: 6px; border: 1px solid var(--border-card);">
+              <div id="label-size-inputs-container" style="display: flex; flex-wrap: wrap; gap: 8px; background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
                 <!-- Dynamic size inputs -->
               </div>
             </div>
@@ -3052,61 +3052,61 @@
           </div>
 
           <!-- Numara Matrisi (36 - 45) -->
-          <div class="form-group" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-card); border-radius: var(--radius-md); padding: 14px;">
+          <div class="form-group" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-              <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-accent); margin-bottom: 0; text-transform: uppercase;">
+              <label style="font-weight: 700; font-size: 0.85rem; color: #0f172a; margin-bottom: 0; text-transform: uppercase;">
                 Numara Adet Dağılımı
               </label>
               <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">⚡ ASORTİ:</span>
-                <select id="quick-order-asorti-select" style="padding: 4px 6px; font-size: 11px; border-radius: 4px; height: 28px; width: 130px; margin-bottom: 0;">
+                <span style="font-size: 11px; font-weight: 600; color: #475569;">⚡ ASORTİ:</span>
+                <select id="quick-order-asorti-select" style="padding: 4px 6px; font-size: 11px; border-radius: 4px; height: 28px; width: 130px; margin-bottom: 0; background: #ffffff; color: #0f172a;">
                   <option value="">Şablon Seçin</option>
                 </select>
-                <input type="number" id="quick-order-asorti-qty" value="1" min="1" placeholder="Koli" style="width: 50px; padding: 4px 6px; font-size: 11px; text-align: center; border-radius: 4px; height: 28px; margin-bottom: 0;">
-                <button type="button" id="btn-quick-apply-asorti" class="btn btn-sm" style="padding: 4px 8px; font-size: 11px; height: 28px; font-weight: 600; background: var(--accent-primary); border-color: var(--accent-primary);">Doldur</button>
+                <input type="number" id="quick-order-asorti-qty" value="1" min="1" placeholder="Koli" style="width: 50px; padding: 4px 6px; font-size: 11px; text-align: center; border-radius: 4px; height: 28px; margin-bottom: 0; background: #ffffff; color: #0f172a;">
+                <button type="button" id="btn-quick-apply-asorti" class="btn btn-sm btn-primary" style="padding: 4px 8px; font-size: 11px; height: 28px; font-weight: 600;">Doldur</button>
               </div>
             </div>
             <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;" id="quick-order-matrix">
               <!-- 36 - 45 sizes inputs -->
-              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
-                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">36</span>
-                <input type="number" class="quick-size-input" data-size="36" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              <div style="text-align: center; background: #ffffff; padding: 6px; border-radius: var(--radius-sm); border: 1px solid #cbd5e1;">
+                <span style="font-size: 12px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">36</span>
+                <input type="number" class="quick-size-input" data-size="36" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700; background: #ffffff; color: #0f172a;">
               </div>
-              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
-                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">37</span>
-                <input type="number" class="quick-size-input" data-size="37" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              <div style="text-align: center; background: #ffffff; padding: 6px; border-radius: var(--radius-sm); border: 1px solid #cbd5e1;">
+                <span style="font-size: 12px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">37</span>
+                <input type="number" class="quick-size-input" data-size="37" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700; background: #ffffff; color: #0f172a;">
               </div>
-              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
-                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">38</span>
-                <input type="number" class="quick-size-input" data-size="38" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              <div style="text-align: center; background: #ffffff; padding: 6px; border-radius: var(--radius-sm); border: 1px solid #cbd5e1;">
+                <span style="font-size: 12px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">38</span>
+                <input type="number" class="quick-size-input" data-size="38" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700; background: #ffffff; color: #0f172a;">
               </div>
-              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
-                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">39</span>
-                <input type="number" class="quick-size-input" data-size="39" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              <div style="text-align: center; background: #ffffff; padding: 6px; border-radius: var(--radius-sm); border: 1px solid #cbd5e1;">
+                <span style="font-size: 12px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">39</span>
+                <input type="number" class="quick-size-input" data-size="39" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700; background: #ffffff; color: #0f172a;">
               </div>
-              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
-                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">40</span>
-                <input type="number" class="quick-size-input" data-size="40" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              <div style="text-align: center; background: #ffffff; padding: 6px; border-radius: var(--radius-sm); border: 1px solid #cbd5e1;">
+                <span style="font-size: 12px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">40</span>
+                <input type="number" class="quick-size-input" data-size="40" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700; background: #ffffff; color: #0f172a;">
               </div>
-              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
-                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">41</span>
-                <input type="number" class="quick-size-input" data-size="41" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              <div style="text-align: center; background: #ffffff; padding: 6px; border-radius: var(--radius-sm); border: 1px solid #cbd5e1;">
+                <span style="font-size: 12px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">41</span>
+                <input type="number" class="quick-size-input" data-size="41" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700; background: #ffffff; color: #0f172a;">
               </div>
-              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
-                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">42</span>
-                <input type="number" class="quick-size-input" data-size="42" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              <div style="text-align: center; background: #ffffff; padding: 6px; border-radius: var(--radius-sm); border: 1px solid #cbd5e1;">
+                <span style="font-size: 12px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">42</span>
+                <input type="number" class="quick-size-input" data-size="42" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700; background: #ffffff; color: #0f172a;">
               </div>
-              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
-                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">43</span>
-                <input type="number" class="quick-size-input" data-size="43" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              <div style="text-align: center; background: #ffffff; padding: 6px; border-radius: var(--radius-sm); border: 1px solid #cbd5e1;">
+                <span style="font-size: 12px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">43</span>
+                <input type="number" class="quick-size-input" data-size="43" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700; background: #ffffff; color: #0f172a;">
               </div>
-              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
-                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">44</span>
-                <input type="number" class="quick-size-input" data-size="44" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              <div style="text-align: center; background: #ffffff; padding: 6px; border-radius: var(--radius-sm); border: 1px solid #cbd5e1;">
+                <span style="font-size: 12px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">44</span>
+                <input type="number" class="quick-size-input" data-size="44" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700; background: #ffffff; color: #0f172a;">
               </div>
-              <div style="text-align: center; background: rgba(255,255,255,0.02); padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05);">
-                <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px;">45</span>
-                <input type="number" class="quick-size-input" data-size="45" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700;">
+              <div style="text-align: center; background: #ffffff; padding: 6px; border-radius: var(--radius-sm); border: 1px solid #cbd5e1;">
+                <span style="font-size: 12px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">45</span>
+                <input type="number" class="quick-size-input" data-size="45" min="0" value="0" style="width: 100%; text-align: center; padding: 4px; font-size: 13px; font-weight: 700; background: #ffffff; color: #0f172a;">
               </div>
             </div>
             
@@ -3401,12 +3401,12 @@
           </div>
 
           <!-- 4. Numara / Asorti Cetveli Bölümü -->
-          <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-card); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-              <span style="font-weight: 700; font-size: 13px; color: var(--text-accent);">👟 Numara & Çift Dağılımı (Asorti Cetveli)</span>
+              <span style="font-weight: 700; font-size: 13px; color: #0f172a;">👟 Numara & Çift Dağılımı (Asorti Cetveli)</span>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <label for="jt-size-range-type" style="font-size: 12px; margin-bottom: 0; color: var(--text-muted);">Numara Grubu:</label>
-                <select id="jt-size-range-type" style="padding: 3px 8px; font-size: 11px; width: auto;">
+                <select id="jt-size-range-type" style="padding: 3px 8px; font-size: 11px; width: auto; background: #ffffff; color: #0f172a;">
                   <option value="kadin" selected>Kadın (35 - 41)</option>
                   <option value="erkek">Erkek (39 - 45)</option>
                   <option value="cocuk">Çocuk (26 - 35)</option>
@@ -3417,9 +3417,9 @@
             <!-- Dynamic Size Inputs Container -->
             <div id="jt-size-grid-inputs" style="margin-bottom: 12px;"></div>
 
-            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
-              <span style="font-weight: 700; font-size: 13px; color: var(--text-primary);">Toplam Çift:</span>
-              <input type="number" id="jt-total-pairs" min="0" placeholder="" style="width: 90px; text-align: center; font-weight: 900; font-size: 15px; color: #10b981; border: 1.5px solid #10b981;">
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 8px;">
+              <span style="font-weight: 700; font-size: 13px; color: #0f172a;">Toplam Çift:</span>
+              <input type="number" id="jt-total-pairs" min="0" placeholder="" style="width: 90px; text-align: center; font-weight: 900; font-size: 15px; color: #059669; border: 1.5px solid #059669; background: #ffffff;">
             </div>
           </div>
 

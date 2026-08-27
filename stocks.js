@@ -133,10 +133,10 @@ const Stocks = {
 
         const itemsHtml = group.items.map(s => {
           const isCritical = Number(s.qty || 0) <= Number(s.limit || 0);
-          const qtyStyle = isCritical ? 'color: var(--color-danger); font-weight:600;' : 'color: var(--color-success);';
+          const qtyStyle = isCritical ? 'color: var(--color-danger); font-weight:700;' : 'color: var(--color-success); font-weight:700;';
           return `
-            <li style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.88rem; margin-bottom: 4px;">
-              <span>• <strong>${escapeHtml(s.size || '-')} Beden</strong> - <span style="${qtyStyle}">${s.qty} Çift</span> - Renk: ${escapeHtml(s.color || '-')} (Kritik Limit: ${s.limit || 0} Çift)</span>
+            <li style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: var(--radius-sm); font-size: 0.88rem; margin-bottom: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+              <span>• <strong style="color: #0f172a;">${escapeHtml(s.size || '-')} Beden</strong> — <span style="${qtyStyle}">${s.qty} Çift</span> — Renk: <span style="font-weight: 600; color: #334155;">${escapeHtml(s.color || '-')}</span> <span style="color: var(--text-muted); font-size: 0.8rem;">(Kritik Limit: ${s.limit || 0} Çift)</span></span>
               <div style="display: flex; gap: 8px;">
                 <button type="button" class="btn-icon info" title="Düzenle" onclick="Stocks.openModal('sole', ${s.id})" style="padding: 2px 4px; font-size: 11px; cursor:pointer;">✏️</button>
                 <button type="button" class="btn-icon danger" title="Sil" onclick="Stocks.deleteStock(${s.id})" style="padding: 2px 4px; font-size: 11px; cursor:pointer;">🗑️</button>
@@ -158,7 +158,7 @@ const Stocks = {
               </div>
             </td>
           </tr>
-          <tr id="${detailRowId}" style="display: none; background: rgba(255,255,255,0.01);">
+          <tr id="${detailRowId}" style="display: none; background: #f8fafc;">
             <td colspan="4" style="padding: 10px 20px;">
               <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px;">
                 ${itemsHtml}

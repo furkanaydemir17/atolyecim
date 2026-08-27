@@ -17,6 +17,8 @@
   --border-input: #cbd5e1;
   --border-input-focus: #0f172a;
 
+  --color-primary: #0f172a;
+  --color-primary-hover: #1e293b;
   --accent-primary: #0f172a;
   --accent-secondary: #334155;
   --accent-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -338,19 +340,21 @@ select option {
 }
 
 .btn-primary {
-  background: #0f172a;
+  background: #0f172a !important;
   color: #ffffff !important;
-  border-color: #0f172a;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+  border: 1px solid #0f172a !important;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2) !important;
   position: relative;
   overflow: hidden;
+  font-weight: 700 !important;
 }
 
 .btn-primary:hover {
-  background: #1e293b;
-  border-color: #1e293b;
+  background: #1e293b !important;
+  border-color: #1e293b !important;
+  color: #ffffff !important;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.22);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.3) !important;
 }
 
 .btn-primary:active {
@@ -358,25 +362,65 @@ select option {
 }
 
 .btn-secondary {
-  background: #ffffff;
-  color: #0f172a;
-  border: 1px solid #cbd5e1;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  font-weight: 600 !important;
 }
 
 .btn-secondary:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
 }
 
 .btn-ghost {
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-input);
+  background: #ffffff !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
 }
 
 .btn-ghost:hover {
-  background: #f1f5f9;
-  color: var(--text-primary);
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
+}
+
+.split-chip {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+  font-weight: 700 !important;
+  padding: 6px 14px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.split-chip:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.split-chip.active {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #0f172a !important;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25) !important;
+}
+
+.btn-recipe-template {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-recipe-template:hover {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #0f172a !important;
 }
 
 .btn-sm {
@@ -385,10 +429,11 @@ select option {
 }
 
 .btn-accent {
-  background: #0f172a;
-  color: #fff;
+  background: #0f172a !important;
+  color: #ffffff !important;
   padding: 7px 14px;
   font-size: 0.82rem;
+  font-weight: 700 !important;
 }
 
 .btn-icon {

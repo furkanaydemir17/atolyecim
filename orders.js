@@ -267,23 +267,23 @@ const Orders = {
     const group = document.createElement('div');
     group.className = 'color-group-card';
     group.id = groupId;
-    group.style.cssText = 'background: rgba(99,102,241,0.04); border: 1px solid rgba(99,102,241,0.15); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; position: relative;';
+    group.style.cssText = 'background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px; margin-bottom: 14px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.03);';
 
     group.innerHTML = `
       <!-- Color Group Header -->
       <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
         <div style="display: flex; align-items: center; gap: 10px;">
           <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
-            <span style="font-weight: 700; font-size: 0.82rem; color: var(--text-accent); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">RENK:</span>
+            <span style="font-weight: 700; font-size: 0.82rem; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">RENK:</span>
             <input type="text" list="order-colors-list" class="color-group-name" placeholder="Renk adı yazın" value="${this.escape(colorName)}" 
-              style="flex: 1; margin-bottom: 0; padding: 7px 12px; font-weight: 600; font-size: 0.9rem; border-radius: 6px;" required>
+              style="flex: 1; margin-bottom: 0; padding: 7px 12px; font-weight: 600; font-size: 0.9rem; border-radius: 6px; background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1;" required>
           </div>
           <button type="button" class="btn-icon danger btn-remove-color-group" style="flex-shrink: 0; height: 34px; width: 34px; font-size: 16px;" title="Renk Grubunu Sil">&times;</button>
         </div>
 
         <!-- Hızlı Asorti Butonları (Tek Tıkla Seri Doldur) -->
         <div style="display: flex; gap: 5px; flex-wrap: wrap; align-items: center; background: #f8fafc; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
-          <span style="font-size: 10.5px; font-weight: 700; color: var(--text-secondary); margin-right: 4px;">⚡ HIZLI DOLDUR:</span>
+          <span style="font-size: 10.5px; font-weight: 700; color: #475569; margin-right: 4px;">⚡ HIZLI DOLDUR:</span>
           <button type="button" class="btn btn-sm btn-quick-asorti" data-type="kadin8" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; font-weight: 600;">👠 Kadın (8 Çift)</button>
           <button type="button" class="btn btn-sm btn-quick-asorti" data-type="kadin12" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; font-weight: 600;">👠 Kadın (12'li)</button>
           <button type="button" class="btn btn-sm btn-quick-asorti" data-type="erkek8" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-weight: 600;">👞 Erkek (8 Çift)</button>
@@ -293,17 +293,17 @@ const Orders = {
         
         <!-- Özel Asorti Şablonu & Koli Çarpanı -->
         <div class="asorti-helper-row" style="display: flex; align-items: center; gap: 6px; background: #f8fafc; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
-          <span style="font-size: 11px; font-weight: 600; color: var(--text-secondary); white-space: nowrap;">📦 ŞABLON / KOLİ:</span>
+          <span style="font-size: 11px; font-weight: 600; color: #475569; white-space: nowrap;">📦 ŞABLON / KOLİ:</span>
           <select class="color-group-asorti-select" style="flex: 2; padding: 4px 6px; font-size: 11px; border-radius: 4px; height: 28px; background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1;">
             <option value="">Kayıtlı Şablon Seçin</option>
           </select>
           <input type="number" class="color-group-asorti-qty" value="1" min="1" placeholder="Koli" style="width: 50px; padding: 4px 6px; font-size: 11px; text-align: center; border-radius: 4px; height: 28px; margin-bottom: 0; background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1;">
-          <button type="button" class="btn btn-sm btn-apply-asorti" style="padding: 4px 8px; font-size: 11px; height: 28px; font-weight: 600; background: var(--accent-primary); border-color: var(--accent-primary); color: #fff;">Uygula</button>
+          <button type="button" class="btn btn-sm btn-apply-asorti" style="padding: 4px 8px; font-size: 11px; height: 28px; font-weight: 600; background: #0f172a; border-color: #0f172a; color: #fff;">Uygula</button>
         </div>
       </div>
 
       <!-- Size/Qty Table Header -->
-      <div style="display: flex; gap: 8px; margin-bottom: 4px; font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; padding-left: 4px;">
+      <div style="display: flex; gap: 8px; margin-bottom: 4px; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 4px;">
         <span style="flex: 1; text-align: center;">Asorti (Numara)</span>
         <span style="flex: 1; text-align: center;">Toplam Adet</span>
         <span style="width: 34px;"></span>
@@ -315,7 +315,7 @@ const Orders = {
       </div>
 
       <!-- Add Size Row Button -->
-      <button type="button" class="btn btn-sm btn-add-size-row" style="margin-top: 8px; padding: 4px 10px; font-size: 0.72rem; background: rgba(99,102,241,0.1); color: var(--text-accent); border: 1px dashed rgba(99,102,241,0.3); border-radius: 6px; cursor: pointer; width: 100%;">
+      <button type="button" class="btn btn-sm btn-add-size-row" style="margin-top: 8px; padding: 8px 12px; font-size: 0.82rem; font-weight: 600; background: #f8fafc; color: #0f172a; border: 1px dashed #94a3b8; border-radius: 6px; cursor: pointer; width: 100%;">
         + Manuel Numara Ekle
       </button>
 
@@ -1364,11 +1364,11 @@ const Orders = {
           const serialStr = '№ ' + String(currentSerialNum + (i - 1)).padStart(5, '0');
 
           const row = document.createElement('div');
-          row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 4px; font-size: 11.5px;';
+          row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12.5px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);';
           row.innerHTML = `
-            <span><strong style="color: var(--text-accent);">${serialStr}</strong> — Parti ${i}/${numTickets}</span>
-            <span style="color: var(--text-muted);">${order.modelCode}</span>
-            <strong style="color: var(--color-warning);">${ticketQty} Çift</strong>
+            <span style="font-weight: 600; color: #0f172a;"><strong style="color: #0284c7; font-size: 13px;">${serialStr}</strong> — Parti ${i}/${numTickets}</span>
+            <span style="color: #334155; font-weight: 600; background: #f1f5f9; padding: 3px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">Model: ${this.escape(order.modelCode)}</span>
+            <strong style="color: #d97706; font-size: 13px; font-weight: 800; background: #fffbeb; padding: 3px 8px; border-radius: 4px; border: 1px solid #fde68a;">${ticketQty} Çift</strong>
           `;
           previewContainer.appendChild(row);
         }
