@@ -199,6 +199,10 @@
             <span>Ham Madde Stoklarım</span>
           </li>
         </ul>
+        <li class="nav-item" data-page="material-prices" role="menuitem" tabindex="0" aria-label="Malzeme Fiyat Listesi">
+          <span class="sidebar-icon">🏷️</span>
+          <span>Malzeme Fiyat Listesi</span>
+        </li>
         <li class="nav-item" data-page="products" role="menuitem" tabindex="0" aria-label="Ürünler ve Modeller">
           <span class="sidebar-icon">👟</span>
           <span>Ürünler & Modeller</span>
@@ -1292,6 +1296,90 @@
           </div>
         </div>
 
+      </section>
+
+            <!-- ======= MATERIAL PRICES PAGE ======= -->
+      <section id="page-material-prices" class="page">
+        <div class="page-header" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h1 style="display: flex; align-items: center; gap: 8px; margin: 0; color: #0f172a;">
+              <span>🏷️</span> Malzeme Fiyat Listesi & Tedarikçi Havuzu
+            </h1>
+            <p class="page-desc" style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;">
+              Dericiler, tabancılar, tokacılar ve diğer hammadde firmalarının güncel fiyatlarını takip edin ve zam geçmişini inceleyin.
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary" id="btn-add-custom-category" style="font-weight: 700;">
+              ➕ Özel Kategori Ekle
+            </button>
+            <button type="button" class="btn btn-secondary" id="btn-add-material-supplier" style="font-weight: 700;">
+              🏢 + Yeni Tedarikçi Ekle
+            </button>
+            <button type="button" class="btn btn-primary" id="btn-add-material-price" style="font-weight: 700; background: #0f172a !important; color: #ffffff !important;">
+              ➕ Malzeme Fiyatı Ekle
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px;">
+          <div class="stat-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Toplam Tedarikçi</span>
+              <span style="font-size: 22px;">🏢</span>
+            </div>
+            <div id="kpi-mp-total-suppliers" style="font-size: 24px; font-weight: 800; color: #0f172a; margin-top: 6px;">0</div>
+          </div>
+          <div class="stat-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Kayıtlı Malzeme</span>
+              <span style="font-size: 22px;">📦</span>
+            </div>
+            <div id="kpi-mp-total-materials" style="font-size: 24px; font-weight: 800; color: #0284c7; margin-top: 6px;">0</div>
+          </div>
+          <div class="stat-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Son Güncelleme</span>
+              <span style="font-size: 22px;">🕒</span>
+            </div>
+            <div id="kpi-mp-last-update" style="font-size: 14px; font-weight: 700; color: #059669; margin-top: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</div>
+          </div>
+          <div class="stat-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Fiyat Değişim Takibi</span>
+              <span style="font-size: 22px;">📈</span>
+            </div>
+            <div id="kpi-mp-price-changes" style="font-size: 14px; font-weight: 700; color: #d97706; margin-top: 10px;">0 Kalem</div>
+          </div>
+        </div>
+
+        <!-- Controls: Search, Category Chips & View Switcher -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+            <div style="flex: 1; min-width: 260px;">
+              <input type="text" id="search-material-prices" placeholder="Malzeme, firma veya kategori arayın..." style="width: 100%; height: 38px; padding: 0 14px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; font-size: 13.5px;">
+            </div>
+            <div style="display: flex; gap: 6px;" id="mp-view-switcher">
+              <button type="button" class="filter-btn active" id="btn-view-suppliers" style="display: flex; align-items: center; gap: 6px; font-weight: 700;">
+                <span>🏢</span> Tedarikçi Bazlı
+              </button>
+              <button type="button" class="filter-btn" id="btn-view-comparison" style="display: flex; align-items: center; gap: 6px; font-weight: 700;">
+                <span>⚖️</span> Fiyat Kıyaslama
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic Category Chips -->
+          <div id="mp-category-chips" style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+            <!-- Category filter buttons dynamic -->
+          </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="material-prices-content-area">
+          <!-- Suppliers or Comparison list rendered by JS -->
+        </div>
       </section>
 
       <!-- ======= AI ASSISTANT PAGE ======= -->
@@ -3537,6 +3625,186 @@
   <!-- ============ TOAST NOTIFICATION ============ -->
   <div id="toast-container"></div>
 
+    <!-- ============ MATERIAL SUPPLIER MODAL ============ -->
+  <div class="modal-overlay" id="material-supplier-modal">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <h2 id="material-supplier-modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <span>🏢</span> Tedarikçi Firma Ekle
+        </h2>
+        <button type="button" class="modal-close" data-modal="material-supplier-modal">&times;</button>
+      </div>
+      <form id="material-supplier-form" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+        <input type="hidden" id="mp-supplier-id">
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="mp-supplier-name">Tedarikçi Firma / Şahıs Adı <span style="color: var(--color-danger);">*</span></label>
+          <input type="text" id="mp-supplier-name" required placeholder="Firma adını yazın">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom: 0; flex: 1;">
+            <label for="mp-supplier-category">Ana Faaliyet Alanı</label>
+            <select id="mp-supplier-category">
+              <!-- Dynamic categories -->
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 0; flex: 1;">
+            <label for="mp-supplier-person">Yetkili Kişi</label>
+            <input type="text" id="mp-supplier-person" placeholder="Yetkili adı ve soyadı">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom: 0; flex: 1;">
+            <label for="mp-supplier-phone">WhatsApp / Telefon</label>
+            <input type="tel" id="mp-supplier-phone" placeholder="Telefon numarası">
+          </div>
+          <div class="form-group" style="margin-bottom: 0; flex: 1;">
+            <label for="mp-supplier-city">Şehir / Sanayi Bölgesi</label>
+            <input type="text" id="mp-supplier-city" placeholder="Şehir veya sanayi sitesi">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="mp-supplier-notes">Özel Notlar</label>
+          <textarea id="mp-supplier-notes" rows="2" placeholder="Tedarikçi hakkında hatırlatıcı notlar"></textarea>
+        </div>
+
+        <div class="modal-actions" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <button type="button" class="btn btn-ghost" data-modal="material-supplier-modal">İptal</button>
+          <button type="submit" class="btn btn-primary" style="background: #0f172a !important; color: #ffffff !important; font-weight: 700; padding: 10px 24px;">
+            💾 Firmayı Kaydet
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ MATERIAL PRICE MODAL ============ -->
+  <div class="modal-overlay" id="material-price-modal">
+    <div class="modal-card" style="max-width: 540px;">
+      <div class="modal-header">
+        <h2 id="material-price-modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <span>📦</span> Malzeme Fiyatı Ekle
+        </h2>
+        <button type="button" class="modal-close" data-modal="material-price-modal">&times;</button>
+      </div>
+      <form id="material-price-form" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+        <input type="hidden" id="mp-price-id">
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="mp-price-supplier-id">Tedarikçi Firma <span style="color: var(--color-danger);">*</span></label>
+          <select id="mp-price-supplier-id" required>
+            <!-- Dynamic suppliers -->
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom: 0; flex: 1.4;">
+            <label for="mp-price-material-name">Malzeme Adı / Cinsi <span style="color: var(--color-danger);">*</span></label>
+            <input type="text" id="mp-price-material-name" required placeholder="Malzemenin tam adı">
+          </div>
+          <div class="form-group" style="margin-bottom: 0; flex: 1;">
+            <label for="mp-price-category">Kategori</label>
+            <select id="mp-price-category">
+              <!-- Dynamic categories -->
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom: 0; flex: 1;">
+            <label for="mp-price-unit">Ölçü Birimi</label>
+            <select id="mp-price-unit">
+              <option value="dm²">dm² (Desimetre)</option>
+              <option value="Çift">Çift</option>
+              <option value="Adet">Adet</option>
+              <option value="Kg">Kg</option>
+              <option value="Litre">Litre</option>
+              <option value="Metre">Metre</option>
+              <option value="Takım">Takım</option>
+              <option value="Koli">Koli</option>
+              <option value="Bobin">Bobin</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 0; flex: 1;">
+            <label for="mp-price-amount">Birim Fiyat <span style="color: var(--color-danger);">*</span></label>
+            <input type="number" id="mp-price-amount" step="0.01" min="0.01" required placeholder="0.00">
+          </div>
+          <div class="form-group" style="margin-bottom: 0; flex: 0.8;">
+            <label for="mp-price-currency">Para Birimi</label>
+            <select id="mp-price-currency">
+              <option value="TRY">TRY (₺)</option>
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="mp-price-notes">Özellik / Tedarik Notu</label>
+          <input type="text" id="mp-price-notes" placeholder="Renk, kalınlık, minimum alım veya teslimat süresi">
+        </div>
+
+        <div class="modal-actions" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <button type="button" class="btn btn-ghost" data-modal="material-price-modal">İptal</button>
+          <button type="submit" class="btn btn-primary" style="background: #0f172a !important; color: #ffffff !important; font-weight: 700; padding: 10px 24px;">
+            💾 Fiyatı Kaydet
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ PRICE HISTORY MODAL ============ -->
+  <div class="modal-overlay" id="price-history-modal">
+    <div class="modal-card" style="max-width: 580px;">
+      <div class="modal-header">
+        <h2 id="price-history-modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <span>📈</span> Fiyat Değişim & Zam Geçmişi
+        </h2>
+        <button type="button" class="modal-close" data-modal="price-history-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div id="price-history-timeline" style="max-height: 380px; overflow-y: auto;">
+          <!-- History items dynamic -->
+        </div>
+        <div class="modal-actions" style="margin-top: 18px; display: flex; justify-content: flex-end;">
+          <button type="button" class="btn btn-primary" data-modal="price-history-modal" style="background: #0f172a !important; color: #ffffff !important; font-weight: 700; padding: 8px 20px;">Kapat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CUSTOM CATEGORY MODAL ============ -->
+  <div class="modal-overlay" id="custom-category-modal">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h2 style="display: flex; align-items: center; gap: 8px;">
+          <span>🏷️</span> Yeni Özel Kategori Ekle
+        </h2>
+        <button type="button" class="modal-close" data-modal="custom-category-modal">&times;</button>
+      </div>
+      <form id="custom-category-form" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="custom-cat-name">Kategori Adı <span style="color: var(--color-danger);">*</span></label>
+          <input type="text" id="custom-cat-name" required placeholder="Yeni kategori adı">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="custom-cat-icon">Kategori İkonu / Emojisi</label>
+          <input type="text" id="custom-cat-icon" value="🏷️" placeholder="Emoji seçin veya yazın">
+        </div>
+        <div class="modal-actions" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <button type="button" class="btn btn-ghost" data-modal="custom-category-modal">İptal</button>
+          <button type="submit" class="btn btn-primary" style="background: #0f172a !important; color: #ffffff !important; font-weight: 700; padding: 10px 24px;">
+            ➕ Kategoriyi Ekle
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ============ AI ASSISTANT COPILOT DRAWER ============ -->
   <div class="ai-drawer-overlay" id="ai-drawer-overlay" onclick="AiAssistant.toggleDrawer(false)"></div>
   <aside class="ai-copilot-drawer" id="ai-copilot-drawer" aria-label="Atölyecim Yapay Zeka Asistanı">
@@ -3590,6 +3858,7 @@
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="db.js" type="module"></script>
   <script src="dashboard.js" type="module"></script>
+  <script src="material-prices.js" type="module"></script>
   <script src="products.js" type="module"></script>
   <script src="contacts.js" type="module"></script>
   <script src="stocks.js" type="module"></script>

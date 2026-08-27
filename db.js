@@ -58,7 +58,7 @@ initSupabaseClient();
 
 // Local IndexedDB Settings
 const DB_NAME = 'atolyecim_db_v4';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 let db = null;
 
 // Primary key field mappings for different tables
@@ -286,6 +286,19 @@ function initDB() {
         const jts = database.createObjectStore('job_tickets', { keyPath: 'id', autoIncrement: true });
         jts.createIndex('stage', 'stage', { unique: false });
         jts.createIndex('serialNo', 'serialNo', { unique: false });
+      }
+
+      if (!database.objectStoreNames.contains('material_suppliers')) {
+        const mss = database.createObjectStore('material_suppliers', { keyPath: 'id', autoIncrement: true });
+        mss.createIndex('category', 'category', { unique: false });
+        mss.createIndex('name', 'name', { unique: false });
+      }
+
+      if (!database.objectStoreNames.contains('material_prices')) {
+        const mps = database.createObjectStore('material_prices', { keyPath: 'id', autoIncrement: true });
+        mps.createIndex('supplierId', 'supplierId', { unique: false });
+        mps.createIndex('category', 'category', { unique: false });
+        mps.createIndex('materialName', 'materialName', { unique: false });
       }
     };
 

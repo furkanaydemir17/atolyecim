@@ -172,6 +172,12 @@ function initNavigation() {
             window.JobTickets.loadTickets();
           }
         }
+        else if (pageName === 'material-prices') {
+          if (window.MaterialPrices) {
+            window.MaterialPrices.init();
+            window.MaterialPrices.render();
+          }
+        }
         else if (pageName.startsWith('stock-') && window.Stocks) window.Stocks.render(pageName);
         else if (pageName === 'barcode' && window.BarcodeScanner) window.BarcodeScanner.render();
         else if (pageName === 'manager') initManagerPage();
@@ -693,6 +699,7 @@ async function loadApp() {
     if (window.Stocks) window.Stocks.bindEvents();
     if (window.Contractors) window.Contractors.bindEvents();
     if (window.JobTickets && typeof window.JobTickets.bindEvents === 'function') window.JobTickets.bindEvents();
+    if (window.MaterialPrices && typeof window.MaterialPrices.init === 'function') window.MaterialPrices.init();
     if (window.WhatsAppManager && typeof window.WhatsAppManager.init === 'function') window.WhatsAppManager.init();
 
     // Sync B2B settings from DB

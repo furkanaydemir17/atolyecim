@@ -2664,11 +2664,11 @@ const Orders = {
           <div style="display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 10px; margin-bottom: 12px;">
             <div class="form-group" style="margin-bottom: 0;">
               <label style="font-size: 11px; font-weight: 700; color: #475569;">Model Kodu</label>
-              <input type="text" class="email-grp-model" data-group-id="${grp.id}" value="${this.escape(grp.modelCode)}" placeholder="Örn: A-102" style="width: 100%; font-weight: 800; font-size: 13px;">
+              <input type="text" class="email-grp-model" data-group-id="${grp.id}" value="${this.escape(grp.modelCode)}" placeholder="Model kodu" style="width: 100%; font-weight: 800; font-size: 13px;">
             </div>
             <div class="form-group" style="margin-bottom: 0;">
               <label style="font-size: 11px; font-weight: 700; color: #475569;">Renk</label>
-              <input type="text" class="email-grp-color" data-group-id="${grp.id}" value="${this.escape(grp.color)}" placeholder="Siyah" style="width: 100%; font-weight: 600; font-size: 13px;">
+              <input type="text" class="email-grp-color" data-group-id="${grp.id}" value="${this.escape(grp.color)}" placeholder="Renk" style="width: 100%; font-weight: 600; font-size: 13px;">
             </div>
             <div class="form-group" style="margin-bottom: 0;">
               <label style="font-size: 11px; font-weight: 700; color: #475569;">Birim Fiyat & Para Birimi</label>
@@ -3050,8 +3050,13 @@ const Recipes = {
     const datalist = document.getElementById('recipe-stock-suggestions');
     if (!datalist) return;
     try {
-      const stocks = await dbGetAll('stocks');
-      datalist.innerHTML = stocks.map(s => `<option value="${this.escape(s.name)}" data-price="${s.price || 0}" data-unit="${s.unit || 'adet'}">`).join('');
+      const stocks = await dbGetAll('stocks') || [];
+      const materialPrices = await dbGetAll('material_prices') || [];
+      
+      const stockOptions = stocks.map(s => `<option value="${this.escape(s.name)}" data-price="${s.price || 0}" data-unit="${s.unit || 'adet'}">`);
+      const materialOptions = materialPrices.map(m => `<option value="${this.escape(m.materialName)}" data-price="${m.unitPrice || 0}" data-unit="${m.unit || 'adet'}"> (${this.escape(m.supplierName || 'Tedarikçi')} — ${m.unitPrice} ₺)</option>`);
+      
+      datalist.innerHTML = [...materialOptions, ...stockOptions].join('');
     } catch (e) {
       console.warn('Stock suggestions load failed:', e);
     }
@@ -3084,14 +3089,26 @@ const Recipes = {
       });
     }
 
-    // Material Name Input Autocomplete Auto-fill unit & price
+    // Material Name Input Autocomplete Auto-fill unit & price from stocks AND material_prices
     const nameInput = document.getElementById('recipe-material-name');
     if (nameInput && !nameInput._bound) {
       nameInput._bound = true;
       nameInput.addEventListener('change', async (e) => {
         const val = e.target.value.trim();
-        const stocks = await dbGetAll('stocks');
-        const match = stocks.find(s => (s.name || '').toLowerCase() === val.toLowerCase());
+        const stocks = await dbGetAll('stocks') || [];
+        const materialPrices = await dbGetAll('material_prices') || [];
+
+        let match = null;
+        const matMatch = materialPrices.find(m => (m.materialName || '').toLowerCase() === val.toLowerCase());
+        if (matMatch) {
+          match = { unit: matMatch.unit, price: matMatch.unitPrice };
+        } else {
+          const stockMatch = stocks.find(s => (s.name || '').toLowerCase() === val.toLowerCase());
+          if (stockMatch) {
+            match = { unit: stockMatch.unit, price: stockMatch.price };
+          }
+        }
+
         if (match) {
           const unitSelect = document.getElementById('recipe-material-unit');
           if (unitSelect && match.unit) unitSelect.value = match.unit;
