@@ -20,6 +20,27 @@ export const MaterialPrices = {
   suppliers: [],
   prices: [],
   customCategories: [],
+  expandedSuppliers: new Set(),
+
+  toggleSupplierExpand(supplierId) {
+    const id = Number(supplierId);
+    if (this.expandedSuppliers.has(id)) {
+      this.expandedSuppliers.delete(id);
+    } else {
+      this.expandedSuppliers.add(id);
+    }
+    this.renderList();
+  },
+
+  expandAllSuppliers() {
+    this.suppliers.forEach(s => this.expandedSuppliers.add(Number(s.id)));
+    this.renderList();
+  },
+
+  collapseAllSuppliers() {
+    this.expandedSuppliers.clear();
+    this.renderList();
+  },
 
   async init() {
     this.loadCustomCategories();
@@ -263,126 +284,173 @@ export const MaterialPrices = {
       return;
     }
 
-    let html = `<div style="display: flex; flex-direction: column; gap: 16px;">`;
+    const allExpanded = filteredSuppliers.length > 0 && filteredSuppliers.every(s => this.expandedSuppliers.has(Number(s.id)) || Boolean(this.searchQuery));
+
+    let html = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+        <div style="font-size: 13px; font-weight: 700; color: #475569;">
+          🏢 Toplam <strong>${filteredSuppliers.length}</strong> Tedarikçi Firma <span style="font-size: 11.5px; color: #94a3b8; font-weight: 500; margin-left: 6px;">(Detayları görmek için firmaya tıklayın)</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          ${allExpanded ? `
+            <button type="button" class="btn btn-sm btn-ghost" onclick="window.MaterialPrices.collapseAllSuppliers()" style="font-size: 12px; font-weight: 700; color: #475569; border-color: #cbd5e1; background: #ffffff;">
+              📁 Tümünü Kapat
+            </button>
+          ` : `
+            <button type="button" class="btn btn-sm btn-ghost" onclick="window.MaterialPrices.expandAllSuppliers()" style="font-size: 12px; font-weight: 700; color: #0284c7; border-color: #bae6fd; background: #f0f9ff;">
+              📂 Tümünü Aç
+            </button>
+          `}
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+    `;
 
     filteredSuppliers.forEach(sup => {
       const catInfo = this.getCategoryInfo(sup.category);
       const supplierPrices = this.prices.filter(p => p.supplierId === sup.id);
+      const isExpanded = this.expandedSuppliers.has(Number(sup.id)) || Boolean(this.searchQuery);
 
       html += `
-        <div class="card" style="padding: 18px 20px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        <div class="card" style="padding: 0; background: #ffffff; border: 1px solid ${isExpanded ? '#93c5fd' : '#e2e8f0'}; border-radius: 12px; box-shadow: ${isExpanded ? '0 4px 12px rgba(2,132,199,0.08)' : '0 1px 3px rgba(0,0,0,0.03)'}; transition: all 0.2s; overflow: hidden;">
           
-          <!-- Supplier Header -->
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 14px;">
-            <div>
-              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <h3 style="margin: 0; color: #0f172a; font-size: 1.15rem; font-weight: 800;">${escapeHtml(sup.name)}</h3>
-                <span style="display: inline-flex; align-items: center; gap: 4px; background: #f1f5f9; color: #334155; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; border: 1px solid #e2e8f0;">
-                  <span>${catInfo.icon}</span> ${escapeHtml(catInfo.label)}
-                </span>
-                ${sup.city ? `<span style="color: #64748b; font-size: 12px;">📍 ${escapeHtml(sup.city)}</span>` : ''}
-              </div>
-              <div style="display: flex; gap: 16px; margin-top: 6px; font-size: 12px; color: #475569; flex-wrap: wrap;">
-                ${sup.contactPerson ? `<span>👤 Yetkili: <strong>${escapeHtml(sup.contactPerson)}</strong></span>` : ''}
-                ${sup.phone ? `<span>📞 Telefon: <strong>${escapeHtml(sup.phone)}</strong></span>` : ''}
-                ${sup.notes ? `<span style="color: #64748b; font-style: italic;">📝 ${escapeHtml(sup.notes)}</span>` : ''}
+          <!-- Accordion Header (Click to Open/Close) -->
+          <div onclick="window.MaterialPrices.toggleSupplierExpand(${sup.id})" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px 18px; cursor: pointer; background: ${isExpanded ? '#f8fafc' : '#ffffff'}; border-bottom: ${isExpanded ? '1px solid #e2e8f0' : 'none'}; user-select: none;">
+            
+            <div style="display: flex; align-items: center; gap: 12px; min-width: 260px; flex: 1;">
+              <!-- Expand Icon Indicator -->
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: ${isExpanded ? '#0284c7' : '#f1f5f9'}; color: ${isExpanded ? '#ffffff' : '#64748b'}; font-size: 11px; font-weight: 800; transition: all 0.2s; flex-shrink: 0;">
+                ${isExpanded ? '▼' : '▶'}
+              </span>
+
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <h3 style="margin: 0; color: #0f172a; font-size: 1.12rem; font-weight: 800;">${escapeHtml(sup.name)}</h3>
+                  <span style="display: inline-flex; align-items: center; gap: 4px; background: #ffffff; color: #334155; padding: 2px 8px; border-radius: 16px; font-size: 11px; font-weight: 700; border: 1px solid #e2e8f0;">
+                    <span>${catInfo.icon}</span> ${escapeHtml(catInfo.label)}
+                  </span>
+                  ${sup.city ? `<span style="color: #64748b; font-size: 11.5px; background: #f8fafc; padding: 2px 6px; border-radius: 6px; border: 1px solid #f1f5f9;">📍 ${escapeHtml(sup.city)}</span>` : ''}
+                  ${supplierPrices.length > 0 ? `
+                    <span style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;">
+                      📦 ${supplierPrices.length} Malzeme Kayıtlı
+                    </span>
+                  ` : `
+                    <span style="background: #f1f5f9; color: #64748b; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">
+                      0 Malzeme
+                    </span>
+                  `}
+                </div>
+                
+                <div style="display: flex; gap: 14px; margin-top: 4px; font-size: 11.5px; color: #475569; flex-wrap: wrap;">
+                  ${sup.contactPerson ? `<span>👤 <strong>${escapeHtml(sup.contactPerson)}</strong></span>` : ''}
+                  ${sup.phone ? `<span>📞 <strong>${escapeHtml(sup.phone)}</strong></span>` : ''}
+                  ${sup.notes ? `<span style="color: #64748b; font-style: italic;">📝 ${escapeHtml(sup.notes)}</span>` : ''}
+                </div>
               </div>
             </div>
 
-            <!-- Supplier Action Buttons -->
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <!-- Supplier Action Buttons (e.stopPropagation prevents toggle when clicking buttons) -->
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;" onclick="event.stopPropagation()">
               ${sup.phone ? `
-                <button type="button" class="btn btn-sm btn-ghost" onclick="window.MaterialPrices.openWhatsAppChat('${escapeHtml(sup.phone)}', '${escapeHtml(sup.name)}')" title="WhatsApp ile İletişime Geç" style="color: #059669; border-color: #a7f3d0; background: #ecfdf5; font-weight: 700;">
+                <button type="button" class="btn btn-sm btn-ghost" onclick="window.MaterialPrices.openWhatsAppChat('${escapeHtml(sup.phone)}', '${escapeHtml(sup.name)}')" title="WhatsApp ile İletişime Geç" style="color: #059669; border-color: #a7f3d0; background: #ecfdf5; font-weight: 700; font-size: 11px; padding: 4px 8px;">
                   📲 WhatsApp
                 </button>
               ` : ''}
-              <button type="button" class="btn btn-sm btn-secondary" onclick="window.MaterialPrices.openPriceModal(null, ${sup.id})" style="font-weight: 700;">
-                ➕ Malzeme Fiyatı Ekle
+              <button type="button" class="btn btn-sm btn-secondary" onclick="window.MaterialPrices.openPriceModal(null, ${sup.id})" style="font-weight: 700; font-size: 11px; padding: 4px 8px;">
+                ➕ Malzeme Ekle
               </button>
-              <button type="button" class="btn-icon info" onclick="window.MaterialPrices.openSupplierModal(${sup.id})" title="Firmayı Düzenle">✏️</button>
-              <button type="button" class="btn-icon danger" onclick="window.MaterialPrices.deleteSupplier(${sup.id})" title="Firmayı Sil">🗑️</button>
+              <button type="button" class="btn-icon info" onclick="window.MaterialPrices.openSupplierModal(${sup.id})" title="Firmayı Düzenle" style="padding: 4px 6px;">✏️</button>
+              <button type="button" class="btn-icon danger" onclick="window.MaterialPrices.deleteSupplier(${sup.id})" title="Firmayı Sil" style="padding: 4px 6px;">🗑️</button>
+              
+              <button type="button" class="btn btn-sm" onclick="window.MaterialPrices.toggleSupplierExpand(${sup.id})" style="font-size: 11px; font-weight: 700; background: ${isExpanded ? '#f1f5f9' : '#0284c7'}; color: ${isExpanded ? '#334155' : '#ffffff'}; border: 1px solid ${isExpanded ? '#cbd5e1' : '#0284c7'}; padding: 4px 10px; border-radius: 6px; cursor: pointer;">
+                ${isExpanded ? '▲ Gizle' : '▼ Malzemeleri Gör'}
+              </button>
             </div>
           </div>
 
-          <!-- Supplier Materials Table -->
-          ${supplierPrices.length === 0 ? `
-            <div style="padding: 12px; text-align: center; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1; color: #64748b; font-size: 12.5px;">
-              Bu firmaya ait henüz malzeme fiyatı girilmemiş. <a href="javascript:void(0)" onclick="window.MaterialPrices.openPriceModal(null, ${sup.id})" style="color: #0284c7; font-weight: 700; text-decoration: underline;">Hemen ilk malzemeyi ekleyin</a>.
-            </div>
-          ` : `
-            <div class="table-container" style="box-shadow: none; border: 1px solid #e2e8f0; border-radius: 8px;">
-              <table class="data-table" style="margin: 0; font-size: 13px;">
-                <thead>
-                  <tr style="background: #f8fafc;">
-                    <th style="font-weight: 700; color: #475569;">Malzeme Adı</th>
-                    <th style="font-weight: 700; color: #475569;">Kategori</th>
-                    <th style="font-weight: 700; color: #475569;">Birim</th>
-                    <th style="font-weight: 700; color: #475569; text-align: right;">Birim Fiyat</th>
-                    <th style="font-weight: 700; color: #475569; text-align: center;">Zam / Fiyat Değişimi</th>
-                    <th style="font-weight: 700; color: #475569;">Son Güncelleme</th>
-                    <th style="font-weight: 700; color: #475569; text-align: right;">İşlemler</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${supplierPrices.map(pr => {
-                    const prCat = this.getCategoryInfo(pr.category);
-                    const history = Array.isArray(pr.priceHistory) ? pr.priceHistory : [];
-                    let historyBadge = `<span style="color: #94a3b8; font-size: 11px;">İlk Fiyat</span>`;
-
-                    if (history.length > 0) {
-                      const latestChange = history[history.length - 1];
-                      const changePct = latestChange.changePercent;
-                      if (changePct > 0) {
-                        historyBadge = `<span style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 2px 7px; border-radius: 12px; font-weight: 800; font-size: 11px;">📈 +%${changePct} Zam</span>`;
-                      } else if (changePct < 0) {
-                        historyBadge = `<span style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 2px 7px; border-radius: 12px; font-weight: 800; font-size: 11px;">📉 %${Math.abs(changePct)} İndirim</span>`;
-                      }
-                    }
-
-                    const sym = pr.currency === 'USD' ? '$' : (pr.currency === 'EUR' ? '€' : '₺');
-                    const formattedPrice = `${sym}${Number(pr.unitPrice || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
-                    const dateStr = pr.updatedAt ? new Date(pr.updatedAt).toLocaleDateString('tr-TR') : (pr.createdAt ? new Date(pr.createdAt).toLocaleDateString('tr-TR') : '-');
-
-                    return `
-                      <tr>
-                        <td>
-                          <strong style="color: #0f172a; font-size: 13.5px;">${escapeHtml(pr.materialName)}</strong>
-                          ${pr.notes ? `<div style="font-size: 11px; color: #64748b;">${escapeHtml(pr.notes)}</div>` : ''}
-                        </td>
-                        <td>
-                          <span style="font-size: 11.5px; color: #334155;">${prCat.icon} ${escapeHtml(prCat.label)}</span>
-                        </td>
-                        <td>
-                          <span style="font-weight: 600; color: #475569; text-transform: uppercase; font-size: 11px;">${escapeHtml(pr.unit || 'Adet')}</span>
-                        </td>
-                        <td style="text-align: right;">
-                          <strong style="font-size: 14px; color: #0f172a; font-family: monospace;">${formattedPrice}</strong>
-                        </td>
-                        <td style="text-align: center;">
-                          ${historyBadge}
-                          ${history.length > 0 ? `
-                            <button type="button" class="btn btn-sm btn-ghost" onclick="window.MaterialPrices.openPriceHistoryModal(${pr.id})" style="padding: 1px 6px; font-size: 10.5px; margin-left: 4px; border: none; text-decoration: underline; color: #0284c7; cursor: pointer;">
-                              Tarihçe (${history.length})
-                            </button>
-                          ` : ''}
-                        </td>
-                        <td style="font-size: 12px; color: #64748b;">
-                          ${dateStr}
-                        </td>
-                        <td style="text-align: right;">
-                          <div class="actions-cell" style="justify-content: flex-end;">
-                            <button type="button" class="btn-icon success" onclick="window.MaterialPrices.generateWhatsAppInquiry(${pr.id})" title="Tedarikçiye WhatsApp ile Malzeme Sor" style="color: #059669; background: #ecfdf5; border-color: #a7f3d0;">📲</button>
-                            <button type="button" class="btn-icon info" onclick="window.MaterialPrices.openPriceModal(${pr.id})" title="Fiyatı Düzenle">✏️</button>
-                            <button type="button" class="btn-icon danger" onclick="window.MaterialPrices.deletePrice(${pr.id})" title="Fiyatı Sil">🗑️</button>
-                          </div>
-                        </td>
+          <!-- Supplier Materials Table (Expanded State) -->
+          ${isExpanded ? `
+            <div style="padding: 16px 18px; background: #ffffff;">
+              ${supplierPrices.length === 0 ? `
+                <div style="padding: 14px; text-align: center; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1; color: #64748b; font-size: 12.5px;">
+                  Bu firmaya ait henüz malzeme fiyatı girilmemiş. <a href="javascript:void(0)" onclick="window.MaterialPrices.openPriceModal(null, ${sup.id})" style="color: #0284c7; font-weight: 700; text-decoration: underline;">Hemen ilk malzemeyi ekleyin</a>.
+                </div>
+              ` : `
+                <div class="table-container" style="box-shadow: none; border: 1px solid #e2e8f0; border-radius: 8px;">
+                  <table class="data-table" style="margin: 0; font-size: 13px;">
+                    <thead>
+                      <tr style="background: #f8fafc;">
+                        <th style="font-weight: 700; color: #475569;">Malzeme Adı</th>
+                        <th style="font-weight: 700; color: #475569;">Kategori</th>
+                        <th style="font-weight: 700; color: #475569;">Birim</th>
+                        <th style="font-weight: 700; color: #475569; text-align: right;">Birim Fiyat</th>
+                        <th style="font-weight: 700; color: #475569; text-align: center;">Zam / Fiyat Değişimi</th>
+                        <th style="font-weight: 700; color: #475569;">Son Güncelleme</th>
+                        <th style="font-weight: 700; color: #475569; text-align: right;">İşlemler</th>
                       </tr>
-                    `;
-                  }).join('')}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      ${supplierPrices.map(pr => {
+                        const prCat = this.getCategoryInfo(pr.category);
+                        const history = Array.isArray(pr.priceHistory) ? pr.priceHistory : [];
+                        let historyBadge = `<span style="color: #94a3b8; font-size: 11px;">İlk Fiyat</span>`;
+
+                        if (history.length > 0) {
+                          const latestChange = history[history.length - 1];
+                          const changePct = latestChange.changePercent;
+                          if (changePct > 0) {
+                            historyBadge = `<span style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 2px 7px; border-radius: 12px; font-weight: 800; font-size: 11px;">📈 +%${changePct} Zam</span>`;
+                          } else if (changePct < 0) {
+                            historyBadge = `<span style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 2px 7px; border-radius: 12px; font-weight: 800; font-size: 11px;">📉 %${Math.abs(changePct)} İndirim</span>`;
+                          }
+                        }
+
+                        const sym = pr.currency === 'USD' ? '$' : (pr.currency === 'EUR' ? '€' : '₺');
+                        const formattedPrice = `${sym}${Number(pr.unitPrice || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+                        const dateStr = pr.updatedAt ? new Date(pr.updatedAt).toLocaleDateString('tr-TR') : (pr.createdAt ? new Date(pr.createdAt).toLocaleDateString('tr-TR') : '-');
+
+                        return `
+                          <tr>
+                            <td>
+                              <strong style="color: #0f172a; font-size: 13.5px;">${escapeHtml(pr.materialName)}</strong>
+                              ${pr.notes ? `<div style="font-size: 11px; color: #64748b;">${escapeHtml(pr.notes)}</div>` : ''}
+                            </td>
+                            <td>
+                              <span style="font-size: 11.5px; color: #334155;">${prCat.icon} ${escapeHtml(prCat.label)}</span>
+                            </td>
+                            <td>
+                              <span style="font-weight: 600; color: #475569; text-transform: uppercase; font-size: 11px;">${escapeHtml(pr.unit || 'Adet')}</span>
+                            </td>
+                            <td style="text-align: right;">
+                              <strong style="font-size: 14px; color: #0f172a; font-family: monospace;">${formattedPrice}</strong>
+                            </td>
+                            <td style="text-align: center;">
+                              ${historyBadge}
+                              ${history.length > 0 ? `
+                                <button type="button" class="btn btn-sm btn-ghost" onclick="window.MaterialPrices.openPriceHistoryModal(${pr.id})" style="padding: 1px 6px; font-size: 10.5px; margin-left: 4px; border: none; text-decoration: underline; color: #0284c7; cursor: pointer;">
+                                  Tarihçe (${history.length})
+                                </button>
+                              ` : ''}
+                            </td>
+                            <td style="font-size: 12px; color: #64748b;">
+                              ${dateStr}
+                            </td>
+                            <td style="text-align: right;">
+                              <div class="actions-cell" style="justify-content: flex-end;">
+                                <button type="button" class="btn-icon success" onclick="window.MaterialPrices.generateWhatsAppInquiry(${pr.id})" title="Tedarikçiye WhatsApp ile Malzeme Sor" style="color: #059669; background: #ecfdf5; border-color: #a7f3d0;">📲</button>
+                                <button type="button" class="btn-icon info" onclick="window.MaterialPrices.openPriceModal(${pr.id})" title="Fiyatı Düzenle">✏️</button>
+                                <button type="button" class="btn-icon danger" onclick="window.MaterialPrices.deletePrice(${pr.id})" title="Fiyatı Sil">🗑️</button>
+                              </div>
+                            </td>
+                          </tr>
+                        `;
+                      }).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              `}
             </div>
-          `}
+          ` : ''}
         </div>
       `;
     });
