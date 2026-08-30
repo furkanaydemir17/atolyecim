@@ -24,10 +24,28 @@ function showToast(message, type = 'info') {
   }, 3000);
 }
 
+/* --- Global Browser Autocomplete Disabler --- */
+function disableAllBrowserAutocompletes() {
+  document.querySelectorAll('form').forEach(form => {
+    if (form.id !== 'login-form' && form.id !== 'register-form') {
+      form.setAttribute('autocomplete', 'off');
+    }
+  });
+  document.querySelectorAll('input, textarea, select').forEach(el => {
+    if (!el.id?.startsWith('login-') && !el.id?.startsWith('reg-')) {
+      el.setAttribute('autocomplete', 'off');
+      el.setAttribute('autocorrect', 'off');
+      el.setAttribute('autocapitalize', 'off');
+      el.setAttribute('spellcheck', 'false');
+    }
+  });
+}
+
 /* --- Modal Helpers --- */
 function openModalById(id) {
   const modal = document.getElementById(id);
   if (modal) {
+    disableAllBrowserAutocompletes();
     modal.style.display = 'flex';
     requestAnimationFrame(() => modal.classList.add('show'));
   }
@@ -688,6 +706,7 @@ async function loadApp() {
     await initDB();
 
     initModals();
+    disableAllBrowserAutocompletes();
     initMobileMenu();
     initNavigation();
     initAdminModulesForm();

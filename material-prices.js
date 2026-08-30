@@ -326,10 +326,6 @@ export const MaterialPrices = {
               <div>
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                   <h3 style="margin: 0; color: #0f172a; font-size: 1.12rem; font-weight: 800;">${escapeHtml(sup.name)}</h3>
-                  <span style="display: inline-flex; align-items: center; gap: 4px; background: #ffffff; color: #334155; padding: 2px 8px; border-radius: 16px; font-size: 11px; font-weight: 700; border: 1px solid #e2e8f0;">
-                    <span>${catInfo.icon}</span> ${escapeHtml(catInfo.label)}
-                  </span>
-                  ${sup.city ? `<span style="color: #64748b; font-size: 11.5px; background: #f8fafc; padding: 2px 6px; border-radius: 6px; border: 1px solid #f1f5f9;">📍 ${escapeHtml(sup.city)}</span>` : ''}
                   ${supplierPrices.length > 0 ? `
                     <span style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;">
                       📦 ${supplierPrices.length} Malzeme Kayıtlı
@@ -341,10 +337,9 @@ export const MaterialPrices = {
                   `}
                 </div>
                 
-                <div style="display: flex; gap: 14px; margin-top: 4px; font-size: 11.5px; color: #475569; flex-wrap: wrap;">
+                <div style="display: flex; gap: 14px; margin-top: 4px; font-size: 12px; color: #334155; flex-wrap: wrap;">
                   ${sup.contactPerson ? `<span>👤 <strong>${escapeHtml(sup.contactPerson)}</strong></span>` : ''}
                   ${sup.phone ? `<span>📞 <strong>${escapeHtml(sup.phone)}</strong></span>` : ''}
-                  ${sup.notes ? `<span style="color: #64748b; font-style: italic;">📝 ${escapeHtml(sup.notes)}</span>` : ''}
                 </div>
               </div>
             </div>

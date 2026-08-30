@@ -275,7 +275,7 @@ const Orders = {
         <div style="display: flex; align-items: center; gap: 10px;">
           <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
             <span style="font-weight: 700; font-size: 0.82rem; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">RENK:</span>
-            <input type="text" list="order-colors-list" class="color-group-name" placeholder="Renk adı yazın" value="${this.escape(colorName)}" 
+            <input type="text" class="color-group-name" placeholder="Renk adı yazın" value="${this.escape(colorName)}" autocomplete="off"
               style="flex: 1; margin-bottom: 0; padding: 7px 12px; font-weight: 600; font-size: 0.9rem; border-radius: 6px; background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1;" required>
           </div>
           <button type="button" class="btn-icon danger btn-remove-color-group" style="flex-shrink: 0; height: 34px; width: 34px; font-size: 16px;" title="Renk Grubunu Sil">&times;</button>
