@@ -190,9 +190,9 @@ const Stocks = {
           <tr>
             <td><strong>${this.escape(s.name)}</strong></td>
             <td>${this.escape(s.color || '-')}</td>
-            <td class="${qtyClass}" style="${qtyStyle}">${s.qty} ${this.escape(s.unit || 'm²')}</td>
+            <td class="${qtyClass}" style="${qtyStyle}">${s.qty} ${this.escape(s.unit || 'dm²')}</td>
             <td>${this.escape(s.size || '-')}</td>
-            <td>${s.limit || 0} ${this.escape(s.unit || 'm²')}</td>
+            <td>${s.limit || 0} ${this.escape(s.unit || 'dm²')}</td>
         `;
       } else { // raw
         rowHtml = `
@@ -276,7 +276,7 @@ const Stocks = {
       if (extraGroup) extraGroup.style.display = 'none';
       if (unitSelect) {
         unitSelect.value = 'Çift';
-        unitSelect.disabled = true;
+        unitSelect.disabled = false;
       }
 
       if (!isEdit) {
@@ -310,7 +310,7 @@ const Stocks = {
       }
       if (unitSelect) {
         unitSelect.value = 'Adet';
-        unitSelect.disabled = true;
+        unitSelect.disabled = false;
       }
     } else if (type === 'leather') {
       if (sizeLabel && sizeInput) {
@@ -319,8 +319,8 @@ const Stocks = {
       }
       if (extraGroup) extraGroup.style.display = 'none';
       if (unitSelect) {
-        unitSelect.value = 'm²';
-        unitSelect.disabled = true;
+        unitSelect.value = 'dm²';
+        unitSelect.disabled = false;
       }
     } else if (type === 'raw') {
       if (sizeGroup) sizeGroup.style.display = 'none';
@@ -328,6 +328,10 @@ const Stocks = {
       if (extraLabel && extraInput) {
         extraLabel.textContent = 'Depo Alanı';
         extraInput.placeholder = '';
+      }
+      if (unitSelect) {
+        unitSelect.value = 'Kg';
+        unitSelect.disabled = false;
       }
     }
   },
