@@ -316,19 +316,20 @@ const Contractors = {
           const odenenStr = entry.odenen > 0 ? formatMoney(entry.odenen, curr) : '-';
           const balanceStr = formatMoney(runningBalance[curr], curr);
 
+          tr.className = 'ledger-row-item';
           tr.innerHTML = `
-            <td>${dateFormatted}</td>
-            <td>
+            <td data-label="Tarih">${dateFormatted}</td>
+            <td data-label="Açıklama">
               <div style="font-weight: 500; font-size: 0.9rem;">
                 ${isJob ? '📦 ' : '💵 '}${escapeHtml(entry.description)}
               </div>
             </td>
-            <td style="text-align: right; font-weight: 600;">${hakedisStr}</td>
-            <td style="text-align: right; font-weight: 600; color: var(--color-success);">${odenenStr}</td>
-            <td style="text-align: right; font-weight: 700; color: ${runningBalance[curr] >= 0 ? 'var(--color-danger)' : 'var(--color-success)'};">
+            <td data-label="Hakediş" style="text-align: right; font-weight: 600;">${hakedisStr}</td>
+            <td data-label="Ödenen" style="text-align: right; font-weight: 600; color: var(--color-success);">${odenenStr}</td>
+            <td data-label="Bakiye" style="text-align: right; font-weight: 700; color: ${runningBalance[curr] >= 0 ? 'var(--color-danger)' : 'var(--color-success)'};">
               ${balanceStr}
             </td>
-            <td style="text-align: center;">
+            <td data-label="İşlem" style="text-align: center;">
               <button class="btn-icon danger btn-delete-ledger-entry" data-id="${entry.id}" data-type="${entry.type}" title="Sil" style="font-size: 1rem; border: none; background: transparent; cursor: pointer; color: var(--color-danger);">&times;</button>
             </td>
           `;

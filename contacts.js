@@ -961,21 +961,21 @@ const Contacts = {
           }
 
           return `
-            <tr ${isLastRow} onclick="Contacts.toggleTxDetailRow(${tx.id})" style="cursor: pointer;">
-              <td>${dateStr}</td>
-              <td style="font-weight: 700; color: var(--text-accent);">${escapeHtml(invoiceNo)}</td>
-              <td>${typeLabel}</td>
-              <td style="font-weight: 500; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${this.escape(tx.description || '')}">${this.escape(tx.description || '-')}</td>
-              <td style="text-align: right; font-weight: 600;">${debitStr}</td>
-              <td style="text-align: right; font-weight: 600;">${creditStr}</td>
-              <td class="${cellStyleClass}" style="text-align: right; font-weight: 700; color: #ef4444;">${bakiyeBorcStr}</td>
-              <td class="${cellStyleClass}" style="text-align: right; font-weight: 700; color: #10b981;">${bakiyeAlacakStr}</td>
-              <td style="text-align: center; white-space: nowrap;" onclick="event.stopPropagation();">
+            <tr ${isLastRow} onclick="Contacts.toggleTxDetailRow(${tx.id})" style="cursor: pointer;" class="ledger-row-item">
+              <td data-label="Tarih">${dateStr}</td>
+              <td data-label="Evrak No" style="font-weight: 700; color: var(--text-accent);">${escapeHtml(invoiceNo)}</td>
+              <td data-label="İşlem Türü"><span class="ledger-type-badge type-${tx.type}">${typeLabel}</span></td>
+              <td data-label="Açıklama" style="font-weight: 500;" title="${this.escape(tx.description || '')}">${this.escape(tx.description || '-')}</td>
+              <td data-label="Borçlu" style="text-align: right; font-weight: 600;">${debitStr || '-'}</td>
+              <td data-label="Alacaklı" style="text-align: right; font-weight: 600;">${creditStr || '-'}</td>
+              <td data-label="B. Borçlu" class="${cellStyleClass}" style="text-align: right; font-weight: 700; color: #ef4444;">${bakiyeBorcStr || '-'}</td>
+              <td data-label="B. Alacaklı" class="${cellStyleClass}" style="text-align: right; font-weight: 700; color: #10b981;">${bakiyeAlacakStr || '-'}</td>
+              <td data-label="İşlemler" style="text-align: center; white-space: nowrap;" onclick="event.stopPropagation();">
                 <button class="btn-icon info" title="İşlemi Düzenle" onclick="Contacts.openTransactionModal(${contactId}, ${tx.id})">✏️</button>
                 <button class="btn-icon danger" title="İşlemi Sil" onclick="Contacts.deleteTransaction(${tx.id}, ${contactId})">🗑️</button>
               </td>
             </tr>
-            <tr id="tx-detail-row-${tx.id}" style="display: none; background: rgba(255, 255, 255, 0.015);">
+            <tr id="tx-detail-row-${tx.id}" style="display: none; background: #f8fafc;" class="tx-detail-expanded-row">
               <td colspan="9" style="padding: 10px 15px;">
                 ${itemsHtml}
               </td>
