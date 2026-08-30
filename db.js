@@ -58,7 +58,7 @@ initSupabaseClient();
 
 // Local IndexedDB Settings
 const DB_NAME = 'atolyecim_db_v4';
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 let db = null;
 
 // Primary key field mappings for different tables
@@ -300,6 +300,13 @@ function initDB() {
         mps.createIndex('category', 'category', { unique: false });
         mps.createIndex('materialName', 'materialName', { unique: false });
       }
+
+      if (!database.objectStoreNames.contains('expenses')) {
+        const expStore = database.createObjectStore('expenses', { keyPath: 'id', autoIncrement: true });
+        expStore.createIndex('category', 'category', { unique: false });
+        expStore.createIndex('date', 'date', { unique: false });
+        expStore.createIndex('status', 'status', { unique: false });
+      }
     };
 
     request.onsuccess = async (e) => {
@@ -347,6 +354,12 @@ function invalidateCache(storeName) {
   if (storeName === 'stocks') {
     delete memoryCache['material_prices'];
   }
+  if (storeName === 'expenses') {
+    delete memoryCache['transactions'];
+  }
+  if (storeName === 'transactions') {
+    delete memoryCache['expenses'];
+  }
 }
 
 // Bind to window for debugging or manual cache bust
@@ -361,6 +374,7 @@ function getSupabaseTableName(storeName) {
   if (storeName === 'job_tickets') return 'contractor_jobs';
   if (storeName === 'material_suppliers') return 'contacts';
   if (storeName === 'material_prices') return 'stocks';
+  if (storeName === 'expenses') return 'transactions';
   return storeName;
 }
 
@@ -389,6 +403,12 @@ function filterByTenant(storeName, items) {
     if (storeName === 'stocks') {
       return item._type !== 'material_price';
     }
+    if (storeName === 'expenses') {
+      return item._type === 'expense';
+    }
+    if (storeName === 'transactions') {
+      return item._type !== 'expense';
+    }
     return true;
   });
 }
@@ -403,6 +423,9 @@ async function dbAdd(storeName, data) {
   }
   if (storeName === 'material_prices') {
     data._type = 'material_price';
+  }
+  if (storeName === 'expenses') {
+    data._type = 'expense';
   }
 
   if (useSupabase) {

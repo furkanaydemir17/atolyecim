@@ -190,6 +190,12 @@ function initNavigation() {
             window.JobTickets.loadTickets();
           }
         }
+        else if (pageName === 'expenses') {
+          if (window.Expenses) {
+            window.Expenses.init();
+            window.Expenses.render();
+          }
+        }
         else if (pageName === 'material-prices') {
           if (window.MaterialPrices) {
             window.MaterialPrices.init();
@@ -718,6 +724,7 @@ async function loadApp() {
     if (window.Stocks) window.Stocks.bindEvents();
     if (window.Contractors) window.Contractors.bindEvents();
     if (window.JobTickets && typeof window.JobTickets.bindEvents === 'function') window.JobTickets.bindEvents();
+    if (window.Expenses && typeof window.Expenses.init === 'function') window.Expenses.init();
     if (window.MaterialPrices && typeof window.MaterialPrices.init === 'function') window.MaterialPrices.init();
     if (window.WhatsAppManager && typeof window.WhatsAppManager.init === 'function') window.WhatsAppManager.init();
 
