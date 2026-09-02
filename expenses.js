@@ -1,5 +1,6 @@
 /* =========================================
    ATÖLYECİM — Harcamalarım & Gider Takip Modülü
+   (Tüm Cari & Fason Ödemeleri Otomatik Toplayan Akıllı Motor)
    ========================================= */
 
 import { escapeHtml, generateId } from './utils.js';
@@ -59,7 +60,7 @@ export const Expenses = {
       });
     }
 
-    // Export & WhatsApp Share
+    // Export Excel
     const btnExport = document.getElementById('btn-expenses-export');
     if (btnExport && !btnExport._bound) {
       btnExport._bound = true;
@@ -69,9 +70,89 @@ export const Expenses = {
 
   async loadData() {
     try {
-      this.expenses = await window.dbGetAll('expenses') || [];
-      // Sort newest first
-      this.expenses.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+      const [manualExpenses, contactTxs, contacts, contractorTxs, contractors] = await Promise.all([
+        window.dbGetAll('expenses').catch(() => []),
+        window.dbGetAll('transactions').catch(() => []),
+        window.dbGetAll('contacts').catch(() => []),
+        window.dbGetAll('contractor_transactions').catch(() => []),
+        window.dbGetAll('contractors').catch(() => [])
+      ]);
+
+      const contactMap = {};
+      (contacts || []).forEach(c => { contactMap[c.id] = c; });
+
+      const contractorMap = {};
+      (contractors || []).forEach(c => { contractorMap[c.id] = c; });
+
+      const allItems = [];
+
+      // 1. Manuel Girilen Harcamalar
+      (manualExpenses || []).forEach(exp => {
+        if (exp) {
+          allItems.push({
+            ...exp,
+            _source: 'manual',
+            id: String(exp.id),
+            rawId: exp.id
+          });
+        }
+      });
+
+      // 2. Cari Hesap Ödemeleri (Sadece yapılan gerçek ödemeler: tx.type === 'odeme')
+      (contactTxs || []).forEach(tx => {
+        if (tx && tx.type === 'odeme' && !tx.isPackaging) {
+          const contact = contactMap[tx.contactId];
+          let category = 'other';
+          if (contact && contact.type === 'tedarikci') category = 'supplies';
+
+          allItems.push({
+            id: `ctx_${tx.id}`,
+            rawId: tx.id,
+            _source: 'contact_tx',
+            contactId: tx.contactId,
+            title: tx.description ? tx.description : (contact ? `${contact.name} Cari Ödemesi` : 'Cari Hesap Ödemesi'),
+            category: category,
+            amount: parseFloat(tx.amount || 0),
+            currency: tx.currency || 'TRY',
+            date: tx.date ? tx.date.split('T')[0] : new Date().toISOString().split('T')[0],
+            paymentMethod: tx.paymentMethod || 'cash',
+            status: 'paid',
+            supplierOrPayee: contact ? contact.name : '',
+            receiptNo: tx.invoiceNo || '',
+            notes: contact ? `Cari Hesap: ${contact.name}` : 'Cari Hesap Ödemesi'
+          });
+        }
+      });
+
+      // 3. Fasoncu / Usta Ödemeleri (Sadece ustalara yapılan hakediş ödemeleri: ct.type === 'odeme' veya ct.odenen > 0)
+      (contractorTxs || []).forEach(ct => {
+        if (ct && (ct.type === 'odeme' || (ct.odenen && ct.odenen > 0))) {
+          const contractor = contractorMap[ct.contractorId];
+          const amt = parseFloat(ct.amount || ct.odenen || 0);
+          if (amt > 0) {
+            allItems.push({
+              id: `cnt_${ct.id}`,
+              rawId: ct.id,
+              _source: 'contractor_tx',
+              contractorId: ct.contractorId,
+              title: ct.description ? ct.description : (contractor ? `${contractor.name} Usta Ödemesi` : 'Fason Hakediş Ödemesi'),
+              category: 'salary',
+              amount: amt,
+              currency: ct.currency || 'TRY',
+              date: ct.date ? ct.date.split('T')[0] : new Date().toISOString().split('T')[0],
+              paymentMethod: ct.paymentMethod || 'cash',
+              status: 'paid',
+              supplierOrPayee: contractor ? contractor.name : '',
+              receiptNo: '',
+              notes: contractor ? `Fason Usta: ${contractor.name}` : 'Fason Hakediş Ödemesi'
+            });
+          }
+        }
+      });
+
+      // Sort newest date first
+      allItems.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+      this.expenses = allItems;
     } catch (e) {
       console.error('Error loading expenses:', e);
       this.expenses = [];
@@ -272,6 +353,13 @@ export const Expenses = {
         ? `<span style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a; padding: 3px 8px; border-radius: 12px; font-weight: 700; font-size: 11px;">⏳ Beklemede</span>`
         : `<span style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 3px 8px; border-radius: 12px; font-weight: 700; font-size: 11px;">✅ Ödendi</span>`;
 
+      let sourceBadge = '';
+      if (exp._source === 'contact_tx') {
+        sourceBadge = `<span style="font-size: 10.5px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 1px 7px; border-radius: 10px; font-weight: 700;">👥 Cari Ödeme</span>`;
+      } else if (exp._source === 'contractor_tx') {
+        sourceBadge = `<span style="font-size: 10.5px; background: #fdf2f8; color: #db2777; border: 1px solid #fce7f3; padding: 1px 7px; border-radius: 10px; font-weight: 700;">🧵 Fason Ödeme</span>`;
+      }
+
       const methodLabels = {
         cash: '💵 Nakit / Elden',
         credit_card: '💳 Kredi Kartı',
@@ -289,8 +377,11 @@ export const Expenses = {
             </span>
           </td>
           <td data-label="Harcama Başlığı / Açıklama">
-            <div style="font-weight: 700; color: #0f172a; font-size: 13.5px;">${escapeHtml(exp.title || '-')}</div>
-            ${exp.supplierOrPayee ? `<div style="font-size: 11.5px; color: #64748b;">Kişi/Firma: <strong>${escapeHtml(exp.supplierOrPayee)}</strong></div>` : ''}
+            <div style="font-weight: 700; color: #0f172a; font-size: 13.5px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              <span>${escapeHtml(exp.title || '-')}</span>
+              ${sourceBadge}
+            </div>
+            ${exp.supplierOrPayee ? `<div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">Kişi/Firma: <strong>${escapeHtml(exp.supplierOrPayee)}</strong></div>` : ''}
             ${exp.notes ? `<div style="font-size: 11px; color: #94a3b8; font-style: italic;">${escapeHtml(exp.notes)}</div>` : ''}
           </td>
           <td data-label="Ödeme Yöntemi" style="font-size: 12px; color: #475569;">${methodLabel}</td>
@@ -300,8 +391,8 @@ export const Expenses = {
           </td>
           <td data-label="İşlemler" style="text-align: center; white-space: nowrap;">
             <div class="actions-cell" style="justify-content: center;">
-              <button type="button" class="btn-icon info" onclick="window.Expenses.openModal(${exp.id})" title="Harcamayı Düzenle">✏️</button>
-              <button type="button" class="btn-icon danger" onclick="window.Expenses.deleteExpense(${exp.id})" title="Harcamayı Sil">🗑️</button>
+              <button type="button" class="btn-icon info" onclick="window.Expenses.openModal('${exp.id}')" title="Düzenle">✏️</button>
+              <button type="button" class="btn-icon danger" onclick="window.Expenses.deleteExpense('${exp.id}')" title="Sil">🗑️</button>
             </div>
           </td>
         </tr>
@@ -321,10 +412,21 @@ export const Expenses = {
     if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
 
     if (id) {
-      const exp = this.expenses.find(e => Number(e.id) === Number(id));
+      const exp = this.expenses.find(e => String(e.id) === String(id));
       if (exp) {
+        if (exp._source === 'contact_tx') {
+          if (window.Contacts && typeof window.Contacts.openTransactionModal === 'function') {
+            window.Contacts.openTransactionModal(exp.contactId, exp.rawId);
+            return;
+          }
+        }
+        if (exp._source === 'contractor_tx') {
+          window.showToast('Bu ödeme Fason Takip modülünden yapılmıştır. Fasoncu ekstresinden güncelleyebilirsiniz.', 'info');
+          return;
+        }
+
         if (titleEl) titleEl.textContent = 'Harcama Kaydını Düzenle ✏️';
-        if (idEl) idEl.value = exp.id;
+        if (idEl) idEl.value = exp.rawId || exp.id;
         document.getElementById('expense-title').value = exp.title || '';
         document.getElementById('expense-category').value = exp.category || 'other';
         document.getElementById('expense-amount').value = exp.amount || '';
@@ -403,10 +505,23 @@ export const Expenses = {
   },
 
   async deleteExpense(id) {
-    if (!confirm('Bu harcama kaydını silmek istediğinizden emin misiniz?')) return;
+    const exp = this.expenses.find(e => String(e.id) === String(id));
+    if (!exp) return;
+
+    if (!confirm('Bu harcama / ödeme kaydını silmek istediğinizden emin misiniz?')) return;
+
     try {
-      await window.dbDelete('expenses', Number(id));
-      window.showToast('Harcama kaydı silindi.', 'info');
+      if (exp._source === 'contact_tx') {
+        await window.dbDelete('transactions', Number(exp.rawId));
+        window.showToast('Cari ödeme kaydı silindi.', 'info');
+      } else if (exp._source === 'contractor_tx') {
+        await window.dbDelete('contractor_transactions', Number(exp.rawId));
+        window.showToast('Fason usta ödeme kaydı silindi.', 'info');
+      } else {
+        await window.dbDelete('expenses', Number(exp.rawId || exp.id));
+        window.showToast('Harcama kaydı silindi.', 'info');
+      }
+
       await this.render();
       if (window.Dashboard && typeof window.Dashboard.render === 'function') {
         await window.Dashboard.render();
@@ -417,64 +532,6 @@ export const Expenses = {
     }
   },
 
-  sendExpenseWhatsApp(id) {
-    const exp = this.expenses.find(e => Number(e.id) === Number(id));
-    if (!exp) return;
-
-    const company = localStorage.getItem('atolyecim_auth_company') || 'Atölyecim';
-    const cat = this.getCategoryInfo(exp.category);
-    const sym = exp.currency === 'USD' ? '$' : (exp.currency === 'EUR' ? '€' : '₺');
-    const dateFormatted = exp.date ? exp.date.split('-').reverse().join('.') : '-';
-
-    const msg = `💸 *${company.toUpperCase()} — HARCAMA BİLDİRİMİ*\n` +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `📌 *Açıklama:* ${exp.title}\n` +
-      `🏷️ *Kategori:* ${cat.icon} ${cat.label}\n` +
-      `💰 *Tutar:* ${sym}${Number(exp.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}\n` +
-      `📅 *Tarih:* ${dateFormatted}\n` +
-      `💳 *Ödeme:* ${exp.paymentMethod || 'Nakit'} (${exp.status === 'pending' ? 'Beklemede' : 'Ödendi'})\n` +
-      (exp.supplierOrPayee ? `👤 *Kişi/Firma:* ${exp.supplierOrPayee}\n` : '') +
-      (exp.notes ? `📝 *Not:* ${exp.notes}\n` : '') +
-      `━━━━━━━━━━━━━━━━━━━━━`;
-
-    const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-    window.open(waUrl, '_blank');
-  },
-
-  shareWhatsAppSummary() {
-    const company = localStorage.getItem('atolyecim_auth_company') || 'Atölyecim';
-    const filtered = this.getFilteredExpenses();
-    const today = new Date().toLocaleDateString('tr-TR');
-
-    let totalAmount = 0;
-    const catTotals = {};
-
-    filtered.forEach(exp => {
-      const amt = Number(exp.amount) || 0;
-      totalAmount += amt;
-      const cat = this.getCategoryInfo(exp.category);
-      catTotals[cat.label] = (catTotals[cat.label] || 0) + amt;
-    });
-
-    let breakdownText = '';
-    for (const [cLabel, cTotal] of Object.entries(catTotals)) {
-      breakdownText += `• ${cLabel}: ₺${cTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}\n`;
-    }
-
-    const msg = `📊 *${company.toUpperCase()} — GİDER & HARCAMA ÖZETİ*\n` +
-      `📅 *Tarih:* ${today}\n` +
-      `📋 *Toplam Harcama Kalemi:* ${filtered.length} Adet\n` +
-      `💰 *TOPLAM HARCAMA:* ₺${totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}\n` +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `🏷️ *Kategori Dağılımı:*\n` +
-      breakdownText +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `ℹ️ _Atölyecim ERP Sistemi üzerinden oluşturulmuştur._`;
-
-    const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-    window.open(waUrl, '_blank');
-  },
-
   exportCSV() {
     const filtered = this.getFilteredExpenses();
     if (filtered.length === 0) {
@@ -483,12 +540,14 @@ export const Expenses = {
     }
 
     let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
-    csvContent += 'Tarih;Kategori;Harcama Başlığı;Kişi/Firma;Ödeme Yöntemi;Durum;Tutar;Para Birimi;Fiş No;Notlar\r\n';
+    csvContent += 'Tarih;Kaynak;Kategori;Harcama / Ödeme Başlığı;Kişi/Firma;Ödeme Yöntemi;Durum;Tutar;Para Birimi;Fiş No;Notlar\r\n';
 
     filtered.forEach(exp => {
       const cat = this.getCategoryInfo(exp.category);
+      const sourceName = exp._source === 'contact_tx' ? 'Cari Ödeme' : (exp._source === 'contractor_tx' ? 'Fason Ödeme' : 'Genel Harcama');
       const row = [
         exp.date || '',
+        sourceName,
         cat.label,
         `"${(exp.title || '').replace(/"/g, '""')}"`,
         `"${(exp.supplierOrPayee || '').replace(/"/g, '""')}"`,
