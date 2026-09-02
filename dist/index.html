@@ -43,7 +43,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/main-DG0XiAm_.js"></script>
+  <script type="module" crossorigin src="/assets/main-D5iKOoNc.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/index-xQhTEy45.js">
   <link rel="stylesheet" crossorigin href="/assets/index-Cdg5GCz-.css">
 </head>
@@ -655,15 +655,13 @@
             <thead class="excel-header">
               <tr>
                 <th style="width: 7%; text-align: center;">Fotoğraf</th>
-                <th style="width: 14%;">Model Kodu</th>
-                <th style="width: 10%;">Kategori</th>
-                <th style="width: 8%;">Beden</th>
-                <th style="width: 9%;">Renk</th>
-                <th style="width: 10%;">Taban</th>
-                <th style="width: 18%;">Deri (Astar / Yüz)</th>
-                <th style="width: 7%; text-align: center;">Aksesuar</th>
-                <th style="width: 8%; text-align: right;">Birim Fiyat</th>
-                <th style="width: 9%; text-align: center;">İşlemler</th>
+                <th style="width: 18%;">Model Kodu</th>
+                <th style="width: 14%;">Kategori</th>
+                <th style="width: 14%;">Renk</th>
+                <th style="width: 15%;">Taban</th>
+                <th style="width: 20%;">Deri (Astar / Yüz / Tür)</th>
+                <th style="width: 6%; text-align: center;">Aksesuar</th>
+                <th style="width: 6%; text-align: center;">İşlemler</th>
               </tr>
             </thead>
             <tbody id="products-tbody"></tbody>
@@ -1850,10 +1848,6 @@
                 <option value="Bot">🥾 Bot</option>
               </select>
             </div>
-            <div class="form-group" style="flex: 0.8;">
-              <label for="product-size">Beden / Numara</label>
-              <input type="text" id="product-size" placeholder="Örn: 36-40">
-            </div>
           </div>
 
           <div class="form-row">
@@ -1879,23 +1873,6 @@
             <div class="form-group">
               <label for="product-leather-type">Deri Türü</label>
               <input type="text" id="product-leather-type" placeholder="Örn: Vejetal / Nubuk">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group" style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; flex: 1;">
-              <div>
-                <label for="product-price">Birim Satış Fiyatı</label>
-                <input type="number" id="product-price" step="0.01" min="0" placeholder="0.00" value="0">
-              </div>
-              <div>
-                <label for="product-currency">Para Birimi</label>
-                <select id="product-currency">
-                  <option value="TRY" selected>₺ (TRY)</option>
-                  <option value="USD">$ (USD)</option>
-                  <option value="EUR">€ (EUR)</option>
-                </select>
-              </div>
             </div>
           </div>
 

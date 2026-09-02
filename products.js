@@ -200,12 +200,10 @@ const Products = {
             ${p.barcode ? `<div class="barcode-subtext" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">📟 ${this.escape(p.barcode)}</div>` : ''}
           </td>
           <td data-label="Kategori"><span class="category-badge ${categoryClass}">${this.escape(p.category || '-')}</span></td>
-          <td data-label="Beden">${this.escape(p.size || '-')}</td>
           <td data-label="Renk">${this.escape(p.color || '-')}</td>
           <td data-label="Taban"><span style="background: rgba(99,102,241,0.06); padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;">${this.escape(p.soleMaterial || '-')}</span></td>
-          <td data-label="Deri (Astar / Yüz)" style="font-size: 0.85rem; max-width: 200px;" title="${this.escape(leatherText)}">${this.escape(leatherText)}</td>
+          <td data-label="Deri (Astar / Yüz / Tür)" style="font-size: 0.85rem; max-width: 220px;" title="${this.escape(leatherText)}">${this.escape(leatherText)}</td>
           <td data-label="Aksesuar">${accPhotoHtml}</td>
-          <td data-label="Birim Fiyat" style="text-align: right; font-weight: 700; font-family: monospace; font-size: 13.5px;">${sym}${Number(p.price).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
           <td data-label="İşlemler">
             <div class="actions-cell">
               <button class="btn-icon warning" title="Reçete (BOM)" onclick="Recipes.openModal(${p.id})">🛠️</button>
@@ -241,7 +239,6 @@ const Products = {
     }
 
     const soleInput = document.getElementById('product-sole-material');
-    const currencyEl = document.getElementById('product-currency');
 
     if (id) {
       title.textContent = 'Model Düzenle ✏️';
@@ -252,9 +249,6 @@ const Products = {
           document.getElementById('product-code').value = p.modelCode || '';
           document.getElementById('product-category').value = p.category || 'Ayakkabı';
           
-          const sizeEl = document.getElementById('product-size');
-          if (sizeEl) sizeEl.value = p.size || '';
-          
           const colorEl = document.getElementById('product-color');
           if (colorEl) colorEl.value = p.color || '';
           
@@ -263,9 +257,6 @@ const Products = {
           document.getElementById('product-leather-lining').value = p.leatherLining || '';
           document.getElementById('product-leather-upper').value = p.leatherUpper || '';
           document.getElementById('product-leather-type').value = p.leatherType || '';
-          document.getElementById('product-price').value = p.price || 0;
-          
-          if (currencyEl) currencyEl.value = p.currency || 'TRY';
           
           const barcodeEl = document.getElementById('product-barcode');
           if (barcodeEl) barcodeEl.value = p.barcode || '';
@@ -283,9 +274,7 @@ const Products = {
     } else {
       title.textContent = 'Yeni Model Ekle 👟';
       if (soleInput) soleInput.value = '';
-      if (currencyEl) currencyEl.value = 'TRY';
       document.getElementById('product-category').value = 'Ayakkabı';
-      document.getElementById('product-price').value = '0';
     }
 
     openModalById('product-modal');
@@ -300,23 +289,21 @@ const Products = {
     const photo = photoPreview ? photoPreview.dataset.base64 || '' : '';
     const accessoryPhoto = accPhotoPreview ? accPhotoPreview.dataset.base64 || '' : '';
 
-    const sizeEl = document.getElementById('product-size');
     const colorEl = document.getElementById('product-color');
     const barcodeEl = document.getElementById('product-barcode');
-    const currencyEl = document.getElementById('product-currency');
     const soleInput = document.getElementById('product-sole-material');
 
     const data = {
       modelCode: document.getElementById('product-code').value.trim(),
       category: document.getElementById('product-category').value || 'Ayakkabı',
-      size: sizeEl ? sizeEl.value.trim() : '',
+      size: '',
       color: colorEl ? colorEl.value.trim() : '',
       soleMaterial: soleInput ? soleInput.value.trim() : '',
       leatherLining: document.getElementById('product-leather-lining').value.trim(),
       leatherUpper: document.getElementById('product-leather-upper').value.trim(),
       leatherType: document.getElementById('product-leather-type').value.trim(),
-      price: parseFloat(document.getElementById('product-price').value) || 1,
-      currency: currencyEl ? currencyEl.value : 'TRY',
+      price: 0,
+      currency: 'TRY',
       barcode: barcodeEl ? barcodeEl.value.trim() : '',
       photo,
       accessoryPhoto
