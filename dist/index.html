@@ -2158,23 +2158,21 @@
           </div>
 
           <div class="form-row">
-            <div class="form-group" style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
-              <div>
-                <label for="order-price">Birim Fiyat</label>
-                <input type="number" id="order-price" step="0.01" min="0" placeholder="0.00" required style="width: 100%;">
-              </div>
-              <div>
-                <label for="order-currency">Döviz</label>
-                <select id="order-currency" required style="width: 100%;">
-                  <option value="TRY">₺ (TRY)</option>
-                  <option value="USD">$ (USD)</option>
-                  <option value="EUR">€ (EUR)</option>
-                </select>
-              </div>
+            <div class="form-group" style="flex: 1.2;">
+              <label for="order-price">Birim Fiyat</label>
+              <input type="number" id="order-price" step="0.01" min="0" placeholder="0.00" required style="width: 100%;">
             </div>
-            <div class="form-group">
+            <div class="form-group" style="flex: 1; min-width: 110px;">
+              <label for="order-currency">Döviz</label>
+              <select id="order-currency" required style="width: 100%; min-width: 105px; padding: 8px 10px; font-weight: 600;">
+                <option value="TRY">₺ (TRY)</option>
+                <option value="USD">$ (USD)</option>
+                <option value="EUR">€ (EUR)</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1.2;">
               <label for="order-deadline">Termin Tarihi</label>
-              <input type="date" id="order-deadline" required>
+              <input type="date" id="order-deadline" required style="width: 100%;">
             </div>
           </div>
 
@@ -3193,14 +3191,14 @@
               <label for="quick-order-color" style="font-weight: 600; display: block; margin-bottom: 6px;">Renk</label>
               <input type="text" id="quick-order-color" placeholder="" required style="width: 100%;" autocomplete="off">
             </div>
-            <div class="form-group" style="grid-column: span 2; display: grid; grid-template-columns: 2fr 1.2fr; gap: 8px;">
+            <div class="form-group" style="grid-column: span 2; display: grid; grid-template-columns: 1.5fr 1fr; gap: 8px;">
               <div>
                 <label for="quick-order-price" style="font-weight: 600; display: block; margin-bottom: 6px;">Birim Fiyat</label>
                 <input type="number" id="quick-order-price" min="0.01" step="0.01" placeholder="0.00" required style="width: 100%;">
               </div>
               <div>
                 <label for="quick-order-currency" style="font-weight: 600; display: block; margin-bottom: 6px;">Para Birimi</label>
-                <select id="quick-order-currency" required style="width: 100%;">
+                <select id="quick-order-currency" required style="width: 100%; min-width: 95px; font-weight: 600;">
                   <option value="TRY">₺ (TRY)</option>
                   <option value="USD">$ (USD)</option>
                   <option value="EUR">€ (EUR)</option>
