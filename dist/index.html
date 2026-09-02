@@ -43,7 +43,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/main-DkHpxG_i.js"></script>
+  <script type="module" crossorigin src="/assets/main-6F-u-mCY.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/index-xQhTEy45.js">
   <link rel="stylesheet" crossorigin href="/assets/index-Cdg5GCz-.css">
 </head>
@@ -2275,13 +2275,12 @@
           <h4 style="margin: 0 0 10px 0; color: var(--text-secondary); font-size: 12px; font-weight: 700; text-transform: uppercase;">
             ➕ Manuel Malzeme / Sarfiyat Ekle
           </h4>
-          <form id="recipe-add-material-form" style="display: grid; grid-template-columns: 1.2fr 2fr 1fr 1fr 1fr auto; gap: 8px; align-items: flex-end;">
+          <form id="recipe-add-material-form" novalidate style="display: grid; grid-template-columns: 1.2fr 2fr 1fr 1fr 1fr auto; gap: 8px; align-items: flex-end;">
             
             <div class="form-group" style="margin-bottom: 0;">
               <label for="recipe-material-type" style="font-size: 11px;">Kategori</label>
-              <select id="recipe-material-type" style="padding: 6px 8px; font-size: 12px;" required>
-                <option value="">Seçiniz</option>
-                <option value="leather">🥩 Yüzlük Deri / Kumaş</option>
+              <select id="recipe-material-type" style="padding: 6px 8px; font-size: 12px;">
+                <option value="leather" selected>🥩 Yüzlük Deri / Kumaş</option>
                 <option value="lining">🧵 Astar Deri / Tekstil</option>
                 <option value="sole">👟 Taban / Ökçe / Topuk</option>
                 <option value="reinforcement">🛡️ Fort / Bombe / Takviye</option>
@@ -2294,17 +2293,17 @@
             
             <div class="form-group" style="margin-bottom: 0;">
               <label for="recipe-material-name" style="font-size: 11px;">Malzeme Adı</label>
-              <input type="text" id="recipe-material-name" placeholder="Malzeme adı" style="padding: 6px 10px; font-size: 12px;" required autocomplete="off">
+              <input type="text" id="recipe-material-name" placeholder="Malzeme adı" style="padding: 6px 10px; font-size: 12px;" autocomplete="off">
             </div>
             
             <div class="form-group" style="margin-bottom: 0;">
               <label for="recipe-material-qty" style="font-size: 11px;">Sarfiyat (1 Çift)</label>
-              <input type="number" id="recipe-material-qty" step="0.001" min="0.0001" placeholder="Miktar" style="padding: 6px 8px; font-size: 12px; text-align: center;" required>
+              <input type="text" inputmode="decimal" id="recipe-material-qty" placeholder="Miktar (örn: 1 veya 0.5)" style="padding: 6px 8px; font-size: 12px; text-align: center;">
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
               <label for="recipe-material-unit" style="font-size: 11px;">Birim</label>
-              <select id="recipe-material-unit" style="padding: 6px 6px; font-size: 12px;" required>
+              <select id="recipe-material-unit" style="padding: 6px 6px; font-size: 12px;">
                 <option value="dm²">dm²</option>
                 <option value="m²">m²</option>
                 <option value="çift" selected>çift</option>
@@ -2318,7 +2317,7 @@
 
             <div class="form-group" style="margin-bottom: 0;">
               <label for="recipe-material-unit-price" style="font-size: 11px;">Birim Fiyat (₺)</label>
-              <input type="number" id="recipe-material-unit-price" step="0.01" min="0" placeholder="₺" style="padding: 6px 8px; font-size: 12px; text-align: center;">
+              <input type="text" inputmode="decimal" id="recipe-material-unit-price" placeholder="₺ Fiyat" style="padding: 6px 8px; font-size: 12px; text-align: center;">
             </div>
 
             <button type="submit" class="btn btn-primary" style="height: 35px; padding: 0 14px; font-size: 12px; font-weight: 700;">

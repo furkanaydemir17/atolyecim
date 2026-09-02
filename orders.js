@@ -3315,16 +3315,29 @@ const Recipes = {
   },
 
   async addMaterialItem() {
-    const type = document.getElementById('recipe-material-type').value;
-    const name = document.getElementById('recipe-material-name').value.trim();
-    const qty = parseFloat(document.getElementById('recipe-material-qty').value);
-    const unit = document.getElementById('recipe-material-unit').value || 'adet';
-    const price = parseFloat(document.getElementById('recipe-material-unit-price').value) || 0;
+    const typeEl = document.getElementById('recipe-material-type');
+    const type = (typeEl ? typeEl.value : '') || 'leather';
 
-    if (!type || !name || isNaN(qty) || qty <= 0) {
-      showToast('Lütfen kategori, malzeme adı ve geçerli sarfiyat miktarı girin!', 'error');
-      return;
+    const nameEl = document.getElementById('recipe-material-name');
+    let name = nameEl ? nameEl.value.trim() : '';
+    if (!name) {
+      name = 'Malzeme';
     }
+
+    const qtyEl = document.getElementById('recipe-material-qty');
+    const qtyRaw = qtyEl ? qtyEl.value : '';
+    const cleanedQty = qtyRaw.toString().trim().replace(',', '.');
+    const parsedQty = parseFloat(cleanedQty);
+    const qty = (!isNaN(parsedQty) && parsedQty > 0) ? parsedQty : 1;
+
+    const unitEl = document.getElementById('recipe-material-unit');
+    const unit = (unitEl ? unitEl.value : '') || 'çift';
+
+    const priceEl = document.getElementById('recipe-material-unit-price');
+    const priceRaw = priceEl ? priceEl.value : '';
+    const cleanedPrice = priceRaw.toString().trim().replace(',', '.');
+    const parsedPrice = parseFloat(cleanedPrice);
+    const price = (!isNaN(parsedPrice) && parsedPrice >= 0) ? parsedPrice : 0;
 
     // Check if item already exists by name
     const existing = this.currentMaterials.find(m => (m.name || '').toLowerCase() === name.toLowerCase());
@@ -3342,13 +3355,13 @@ const Recipes = {
         unit: unit,
         price: price
       });
-      showToast('Yeni malzeme reçeteye eklendi.', 'success');
+      showToast('Yeni malzeme reçeteye eklendi. ✅', 'success');
     }
 
     // Reset fields
-    document.getElementById('recipe-material-name').value = '';
-    document.getElementById('recipe-material-qty').value = '';
-    document.getElementById('recipe-material-unit-price').value = '';
+    if (nameEl) nameEl.value = '';
+    if (qtyEl) qtyEl.value = '';
+    if (priceEl) priceEl.value = '';
 
     await this.renderMaterialsTable();
   },
