@@ -700,16 +700,16 @@
 
         <!-- Contacts Table -->
         <div class="table-container">
-          <table class="data-table" id="contacts-table">
-            <thead>
+          <table class="data-table ledger-data-table" id="contacts-table">
+            <thead class="excel-header">
               <tr>
-                <th>Ad Soyad / Firma</th>
-                <th>Tür</th>
-                <th>Telefon</th>
-                <th>Alacak</th>
-                <th>Borç</th>
-                <th>Bakiye</th>
-                <th>İşlemler</th>
+                <th style="width: 26%;">Ad Soyad / Firma</th>
+                <th style="width: 14%;">Tür</th>
+                <th style="width: 14%;">Telefon</th>
+                <th style="width: 12%; text-align: right;">Alacak</th>
+                <th style="width: 12%; text-align: right;">Borç</th>
+                <th style="width: 12%; text-align: right;">Net Bakiye</th>
+                <th style="width: 10%; text-align: center;">İşlemler</th>
               </tr>
             </thead>
             <tbody id="contacts-tbody"></tbody>
@@ -2478,7 +2478,7 @@
 
   <!-- ============ CONTACT LEDGER MODAL ============ -->
   <div class="modal-overlay" id="contact-ledger-modal">
-    <div class="modal-card modal-lg" style="max-width: 950px; width: 95%;">
+    <div class="modal-card modal-lg">
       <div class="modal-header">
         <h2 id="contact-ledger-title" style="text-align: center; width: 100%; letter-spacing: 1px; font-weight: 800;">CARİ HESAP EKSTRESİ</h2>
         <button class="modal-close" data-modal="contact-ledger-modal">&times;</button>

@@ -240,16 +240,16 @@ const Contacts = {
       const netClass = getNetClass();
 
       return `
-        <tr onclick="Contacts.openLedgerModal(${c.id})" style="cursor: pointer;" class="contact-row-clickable" title="Cari Ekstreyi Görüntülemek İçin Tıklayın">
-          <td style="font-weight: 700; color: var(--text-primary);">
+        <tr onclick="Contacts.openLedgerModal(${c.id})" style="cursor: pointer;" class="contact-row-clickable ledger-row-item" title="Cari Ekstreyi Görüntülemek İçin Tıklayın">
+          <td data-label="Cari / Firma" style="font-weight: 700; color: var(--text-primary);">
             ${this.escape(c.name)}
           </td>
-          <td><span class="category-badge ${typeClass}">${typeLabel}</span></td>
-          <td>${this.escape(c.phone || '-')}</td>
-          <td class="money-positive">${formatBalanceCol('receivable')}</td>
-          <td class="money-negative">${formatBalanceCol('payable')}</td>
-          <td class="${netClass}">${formatBalanceCol('net')}</td>
-          <td onclick="event.stopPropagation();">
+          <td data-label="Cari Türü"><span class="category-badge ${typeClass}">${typeLabel}</span></td>
+          <td data-label="Telefon">${this.escape(c.phone || '-')}</td>
+          <td data-label="Alacak" class="money-positive" style="text-align: right;">${formatBalanceCol('receivable')}</td>
+          <td data-label="Borç" class="money-negative" style="text-align: right;">${formatBalanceCol('payable')}</td>
+          <td data-label="Net Bakiye" class="${netClass}" style="text-align: right;">${formatBalanceCol('net')}</td>
+          <td data-label="İşlemler" onclick="event.stopPropagation();" style="text-align: center;">
             <div class="actions-cell">
               <button type="button" class="btn-icon success" title="İşlem Ekle" onclick="event.stopPropagation(); Contacts.openTransactionModal(${c.id})">💰</button>
               <button type="button" class="btn-icon info" title="Düzenle" onclick="event.stopPropagation(); Contacts.openModal(${c.id})">✏️</button>

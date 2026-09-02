@@ -2740,8 +2740,9 @@ div[style*="overflow: auto"]::-webkit-scrollbar-thumb:hover {
     gap: 10px !important;
   }
 
-  /* Mobil Cihazlarda Ekstre ve Tablo Satırlarını Şık Mobil Kartlara Dönüştür (Sıfır Yatay Kaydırma) */
+  /* Mobil Cihazlarda Ekstre, Cari ve Tablo Satırlarını Şık Mobil Kartlara Dönüştür (Sıfır Yatay Kaydırma) */
   .ledger-data-table,
+  #contacts-table,
   #contractor-ledger-table {
     display: block !important;
     width: 100% !important;
@@ -2750,11 +2751,13 @@ div[style*="overflow: auto"]::-webkit-scrollbar-thumb:hover {
   }
 
   .ledger-data-table thead,
+  #contacts-table thead,
   #contractor-ledger-table thead {
     display: none !important;
   }
 
   .ledger-data-table tbody,
+  #contacts-table tbody,
   #contractor-ledger-table tbody {
     display: flex !important;
     flex-direction: column !important;
@@ -2763,6 +2766,8 @@ div[style*="overflow: auto"]::-webkit-scrollbar-thumb:hover {
   }
 
   .ledger-data-table tr.ledger-row-item,
+  #contacts-table tr.contact-row-clickable,
+  #contacts-table tr.ledger-row-item,
   #contractor-ledger-table tr.ledger-row-item {
     display: flex !important;
     flex-direction: column !important;
@@ -2783,13 +2788,14 @@ div[style*="overflow: auto"]::-webkit-scrollbar-thumb:hover {
   }
 
   .ledger-data-table tr.ledger-row-item td,
+  #contacts-table tr td,
   #contractor-ledger-table tr.ledger-row-item td {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    padding: 4px 0 !important;
+    padding: 6px 0 !important;
     border-bottom: 1px dashed #f1f5f9 !important;
-    font-size: 12.5px !important;
+    font-size: 13px !important;
     white-space: normal !important;
     text-align: right !important;
     width: 100% !important;
@@ -2797,6 +2803,7 @@ div[style*="overflow: auto"]::-webkit-scrollbar-thumb:hover {
   }
 
   .ledger-data-table tr.ledger-row-item td::before,
+  #contacts-table tr td::before,
   #contractor-ledger-table tr.ledger-row-item td::before {
     content: attr(data-label);
     font-weight: 700;
@@ -2810,6 +2817,7 @@ div[style*="overflow: auto"]::-webkit-scrollbar-thumb:hover {
   }
 
   .ledger-data-table tr.ledger-row-item td:last-child,
+  #contacts-table tr td:last-child,
   #contractor-ledger-table tr.ledger-row-item td:last-child {
     border-bottom: none !important;
     padding-top: 8px !important;
@@ -2818,6 +2826,7 @@ div[style*="overflow: auto"]::-webkit-scrollbar-thumb:hover {
   }
 
   .ledger-data-table tr.ledger-row-item td:last-child::before,
+  #contacts-table tr td:last-child::before,
   #contractor-ledger-table tr.ledger-row-item td:last-child::before {
     content: 'İşlemler';
   }
