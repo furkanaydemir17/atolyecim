@@ -262,42 +262,52 @@ const Products = {
   },
 
   async saveProduct() {
-    const id = document.getElementById('product-id').value;
+    const idEl = document.getElementById('product-id');
+    const id = idEl ? idEl.value : '';
     
     const photoPreview = document.getElementById('product-photo-preview-box');
     const accPhotoPreview = document.getElementById('product-accessory-photo-preview-box');
     
-    const photo = photoPreview ? photoPreview.dataset.base64 || '' : '';
-    const accessoryPhoto = accPhotoPreview ? accPhotoPreview.dataset.base64 || '' : '';
+    const photo = photoPreview ? (photoPreview.dataset.base64 || '') : '';
+    const accessoryPhoto = accPhotoPreview ? (accPhotoPreview.dataset.base64 || '') : '';
 
+    const modelCodeEl = document.getElementById('product-code');
+    const modelCode = modelCodeEl ? modelCodeEl.value.trim() : '';
     const colorEl = document.getElementById('product-color');
-    const barcodeEl = document.getElementById('product-barcode');
+    const color = colorEl ? colorEl.value.trim() : '';
     const soleInput = document.getElementById('product-sole-material');
+    const soleMaterial = soleInput ? soleInput.value.trim() : '';
+
+    const leatherLiningEl = document.getElementById('product-leather-lining');
+    const leatherLining = leatherLiningEl ? leatherLiningEl.value.trim() : '';
+    const leatherUpperEl = document.getElementById('product-leather-upper');
+    const leatherUpper = leatherUpperEl ? leatherUpperEl.value.trim() : '';
+    const leatherTypeEl = document.getElementById('product-leather-type');
+    const leatherType = leatherTypeEl ? leatherTypeEl.value.trim() : '';
+    const barcodeEl = document.getElementById('product-barcode');
+    const barcode = barcodeEl ? barcodeEl.value.trim() : '';
+
+    if (!modelCode) {
+      showToast('Lütfen model kodunu girin!', 'error');
+      return;
+    }
 
     const data = {
-      modelCode: document.getElementById('product-code').value.trim(),
-      category: document.getElementById('product-category').value || 'Ayakkabı',
+      modelCode,
+      category: 'Ayakkabı',
       size: '',
-      color: colorEl ? colorEl.value.trim() : '',
-      soleMaterial: soleInput ? soleInput.value.trim() : '',
-      leatherLining: document.getElementById('product-leather-lining').value.trim(),
-      leatherUpper: document.getElementById('product-leather-upper').value.trim(),
-      leatherType: document.getElementById('product-leather-type').value.trim(),
+      color,
+      soleMaterial,
+      leatherLining,
+      leatherUpper,
+      leatherType,
       price: 0,
       currency: 'TRY',
-      barcode: barcodeEl ? barcodeEl.value.trim() : '',
+      barcode,
       photo,
       accessoryPhoto
     };
 
-    if (!data.modelCode || !data.category) {
-      showToast('Model kodu zorunludur!', 'error');
-      return;
-    }
-
-    // O1 Düzeltme: Ürün şablon fiyat kontrolü kaldırıldı (Fiyat sipariş girerken girilecek)
-
-    // Y6 Düzeltme: Barkod benzersizlik kontrolü
     if (data.barcode) {
       const allProducts = await dbGetAll('products');
       const duplicate = allProducts.find(p => p.barcode === data.barcode && p.id !== (id ? parseInt(id) : null));
@@ -311,16 +321,19 @@ const Products = {
       if (id) {
         data.id = parseInt(id);
         await dbUpdate('products', data);
-        showToast('Ürün güncellendi!', 'success');
+        showToast('Model başarıyla güncellendi! ✅', 'success');
       } else {
         await dbAdd('products', data);
-        showToast('Ürün başarıyla eklendi!', 'success');
+        showToast('Yeni model başarıyla eklendi! 👟', 'success');
       }
 
       closeModalById('product-modal');
       await this.loadProducts();
-      if (window.Dashboard && typeof window.Dashboard.render === 'function') await window.Dashboard.render();
+      if (window.Dashboard && typeof window.Dashboard.render === 'function') {
+        await window.Dashboard.render();
+      }
     } catch (err) {
+      console.error('saveProduct error:', err);
       showToast('Bir hata oluştu: ' + err.message, 'error');
     }
   },
