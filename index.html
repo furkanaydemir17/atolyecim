@@ -1833,54 +1833,58 @@
           <input type="hidden" id="product-id">
           
           <div class="form-row">
-            <div class="form-group" style="flex: 1;">
-              <label for="product-code">Model Kodu</label>
-              <input type="text" id="product-code" placeholder="" required>
+            <div class="form-group" style="flex: 1.2;">
+              <label for="product-code">Model Kodu *</label>
+              <input type="text" id="product-code" placeholder="Örn: 101-SANDALET" required>
             </div>
             <div class="form-group" style="flex: 1;">
-              <label for="product-sole-material">Taban Bilgisi (Manuel)</label>
-              <input type="text" id="product-sole-material" placeholder="" maxlength="150">
-            </div>
-            <div class="form-group product-detail-field" style="display: none; flex: 1;">
               <label for="product-category">Kategori</label>
               <select id="product-category">
-                <option value="Ayakkabı" selected>Ayakkabı</option>
-                <option value="Sandalet">Sandalet</option>
-                <option value="Terlik">Terlik</option>
-                <option value="Babet">Babet</option>
-                <option value="Espadril">Espadril</option>
-                <option value="Bot">Bot</option>
+                <option value="Ayakkabı" selected>👟 Ayakkabı</option>
+                <option value="Sandalet">👡 Sandalet</option>
+                <option value="Terlik">🩴 Terlik</option>
+                <option value="Babet">🩰 Babet</option>
+                <option value="Espadril">👞 Espadril</option>
+                <option value="Bot">🥾 Bot</option>
               </select>
             </div>
-          </div>
-
-          <div class="form-row product-detail-field" style="display: none;">
-            <div class="form-group" style="flex: 1;">
-              <label for="product-color">Ürün Rengi</label>
-              <input type="text" id="product-color" placeholder="">
+            <div class="form-group" style="flex: 0.8;">
+              <label for="product-size">Beden / Numara</label>
+              <input type="text" id="product-size" placeholder="Örn: 36-40">
             </div>
           </div>
 
-          <div class="form-row product-detail-field" style="display: none;">
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="product-color">Ürün Rengi</label>
+              <input type="text" id="product-color" placeholder="Örn: Siyah / Taba">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="product-sole-material">Taban Bilgisi</label>
+              <input type="text" id="product-sole-material" placeholder="Örn: Termo Taban, Kauçuk..." maxlength="150">
+            </div>
+          </div>
+
+          <div class="form-row">
             <div class="form-group">
               <label for="product-leather-lining">Astar Derisi</label>
-              <input type="text" id="product-leather-lining" placeholder="">
+              <input type="text" id="product-leather-lining" placeholder="Örn: Meşin Astar">
             </div>
             <div class="form-group">
               <label for="product-leather-upper">Yüz Derisi</label>
-              <input type="text" id="product-leather-upper" placeholder="">
+              <input type="text" id="product-leather-upper" placeholder="Örn: Hakiki Dana Derisi">
+            </div>
+            <div class="form-group">
+              <label for="product-leather-type">Deri Türü</label>
+              <input type="text" id="product-leather-type" placeholder="Örn: Vejetal / Nubuk">
             </div>
           </div>
 
-          <div class="form-row product-detail-field" style="display: none;">
-            <div class="form-group">
-              <label for="product-leather-type">Deri Türü</label>
-              <input type="text" id="product-leather-type" placeholder="">
-            </div>
-            <div class="form-group" style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+          <div class="form-row">
+            <div class="form-group" style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; flex: 1;">
               <div>
                 <label for="product-price">Birim Satış Fiyatı</label>
-                <input type="number" id="product-price" step="0.01" min="0" placeholder="0.00" value="1">
+                <input type="number" id="product-price" step="0.01" min="0" placeholder="0.00" value="0">
               </div>
               <div>
                 <label for="product-currency">Para Birimi</label>

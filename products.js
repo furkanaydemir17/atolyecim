@@ -240,28 +240,17 @@ const Products = {
       delete accPhotoPreview.dataset.base64;
     }
 
-    const detailFields = document.querySelectorAll('.product-detail-field');
-    const modelCodeGroup = document.getElementById('product-code').closest('.form-group');
     const soleInput = document.getElementById('product-sole-material');
+    const currencyEl = document.getElementById('product-currency');
 
     if (id) {
       title.textContent = 'Model Düzenle ✏️';
-      
-      // Show detail fields in Edit Mode
-      detailFields.forEach(el => {
-        if (el.classList.contains('form-group')) {
-          el.style.display = 'block';
-        } else {
-          el.style.display = 'flex';
-        }
-      });
-      if (modelCodeGroup) modelCodeGroup.style.flex = '';
 
       dbGet('products', id).then(p => {
         if (p) {
           document.getElementById('product-id').value = p.id;
           document.getElementById('product-code').value = p.modelCode || '';
-          document.getElementById('product-category').value = p.category || '';
+          document.getElementById('product-category').value = p.category || 'Ayakkabı';
           
           const sizeEl = document.getElementById('product-size');
           if (sizeEl) sizeEl.value = p.size || '';
@@ -276,7 +265,6 @@ const Products = {
           document.getElementById('product-leather-type').value = p.leatherType || '';
           document.getElementById('product-price').value = p.price || 0;
           
-          const currencyEl = document.getElementById('product-currency');
           if (currencyEl) currencyEl.value = p.currency || 'TRY';
           
           const barcodeEl = document.getElementById('product-barcode');
@@ -294,17 +282,10 @@ const Products = {
       });
     } else {
       title.textContent = 'Yeni Model Ekle 👟';
-      
-      // Hide detail fields in Create Mode
-      detailFields.forEach(el => {
-        el.style.display = 'none';
-      });
-      if (modelCodeGroup) modelCodeGroup.style.flex = '1';
-
       if (soleInput) soleInput.value = '';
-
-      const currencyEl = document.getElementById('product-currency');
       if (currencyEl) currencyEl.value = 'TRY';
+      document.getElementById('product-category').value = 'Ayakkabı';
+      document.getElementById('product-price').value = '0';
     }
 
     openModalById('product-modal');
