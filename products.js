@@ -113,15 +113,12 @@ const Products = {
   async loadProducts() {
     let products = await dbGetAll('products');
 
-    if (this.currentFilter !== 'all') {
-      products = products.filter(p => p.category === this.currentFilter);
-    }
-
     const searchVal = document.getElementById('search-products')?.value?.toLowerCase().trim() || '';
     if (searchVal) {
       products = products.filter(p => 
         (p.modelCode || '').toLowerCase().includes(searchVal) ||
-        (p.category || '').toLowerCase().includes(searchVal) ||
+        (p.color || '').toLowerCase().includes(searchVal) ||
+        (p.soleMaterial || '').toLowerCase().includes(searchVal) ||
         (p.barcode || '').toLowerCase().includes(searchVal) ||
         (p.leatherUpper || '').toLowerCase().includes(searchVal) ||
         (p.leatherLining || '').toLowerCase().includes(searchVal)
@@ -144,16 +141,6 @@ const Products = {
     if (emptyState) emptyState.style.display = 'none';
 
     tbody.innerHTML = products.map(p => {
-      // Badges mapping
-      const catLower = (p.category || '').toLowerCase();
-      let categoryClass = 'badge-ayakkabi';
-      if (catLower.includes('sandalet')) categoryClass = 'badge-sandalet';
-      else if (catLower.includes('terlik')) categoryClass = 'badge-terlik';
-      else if (catLower.includes('babet')) categoryClass = 'badge-babet';
-      else if (catLower.includes('ayakkabı')) categoryClass = 'badge-ayakkabi';
-      else if (catLower.includes('espadril')) categoryClass = 'badge-espadril';
-      else if (catLower.includes('bot')) categoryClass = 'badge-bot';
-
       const modelPhotoHtml = p.photo 
         ? `<div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
              <img class="table-thumbnail" src="${p.photo}" alt="Model" onclick="window.Products.showImageZoom('${p.photo}')" style="cursor:zoom-in;">
@@ -189,9 +176,6 @@ const Products = {
       if (p.leatherType) leatherParts.push(`Tür: ${p.leatherType}`);
       const leatherText = leatherParts.length > 0 ? leatherParts.join(' / ') : '-';
 
-      const symbols = { TRY: '₺', USD: '$', EUR: '€' };
-      const sym = symbols[p.currency || 'TRY'] || '₺';
-
       return `
         <tr class="ledger-row-item">
           <td data-label="Fotoğraf">${modelPhotoHtml}</td>
@@ -199,7 +183,6 @@ const Products = {
             <strong style="color: #0f172a; font-size: 13.5px;">${this.escape(p.modelCode || 'KODSUZ')}</strong>
             ${p.barcode ? `<div class="barcode-subtext" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">📟 ${this.escape(p.barcode)}</div>` : ''}
           </td>
-          <td data-label="Kategori"><span class="category-badge ${categoryClass}">${this.escape(p.category || '-')}</span></td>
           <td data-label="Renk">${this.escape(p.color || '-')}</td>
           <td data-label="Taban"><span style="background: rgba(99,102,241,0.06); padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;">${this.escape(p.soleMaterial || '-')}</span></td>
           <td data-label="Deri (Astar / Yüz / Tür)" style="font-size: 0.85rem; max-width: 220px;" title="${this.escape(leatherText)}">${this.escape(leatherText)}</td>
@@ -247,7 +230,6 @@ const Products = {
         if (p) {
           document.getElementById('product-id').value = p.id;
           document.getElementById('product-code').value = p.modelCode || '';
-          document.getElementById('product-category').value = p.category || 'Ayakkabı';
           
           const colorEl = document.getElementById('product-color');
           if (colorEl) colorEl.value = p.color || '';
@@ -274,7 +256,6 @@ const Products = {
     } else {
       title.textContent = 'Yeni Model Ekle 👟';
       if (soleInput) soleInput.value = '';
-      document.getElementById('product-category').value = 'Ayakkabı';
     }
 
     openModalById('product-modal');

@@ -43,7 +43,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/main-D5iKOoNc.js"></script>
+  <script type="module" crossorigin src="/assets/main-Du1Gurhv.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/index-xQhTEy45.js">
   <link rel="stylesheet" crossorigin href="/assets/index-Cdg5GCz-.css">
 </head>
@@ -634,19 +634,8 @@
           </button>
         </div>
 
-        <!-- Filters -->
-        <div class="filter-bar" id="product-filters">
-          <button class="filter-btn active" data-filter="all">Tümü</button>
-          <button class="filter-btn" data-filter="Sandalet">👡 Sandalet</button>
-          <button class="filter-btn" data-filter="Terlik">🩴 Terlik</button>
-          <button class="filter-btn" data-filter="Babet">🩰 Babet</button>
-          <button class="filter-btn" data-filter="Ayakkabı">👟 Ayakkabı</button>
-          <button class="filter-btn" data-filter="Espadril">👞 Espadril</button>
-          <button class="filter-btn" data-filter="Bot">🥾 Bot</button>
-        </div>
-
         <div style="margin-bottom: 18px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-          <input type="text" id="search-products" placeholder="🔍 Ürünlerde ara (Model kodu, kategori, renk, malzeme...)" style="max-width: 360px; width: 100%; height: 38px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border-card); background: var(--bg-card); color: var(--text-primary); font-size: 13px;">
+          <input type="text" id="search-products" placeholder="🔍 Ürünlerde ara (Model kodu, renk, taban, deri...)" style="max-width: 360px; width: 100%; height: 38px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border-card); background: var(--bg-card); color: var(--text-primary); font-size: 13px;">
         </div>
 
         <!-- Products Table -->
@@ -654,12 +643,11 @@
           <table class="data-table ledger-data-table" id="products-table">
             <thead class="excel-header">
               <tr>
-                <th style="width: 7%; text-align: center;">Fotoğraf</th>
-                <th style="width: 18%;">Model Kodu</th>
-                <th style="width: 14%;">Kategori</th>
-                <th style="width: 14%;">Renk</th>
-                <th style="width: 15%;">Taban</th>
-                <th style="width: 20%;">Deri (Astar / Yüz / Tür)</th>
+                <th style="width: 8%; text-align: center;">Fotoğraf</th>
+                <th style="width: 22%;">Model Kodu</th>
+                <th style="width: 16%;">Renk</th>
+                <th style="width: 18%;">Taban</th>
+                <th style="width: 24%;">Deri (Astar / Yüz / Tür)</th>
                 <th style="width: 6%; text-align: center;">Aksesuar</th>
                 <th style="width: 6%; text-align: center;">İşlemler</th>
               </tr>
@@ -1833,20 +1821,9 @@
           <input type="hidden" id="product-id">
           
           <div class="form-row">
-            <div class="form-group" style="flex: 1.2;">
+            <div class="form-group" style="flex: 1;">
               <label for="product-code">Model Kodu *</label>
               <input type="text" id="product-code" placeholder="Örn: 101-SANDALET" required>
-            </div>
-            <div class="form-group" style="flex: 1;">
-              <label for="product-category">Kategori</label>
-              <select id="product-category">
-                <option value="Ayakkabı" selected>👟 Ayakkabı</option>
-                <option value="Sandalet">👡 Sandalet</option>
-                <option value="Terlik">🩴 Terlik</option>
-                <option value="Babet">🩰 Babet</option>
-                <option value="Espadril">👞 Espadril</option>
-                <option value="Bot">🥾 Bot</option>
-              </select>
             </div>
           </div>
 
