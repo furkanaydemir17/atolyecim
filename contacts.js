@@ -240,20 +240,20 @@ const Contacts = {
       const netClass = getNetClass();
 
       return `
-        <tr>
-          <td style="cursor: pointer; color: var(--color-primary);" onclick="Contacts.openLedgerModal(${c.id})" title="Cari Ekstreyi Görüntüle">
-            <strong>📁 ${this.escape(c.name)}</strong>
+        <tr onclick="Contacts.openLedgerModal(${c.id})" style="cursor: pointer;" class="contact-row-clickable" title="Cari Ekstreyi Görüntülemek İçin Tıklayın">
+          <td style="font-weight: 700; color: var(--text-primary);">
+            ${this.escape(c.name)}
           </td>
           <td><span class="category-badge ${typeClass}">${typeLabel}</span></td>
           <td>${this.escape(c.phone || '-')}</td>
           <td class="money-positive">${formatBalanceCol('receivable')}</td>
           <td class="money-negative">${formatBalanceCol('payable')}</td>
           <td class="${netClass}">${formatBalanceCol('net')}</td>
-          <td>
+          <td onclick="event.stopPropagation();">
             <div class="actions-cell">
-              <button class="btn-icon success" title="İşlem Ekle" onclick="Contacts.openTransactionModal(${c.id})">💰</button>
-              <button class="btn-icon info" title="Düzenle" onclick="Contacts.openModal(${c.id})">✏️</button>
-              <button class="btn-icon danger" title="Sil" onclick="Contacts.deleteContact(${c.id})">🗑️</button>
+              <button type="button" class="btn-icon success" title="İşlem Ekle" onclick="event.stopPropagation(); Contacts.openTransactionModal(${c.id})">💰</button>
+              <button type="button" class="btn-icon info" title="Düzenle" onclick="event.stopPropagation(); Contacts.openModal(${c.id})">✏️</button>
+              <button type="button" class="btn-icon danger" title="Sil" onclick="event.stopPropagation(); Contacts.deleteContact(${c.id})">🗑️</button>
             </div>
           </td>
         </tr>

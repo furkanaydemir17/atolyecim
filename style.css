@@ -1203,6 +1203,10 @@ div[style*="overflow: auto"]::-webkit-scrollbar-thumb:hover {
   background: #f8fafc;
 }
 
+.data-table tbody tr.contact-row-clickable:hover {
+  background: #f1f5f9;
+}
+
 .data-table tbody tr:last-child td {
   border-bottom: none;
 }
