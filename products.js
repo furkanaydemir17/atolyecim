@@ -140,7 +140,7 @@ const Products = {
       return;
     }
 
-    if (table) table.style.display = 'table';
+    if (table) table.style.display = '';
     if (emptyState) emptyState.style.display = 'none';
 
     tbody.innerHTML = products.map(p => {
@@ -193,22 +193,21 @@ const Products = {
       const sym = symbols[p.currency || 'TRY'] || '₺';
 
       return `
-        <tr>
-          <td>${modelPhotoHtml}</td>
-          <td>
-            <strong>${this.escape(p.modelCode || 'KODSUZ')}</strong>
+        <tr class="ledger-row-item">
+          <td data-label="Fotoğraf">${modelPhotoHtml}</td>
+          <td data-label="Model Kodu">
+            <strong style="color: #0f172a; font-size: 13.5px;">${this.escape(p.modelCode || 'KODSUZ')}</strong>
             ${p.barcode ? `<div class="barcode-subtext" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">📟 ${this.escape(p.barcode)}</div>` : ''}
           </td>
-          <td><span class="category-badge ${categoryClass}">${this.escape(p.category || '-')}</span></td>
-          <td>${this.escape(p.size || '-')}</td>
-          <td>${this.escape(p.color || '-')}</td>
-          <td><span style="background: rgba(99,102,241,0.06); padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;">${this.escape(p.soleMaterial || '-')}</span></td>
-          <td style="font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${this.escape(leatherText)}">${this.escape(leatherText)}</td>
-          <td>${accPhotoHtml}</td>
-          <td>${sym}${Number(p.price).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
-          <td>
+          <td data-label="Kategori"><span class="category-badge ${categoryClass}">${this.escape(p.category || '-')}</span></td>
+          <td data-label="Beden">${this.escape(p.size || '-')}</td>
+          <td data-label="Renk">${this.escape(p.color || '-')}</td>
+          <td data-label="Taban"><span style="background: rgba(99,102,241,0.06); padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;">${this.escape(p.soleMaterial || '-')}</span></td>
+          <td data-label="Deri (Astar / Yüz)" style="font-size: 0.85rem; max-width: 200px;" title="${this.escape(leatherText)}">${this.escape(leatherText)}</td>
+          <td data-label="Aksesuar">${accPhotoHtml}</td>
+          <td data-label="Birim Fiyat" style="text-align: right; font-weight: 700; font-family: monospace; font-size: 13.5px;">${sym}${Number(p.price).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+          <td data-label="İşlemler">
             <div class="actions-cell">
-              <button class="btn-icon" style="background: rgba(99, 102, 241, 0.12); color: var(--text-accent); border: 1px solid rgba(99,102,241,0.25);" title="Fotoğrafı Değiştir" onclick="Products.promptChangePhoto(${p.id}, 'photo')">📷</button>
               <button class="btn-icon warning" title="Reçete (BOM)" onclick="Recipes.openModal(${p.id})">🛠️</button>
               <button class="btn-icon info" title="Düzenle" onclick="Products.openModal(${p.id})">✏️</button>
               <button class="btn-icon danger" title="Sil" onclick="Products.deleteProduct(${p.id})">🗑️</button>
