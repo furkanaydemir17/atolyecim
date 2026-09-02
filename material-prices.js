@@ -346,11 +346,6 @@ export const MaterialPrices = {
 
             <!-- Supplier Action Buttons (e.stopPropagation prevents toggle when clicking buttons) -->
             <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;" onclick="event.stopPropagation()">
-              ${sup.phone ? `
-                <button type="button" class="btn btn-sm btn-ghost" onclick="window.MaterialPrices.openWhatsAppChat('${escapeHtml(sup.phone)}', '${escapeHtml(sup.name)}')" title="WhatsApp ile İletişime Geç" style="color: #059669; border-color: #a7f3d0; background: #ecfdf5; font-weight: 700; font-size: 11px; padding: 4px 8px;">
-                  📲 WhatsApp
-                </button>
-              ` : ''}
               <button type="button" class="btn btn-sm btn-secondary" onclick="window.MaterialPrices.openPriceModal(null, ${sup.id})" style="font-weight: 700; font-size: 11px; padding: 4px 8px;">
                 ➕ Malzeme Ekle
               </button>
@@ -432,7 +427,6 @@ export const MaterialPrices = {
                             </td>
                             <td style="text-align: right;">
                               <div class="actions-cell" style="justify-content: flex-end;">
-                                <button type="button" class="btn-icon success" onclick="window.MaterialPrices.generateWhatsAppInquiry(${pr.id})" title="Tedarikçiye WhatsApp ile Malzeme Sor" style="color: #059669; background: #ecfdf5; border-color: #a7f3d0;">📲</button>
                                 <button type="button" class="btn-icon info" onclick="window.MaterialPrices.openPriceModal(${pr.id})" title="Fiyatı Düzenle">✏️</button>
                                 <button type="button" class="btn-icon danger" onclick="window.MaterialPrices.deletePrice(${pr.id})" title="Fiyatı Sil">🗑️</button>
                               </div>
@@ -556,9 +550,6 @@ export const MaterialPrices = {
                       <td style="font-size: 12px; color: #64748b;">${dateStr}</td>
                       <td style="text-align: right;">
                         <div class="actions-cell" style="justify-content: flex-end;">
-                          <button type="button" class="btn btn-sm btn-ghost" onclick="window.MaterialPrices.generateWhatsAppInquiry(${item.id})" style="color: #059669; border-color: #a7f3d0; background: #ecfdf5; font-weight: 700; padding: 3px 8px; font-size: 11px;">
-                            📲 Sipariş Ver
-                          </button>
                           <button type="button" class="btn-icon info" onclick="window.MaterialPrices.openPriceModal(${item.id})" title="Fiyatı Düzenle">✏️</button>
                         </div>
                       </td>
