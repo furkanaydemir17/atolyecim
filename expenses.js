@@ -65,12 +65,6 @@ export const Expenses = {
       btnExport._bound = true;
       btnExport.addEventListener('click', () => this.exportCSV());
     }
-
-    const btnWa = document.getElementById('btn-expenses-whatsapp');
-    if (btnWa && !btnWa._bound) {
-      btnWa._bound = true;
-      btnWa.addEventListener('click', () => this.shareWhatsAppSummary());
-    }
   },
 
   async loadData() {
@@ -306,7 +300,6 @@ export const Expenses = {
           </td>
           <td data-label="İşlemler" style="text-align: center; white-space: nowrap;">
             <div class="actions-cell" style="justify-content: center;">
-              <button type="button" class="btn-icon success" onclick="window.Expenses.sendExpenseWhatsApp(${exp.id})" title="WhatsApp ile Paylaş" style="color: #059669; background: #ecfdf5; border-color: #a7f3d0;">📲</button>
               <button type="button" class="btn-icon info" onclick="window.Expenses.openModal(${exp.id})" title="Harcamayı Düzenle">✏️</button>
               <button type="button" class="btn-icon danger" onclick="window.Expenses.deleteExpense(${exp.id})" title="Harcamayı Sil">🗑️</button>
             </div>
