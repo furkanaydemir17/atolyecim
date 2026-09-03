@@ -1463,11 +1463,18 @@ const Orders = {
             pageStyle.id = 'dynamic-print-page-style';
             document.head.appendChild(pageStyle);
           }
-          pageStyle.innerHTML = '@page { size: A4 portrait !important; margin: 8mm 10mm !important; }';
+          pageStyle.innerHTML = '@page { size: A4 portrait !important; margin: 6mm 8mm !important; }';
 
           document.body.classList.add('printing-invoice');
-          window.print();
-          document.body.classList.remove('printing-invoice');
+          const cleanup = () => {
+            document.body.classList.remove('printing-invoice');
+            window.removeEventListener('afterprint', cleanup);
+          };
+          window.addEventListener('afterprint', cleanup);
+          setTimeout(() => {
+            window.print();
+            setTimeout(cleanup, 2500);
+          }, 250);
         } catch (e) {
           console.error('Invoice save failed:', e);
         }
@@ -2009,9 +2016,24 @@ const Orders = {
       // Bind Print Button
       const printBtn = document.getElementById('btn-label-print');
       printBtn.onclick = () => {
+        let pageStyle = document.getElementById('dynamic-print-page-style');
+        if (!pageStyle) {
+          pageStyle = document.createElement('style');
+          pageStyle.id = 'dynamic-print-page-style';
+          document.head.appendChild(pageStyle);
+        }
+        pageStyle.innerHTML = '@page { size: 100mm 150mm !important; margin: 0 !important; }';
+
         document.body.classList.add('printing-label');
-        window.print();
-        document.body.classList.remove('printing-label');
+        const cleanup = () => {
+          document.body.classList.remove('printing-label');
+          window.removeEventListener('afterprint', cleanup);
+        };
+        window.addEventListener('afterprint', cleanup);
+        setTimeout(() => {
+          window.print();
+          setTimeout(cleanup, 2500);
+        }, 250);
       };
 
       openModalById('label-modal');

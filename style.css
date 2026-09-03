@@ -2083,12 +2083,27 @@ div[style*="overflow: auto"]::-webkit-scrollbar-thumb:hover {
   }
 
   /* Sayfayı aşağı iten tüm ana elemanların yüksekliğini sıfırla */
-  #app, #sidebar, .header-bar, #mobile-menu-btn, .modal-overlay, #toast-container,
+  #app, #sidebar, .header-bar, #mobile-menu-btn, #toast-container,
   .modal-actions, .modal-close, .modal-header {
     display: none !important;
     height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
+  }
+
+  .modal-overlay:not(#invoice-modal):not(#label-modal) {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body:not(.printing-invoice) #invoice-modal {
+    display: none !important;
+  }
+
+  body:not(.printing-label) #label-modal {
+    display: none !important;
   }
 
   body * {
@@ -2118,19 +2133,39 @@ div[style*="overflow: auto"]::-webkit-scrollbar-thumb:hover {
     padding: 0 !important;
     background: #fff !important;
   }
+  body.printing-invoice #invoice-modal,
+  body.printing-invoice #invoice-modal .modal-card,
+  body.printing-invoice #invoice-modal .modal-body {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+  body.printing-invoice #invoice-modal .modal-header,
+  body.printing-invoice #invoice-modal .modal-actions,
+  body.printing-invoice #invoice-modal .modal-close,
+  body.printing-invoice #invoice-modal .modal-body > div:first-child {
+    display: none !important;
+  }
   body.printing-invoice #invoice-print-area,
   body.printing-invoice #invoice-print-area * {
     visibility: visible !important;
   }
   body.printing-invoice #invoice-print-area {
     display: block !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
+    position: static !important;
     width: 100% !important;
     max-width: 100% !important;
-    margin: 0 !important;
-    padding: 8mm 10mm !important;
+    margin: 0 auto !important;
+    padding: 6mm 8mm !important;
     border: none !important;
     box-shadow: none !important;
     background: #fff !important;
@@ -2192,22 +2227,46 @@ div[style*="overflow: auto"]::-webkit-scrollbar-thumb:hover {
   }
 
   /* Thermal label printing */
-  #label-print-area, #label-print-area * {
+  body.printing-label #label-modal,
+  body.printing-label #label-modal .modal-card,
+  body.printing-label #label-modal .modal-body,
+  body.printing-label .label-wizard-container,
+  body.printing-label .label-preview-panel {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+  body.printing-label #label-modal .modal-header,
+  body.printing-label #label-modal .modal-actions,
+  body.printing-label #label-modal .modal-close,
+  body.printing-label .label-settings-panel,
+  body.printing-label .label-preview-panel > span {
+    display: none !important;
+  }
+  body.printing-label #label-print-area,
+  body.printing-label #label-print-area * {
     visibility: visible !important;
   }
-  #label-print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
+  body.printing-label #label-print-area {
+    position: static !important;
+    margin: 0 auto !important;
     width: 100mm !important;
     height: 150mm !important;
-    margin: 0 !important;
     padding: 6mm !important;
     border: none !important;
     box-shadow: none !important;
     background: #fff !important;
     color: #000 !important;
-    box-sizing: border-box;
+    box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
