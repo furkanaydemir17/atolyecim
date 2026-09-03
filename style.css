@@ -3332,13 +3332,15 @@ input[type="number"],
    ========================================================= */
 
 /* Akordiyon Ana Satır */
-.order-main-row {
-  cursor: pointer;
+.order-main-row,
+.order-main-row td {
+  cursor: pointer !important;
   transition: background 0.15s ease;
 }
 
-.order-main-row:hover {
-  background: #f8fafc !important;
+.order-main-row:hover,
+.order-main-row:hover td {
+  background: #f1f5f9 !important;
 }
 
 .order-arrow-cell {

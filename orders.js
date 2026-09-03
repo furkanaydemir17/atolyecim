@@ -729,18 +729,11 @@ const Orders = {
           return `
             <tr class="ledger-row-item order-main-row" onclick="Orders.toggleAccordion(${o.id}, event)" title="Detayları açmak/kapatmak için tıklayın">
               <td data-label="Detay" class="order-arrow-cell" id="order-arrow-${o.id}">▶</td>
-              <td data-label="Sipariş No"><strong style="color: #6366f1;">#${o.id}</strong></td>
-              <td data-label="Müşteri"><strong style="color: #0f172a;">${this.escape(customerName)}</strong></td>
+              <td data-label="Sipariş No"><strong style="color: #6366f1; font-size: 0.95rem;">#${o.id}</strong></td>
+              <td data-label="Müşteri"><strong style="color: #0f172a; font-size: 0.95rem;">${this.escape(customerName)}</strong></td>
               <td data-label="Model Kodu">
                 <span style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">${this.escape(o.modelCode)}</span>
                 ${colorCountTag}
-              </td>
-              <td data-label="Toplam Çift" style="text-align: center;"><strong>${o.qty} Çift</strong></td>
-              <td data-label="Birim Fiyat" style="text-align: right; font-family: monospace;">${sym}${o.price.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
-              <td data-label="Toplam Tutar" style="text-align: right; font-weight: 700; font-family: monospace; color: #059669;">${sym}${totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
-              <td data-label="Termin" style="font-size: 12px; font-weight: 600; color: #d97706;">
-                <div>Ter: ${deadlineDate}</div>
-                <div style="font-size: 11px; color: #94a3b8; font-weight: normal;">Sip: ${orderDate}</div>
               </td>
               <td data-label="Durum" style="text-align: center;" onclick="event.stopPropagation()">
                 <div class="order-status-dropdown-wrap">
@@ -788,18 +781,37 @@ const Orders = {
 
             <!-- Accordion Detail Row -->
             <tr class="order-detail-row" id="order-detail-${o.id}" style="display: none;">
-              <td colspan="10" style="padding: 10px 16px 14px 28px;">
+              <td colspan="6" style="padding: 10px 16px 14px 24px;">
                 <div class="order-detail-card">
-                  <div class="order-detail-header">
+                  <!-- Order Metrics & Info Grid -->
+                  <div class="order-detail-metrics" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; background: #f8fafc; padding: 12px 14px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e2e8f0;">
                     <div>
-                      <span style="font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">📦 Renk & Beden Asorti Dağılımı</span>
-                      <span style="color: #64748b; margin-left: 8px;">(Toplam: ${o.qty} Çift)</span>
+                      <div style="font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase;">Toplam Çift</div>
+                      <div style="font-size: 15px; font-weight: 800; color: #0f172a;">${o.qty} Çift</div>
                     </div>
-                    <div style="font-size: 11.5px; color: #64748b;">
-                      <span>Klişe: <b style="color: #0f172a;">${this.escape(o.klise || '-')}</b></span>
-                      <span style="margin: 0 6px;">|</span>
-                      <span>Aksesuar: <b style="color: #0f172a;">${this.escape(o.accessoryColor || '-')}</b></span>
+                    <div>
+                      <div style="font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase;">Birim Fiyat</div>
+                      <div style="font-size: 14px; font-weight: 700; font-family: monospace; color: #334155;">${sym}${o.price.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</div>
                     </div>
+                    <div>
+                      <div style="font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase;">Toplam Tutar</div>
+                      <div style="font-size: 15px; font-weight: 800; font-family: monospace; color: #059669;">${sym}${totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</div>
+                    </div>
+                    <div>
+                      <div style="font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase;">Termin Tarihi</div>
+                      <div style="font-size: 13px; font-weight: 700; color: #d97706;">${deadlineDate}</div>
+                      <div style="font-size: 10.5px; color: #94a3b8;">Sipariş: ${orderDate}</div>
+                    </div>
+                    <div>
+                      <div style="font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase;">Klişe / Aksesuar</div>
+                      <div style="font-size: 12px; font-weight: 600; color: #0f172a;">Klişe: ${this.escape(o.klise || '-')}</div>
+                      <div style="font-size: 11px; color: #64748b;">Aks: ${this.escape(o.accessoryColor || '-')}</div>
+                    </div>
+                  </div>
+
+                  <!-- Renk & Beden Asorti Dağılımı Header & Grid -->
+                  <div class="order-detail-header" style="margin-bottom: 8px;">
+                    <span style="font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; font-size: 12px;">📦 Renk & Beden Asorti Dağılımı</span>
                   </div>
                   <div class="order-color-grid">
                     ${colorBoxes}
