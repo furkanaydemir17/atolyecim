@@ -205,24 +205,28 @@ export const JobTickets = {
       const ticketId = String(t.id);
 
       return `
-        <tr>
+        <tr class="jt-row">
           <td>
-            <strong style="color: #ef4444; font-size: 13px; letter-spacing: 0.5px;">${escapeHtml(t.serialNo || '№ -')}</strong>
+            <span class="jt-serial-badge">${escapeHtml(t.serialNo || '№ -')}</span>
           </td>
           <td>
-            <strong>${escapeHtml(t.customer || '-')}</strong>
-            ${t.emboss ? `<div style="font-size: 11px; color: var(--text-accent);">Klişe: ${escapeHtml(t.emboss)}</div>` : ''}
+            <div style="font-weight: 700; color: #0f172a; font-size: 13px;">${escapeHtml(t.customer || '-')}</div>
+            ${t.emboss ? `<div style="font-size: 11px; color: #6366f1; margin-top: 3px; font-weight: 600;">🏷️ Klişe: ${escapeHtml(t.emboss)}</div>` : ''}
           </td>
           <td>
-            <span style="font-weight: 700; color: var(--text-primary);">${escapeHtml(t.modelCode || '-')}</span>
-            <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(t.leather || '-')} | Taban: ${escapeHtml(t.sole || '-')}</div>
+            <div style="font-weight: 700; color: #0f172a; font-size: 13.5px;">${escapeHtml(t.modelCode || '-')}</div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 3px;">
+              <span>${escapeHtml(t.leather || '-')}</span>
+              <span style="margin: 0 4px; color: #cbd5e1;">•</span>
+              <span>Taban: ${escapeHtml(t.sole || '-')}</span>
+            </div>
           </td>
           <td>
-            <span style="font-size: 11px; color: var(--text-secondary);">${escapeHtml(t.lastNo || '-')}</span>
+            ${t.lastNo && t.lastNo !== '-' ? `<span class="jt-last-badge">${escapeHtml(t.lastNo)}</span>` : `<span style="color: #94a3b8; font-size: 12px;">-</span>`}
           </td>
           <td>
-            <div style="font-weight: 700; font-size: 13px; color: var(--text-primary);">${Number(t.totalPairs) || 0} Çift</div>
-            <div style="font-size: 10.5px; color: var(--text-muted); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${sizeSummary}</div>
+            <div style="font-weight: 800; font-size: 13.5px; color: #0f172a;">${Number(t.totalPairs) || 0} Çift</div>
+            <div style="font-size: 10.5px; color: #64748b; font-family: monospace; margin-top: 3px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${sizeSummary}">${sizeSummary}</div>
           </td>
           <td>
             <div class="stage-dropdown-wrap">
@@ -236,14 +240,16 @@ export const JobTickets = {
               </select>
             </div>
           </td>
-          <td>${dateStr}</td>
           <td>
-            <div class="actions-cell">
-              <button class="btn btn-sm btn-primary" onclick="window.JobTickets.printA5Ticket('${ticketId}')" title="A5 İmalat Fişini Yazdır" style="padding: 4px 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; background: #0284c7; border-color: #0284c7; cursor: pointer;">
+            <span style="font-size: 11.5px; font-weight: 600; color: #475569; font-family: monospace;">${dateStr}</span>
+          </td>
+          <td style="text-align: center;">
+            <div class="actions-cell" style="justify-content: center; gap: 5px;">
+              <button class="btn btn-sm btn-primary" onclick="window.JobTickets.printA5Ticket('${ticketId}')" title="A5 İmalat Fişini Yazdır" style="padding: 5px 9px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; background: #0284c7; border-color: #0284c7; border-radius: 6px; cursor: pointer;">
                 🖨️ A5 Fiş
               </button>
-              <button class="btn-icon info" title="Düzenle" onclick="window.JobTickets.openModal('${ticketId}')">✏️</button>
-              <button class="btn-icon danger" title="Sil" onclick="window.JobTickets.deleteTicket('${ticketId}')">🗑️</button>
+              <button class="btn-icon info" title="Düzenle" onclick="window.JobTickets.openModal('${ticketId}')" style="width: 28px; height: 28px; border-radius: 6px;">✏️</button>
+              <button class="btn-icon danger" title="Sil" onclick="window.JobTickets.deleteTicket('${ticketId}')" style="width: 28px; height: 28px; border-radius: 6px;">🗑️</button>
             </div>
           </td>
         </tr>
