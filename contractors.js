@@ -128,7 +128,7 @@ const Contractors = {
           </td>
           <td>
             <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
-              <button class="btn-icon success btn-c-wa" data-id="${c.id}" title="Ustayla WhatsApp'ta Görüş" style="color: #25d366; background: rgba(37,211,102,0.12); border: 1px solid rgba(37,211,102,0.25); cursor: pointer; padding: 4px 6px;">📲</button>
+              <button class="btn btn-sm btn-success btn-c-pay" data-id="${c.id}" title="Ödeme Yap" style="padding: 4px 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; background: #10b981; border-color: #10b981; color: #fff; cursor: pointer; border-radius: 6px;">💵 Ödeme Yap</button>
               <button class="btn btn-sm btn-secondary btn-c-ledger" data-id="${c.id}" style="padding: 4px 10px;">📊 Ekstre</button>
               <button class="btn btn-sm btn-ghost btn-c-delete" data-id="${c.id}" style="color: var(--color-danger); border-color: rgba(239,68,68,0.2); padding: 4px 8px;">Sil</button>
             </div>
@@ -166,33 +166,11 @@ const Contractors = {
   },
 
   bindTableEvents() {
-    document.querySelectorAll('.btn-c-wa').forEach(btn => {
-      bindOnce(btn, 'click', async () => {
+    document.querySelectorAll('.btn-c-pay').forEach(btn => {
+      bindOnce(btn, 'click', () => {
         const id = parseInt(btn.dataset.id);
-        const cont = await window.dbGet('contractors', id);
-        if (cont && window.WhatsAppManager) {
-          const compName = window.WhatsAppManager.getCompanyName();
-          let balanceText = '';
-          if (this.calculateBalance) {
-            const bal = await this.calculateBalance(id);
-            balanceText = `\n📊 *Güncel Hakediş Bakiyesi:* ${bal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`;
-          }
-          const msg = `👞 *${compName.toUpperCase()} — FASON BİLGİLENDİRME*\n` +
-            `━━━━━━━━━━━━━━━━━━━━━\n` +
-            `👤 *Usta / Fasoncu:* ${cont.name}${balanceText}\n` +
-            `━━━━━━━━━━━━━━━━━━━━━\n` +
-            `_İyi çalışmalar dileriz._`;
-          window.WhatsAppManager.openModal({
-            title: '🧵 Fasoncu WhatsApp İletişim',
-            phone: cont.phone || '',
-            recipientName: cont.name,
-            defaultTemplateKey: 'cont_info',
-            templates: [{ key: 'cont_info', label: '💬 Genel Bilgi / Bakiye' }],
-            templateTexts: { cont_info: msg },
-            data: cont
-          });
-        }
-      }, 'btn_c_wa_' + btn.dataset.id);
+        this.openPaymentModal(id);
+      }, 'btn_c_pay_' + btn.dataset.id);
     });
 
     document.querySelectorAll('.btn-c-ledger').forEach(btn => {
@@ -669,14 +647,12 @@ Contractors.bindEvents = function() {
           modal.classList.remove('show');
           setTimeout(() => { modal.style.display = 'none'; }, 250);
         }
-        // Refresh details modal & main table
-        await Contractors.openLedgerModal(contractorId);
-        await Contractors.loadContractors();
-
-        // Trigger WhatsApp notification modal
-        if (window.WhatsAppManager) {
-          window.WhatsAppManager.openForContractorJob(addedJob?.id || jobData.id);
+        // Refresh details modal if open & main table
+        const ledgerModal = document.getElementById('contractor-ledger-modal');
+        if (ledgerModal && ledgerModal.classList.contains('show')) {
+          await Contractors.openLedgerModal(contractorId);
         }
+        await Contractors.loadContractors();
       } catch (err) {
         console.error(err);
         window.showToast('Hakediş kaydedilemedi.', 'error');
@@ -706,20 +682,18 @@ Contractors.bindEvents = function() {
       };
 
       try {
-        const addedTx = await window.dbAdd('contractor_transactions', txData);
+        await window.dbAdd('contractor_transactions', txData);
         window.showToast('Ödeme kaydı başarıyla eklendi.', 'success');
         const modal = document.getElementById('contractor-payment-modal');
         if (modal) {
           modal.classList.remove('show');
           setTimeout(() => { modal.style.display = 'none'; }, 250);
         }
-        await Contractors.openLedgerModal(contractorId);
-        await Contractors.loadContractors();
-
-        // Trigger WhatsApp notification modal
-        if (window.WhatsAppManager) {
-          window.WhatsAppManager.openForContractorPayment(addedTx?.id || txData.id);
+        const ledgerModal = document.getElementById('contractor-ledger-modal');
+        if (ledgerModal && ledgerModal.classList.contains('show')) {
+          await Contractors.openLedgerModal(contractorId);
         }
+        await Contractors.loadContractors();
       } catch (err) {
         console.error(err);
         window.showToast('Ödeme kaydedilemedi.', 'error');
