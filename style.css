@@ -2257,12 +2257,15 @@ div[style*="overflow: auto"]::-webkit-scrollbar-thumb:hover {
     visibility: visible !important;
   }
   body.printing-label #label-print-area {
-    position: static !important;
-    margin: 0 auto !important;
+    position: relative !important;
+    margin: 10mm auto !important;
     width: 100mm !important;
     height: 150mm !important;
+    max-width: 100mm !important;
+    max-height: 150mm !important;
     padding: 6mm !important;
-    border: none !important;
+    border: 2.5px solid #000000 !important;
+    border-radius: 4px !important;
     box-shadow: none !important;
     background: #fff !important;
     color: #000 !important;
@@ -2271,6 +2274,8 @@ div[style*="overflow: auto"]::-webkit-scrollbar-thumb:hover {
     flex-direction: column !important;
     justify-content: space-between !important;
     overflow: hidden !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
 

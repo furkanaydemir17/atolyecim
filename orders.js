@@ -2022,7 +2022,7 @@ const Orders = {
           pageStyle.id = 'dynamic-print-page-style';
           document.head.appendChild(pageStyle);
         }
-        pageStyle.innerHTML = '@page { size: 100mm 150mm !important; margin: 0 !important; }';
+        pageStyle.innerHTML = '@page { size: auto !important; margin: 8mm auto !important; }';
 
         document.body.classList.add('printing-label');
         const cleanup = () => {
