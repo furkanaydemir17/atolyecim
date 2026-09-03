@@ -82,12 +82,122 @@ const Orders = {
   editingId: null,
   colorGroupCounter: 0,
 
+  toggleAccordion(orderId, event) {
+    if (event) event.stopPropagation();
+    const detailRow = document.getElementById(`order-detail-${orderId}`);
+    const arrow = document.getElementById(`order-arrow-${orderId}`);
+    if (!detailRow) return;
+
+    if (detailRow.style.display === 'none' || detailRow.classList.contains('hidden-accordion')) {
+      detailRow.style.display = 'table-row';
+      detailRow.classList.remove('hidden-accordion');
+      if (arrow) arrow.textContent = '▼';
+    } else {
+      detailRow.style.display = 'none';
+      detailRow.classList.add('hidden-accordion');
+      if (arrow) arrow.textContent = '▶';
+    }
+  },
+
+  toggleStatusDropdown(orderId, event) {
+    if (event) event.stopPropagation();
+    const targetMenu = document.getElementById(`status-menu-${orderId}`);
+    const isVisible = targetMenu && targetMenu.style.display === 'block';
+    
+    // Close all open status menus
+    document.querySelectorAll('.order-status-menu').forEach(m => m.style.display = 'none');
+    
+    if (targetMenu && !isVisible) {
+      targetMenu.style.display = 'block';
+    }
+  },
+
+  async changeOrderStatusDirect(orderId, newStatus, event) {
+    if (event) event.stopPropagation();
+    try {
+      const o = await dbGet('orders', parseInt(orderId));
+      if (!o) throw new Error('Sipariş bulunamadı!');
+      
+      const oldStatus = o.status;
+      if (oldStatus === newStatus) {
+        document.querySelectorAll('.order-status-menu').forEach(m => m.style.display = 'none');
+        return;
+      }
+
+      // Handle Stock and Transaction changes if status changes
+      if (newStatus === 'iptal') {
+        if (oldStatus !== 'iptal') {
+          await this.adjustStockForColors(o.colors, 'restore');
+          const txs = await dbGetAll('transactions');
+          const relatedTxs = txs.filter(tx => tx.orderId === o.id);
+          for (const tx of relatedTxs) {
+            await dbDelete('transactions', tx.id);
+          }
+          showToast('Sipariş iptal edildi, stoklar geri yüklendi!', 'info');
+        }
+      } else if (oldStatus === 'iptal' && (newStatus === 'beklemede' || newStatus === 'tamamlandi' || newStatus === 'kargoda')) {
+        const isStockOk = await this.verifyAndDeductStockForColors(o.colors);
+        if (!isStockOk) return;
+        showToast('Sipariş yeniden aktif edildi, stoklar düşüldü!', 'success');
+      }
+
+      o.status = newStatus;
+      await dbUpdate('orders', o);
+
+      const statusLabels = {
+        'beklemede': 'Beklemede',
+        'kargoda': 'Kargoya Verildi',
+        'tamamlandi': 'Tamamlandı',
+        'iptal': 'İptal Edildi'
+      };
+      const label = statusLabels[newStatus] || newStatus;
+      showToast(`Sipariş #${o.id} durumu "${label}" yapıldı! ✅`, 'success');
+
+      if (window.sendNotificationAlert) {
+        window.sendNotificationAlert('order-status', `#${o.id} nolu sipariş durumu güncellendi: ${label.toUpperCase()}. Model: ${o.modelCode}, Adet: ${o.qty} çift.`);
+      }
+
+      // WhatsApp prompt if kargoda
+      if (newStatus === 'kargoda' && o.customerPhone) {
+        try {
+          const formattedPhone = formatPhone(o.customerPhone);
+          const waMsg = `Merhaba, #${o.id} nolu ${o.modelCode} model kodlu ${o.qty} çift siparişiniz kargoya verildi! 🚚`;
+          const waUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(waMsg)}`;
+          openWhatsAppPrompt(
+            waUrl,
+            'Sipariş Kargoya Verildi! 🚚',
+            `#${o.id} nolu sipariş kargoya verildi. Müşterinize WhatsApp üzerinden kargo teslimat bildirimi göndermek ister misiniz?`
+          );
+        } catch (err) {
+          console.error('WhatsApp notification failed:', err);
+        }
+      }
+
+      await this.loadOrders();
+      if (window.Dashboard && typeof window.Dashboard.render === 'function') {
+        window.Dashboard.render();
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Durum güncellenirken hata oluştu: ' + err.message, 'error');
+    }
+  },
+
   async render() {
     this.bindEvents();
     await this.loadOrders();
   },
 
   bindEvents() {
+    if (!document._statusDropdownBound) {
+      document._statusDropdownBound = true;
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.order-status-dropdown-wrap')) {
+          document.querySelectorAll('.order-status-menu').forEach(menu => menu.style.display = 'none');
+        }
+      });
+    }
+
     // B2B Order Tabs switching
     const tabActiveOrders = document.getElementById('btn-tab-active-orders');
     const tabIncomingOrders = document.getElementById('btn-tab-incoming-orders');
@@ -584,56 +694,116 @@ const Orders = {
           const symbols = { TRY: '₺', USD: '$', EUR: '€' };
           const sym = symbols[o.currency || 'TRY'] || '₺';
 
-          // Build status badge
-          let statusBadge = '';
-          if (o.status === 'beklemede') {
-            statusBadge = '<span class="category-badge badge-tedarikci" style="background: var(--color-warning-bg); color: var(--color-warning);">Beklemede</span>';
-          } else if (o.status === 'kargoda') {
-            statusBadge = '<span class="category-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">Kargoda</span>';
-          } else if (o.status === 'tamamlandi') {
-            statusBadge = '<span class="category-badge badge-musteri" style="background: var(--color-success-bg); color: var(--color-success);">Tamamlandı</span>';
-          } else { 
-            statusBadge = '<span class="category-badge" style="background: var(--color-danger-bg); color: var(--color-danger);">İptal Edildi</span>';
-          }
+          // Status configs
+          const statusConfigs = {
+            'beklemede': { label: '⏳ Beklemede', bg: '#fffbeb', color: '#d97706', border: '#fde68a' },
+            'kargoda': { label: '🚚 Kargoda', bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe' },
+            'tamamlandi': { label: '✅ Tamamlandı', bg: '#ecfdf5', color: '#059669', border: '#a7f3d0' },
+            'iptal': { label: '❌ İptal', bg: '#fef2f2', color: '#dc2626', border: '#fecaca' }
+          };
+          const curStatus = statusConfigs[o.status] || statusConfigs['beklemede'];
 
-          // Render colors breakdown badges with size details
-          const colorBadges = (o.colors || []).map(c => {
-            let sizeInfo = '';
+          // Color count
+          const colorCount = (o.colors || []).length;
+          const colorCountTag = colorCount > 0 ? `<span style="font-size: 10.5px; font-weight: 500; color: #64748b; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-left: 4px; border: 1px solid #e2e8f0;">${colorCount} Renk</span>` : '';
+
+          // Color boxes inside accordion
+          const colorBoxes = (o.colors || []).map(c => {
+            let sizeBadges = 'Standart';
             if (c.sizes && c.sizes.length > 0) {
-              sizeInfo = c.sizes.map(s => `${this.escape(s.size)}:${s.qty}`).join(', ');
-              sizeInfo = ` [${sizeInfo}]`;
+              sizeBadges = c.sizes.map(s => `${this.escape(s.size)}:${s.qty}`).join(', ');
             }
-            return `<span style="background: rgba(99, 102, 241, 0.08); color: var(--text-accent); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;">${this.escape(c.color)}: ${c.qty} Çift${sizeInfo}</span>`;
-          }).join(' ');
-
-          // Sub-details row
-          const detailsText = `Klişe: ${o.klise || '-'} | Aks. Rengi: ${o.accessoryColor || '-'}`;
+            return `
+              <div class="order-color-box">
+                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 12px; color: #0f172a; margin-bottom: 4px;">
+                  <span>${this.escape(c.color)}</span>
+                  <span style="color: #6366f1;">${c.qty} Çift</span>
+                </div>
+                <div style="font-size: 11px; color: #64748b; font-family: monospace; line-height: 1.4; word-break: break-word;">
+                  ${this.escape(sizeBadges)}
+                </div>
+              </div>
+            `;
+          }).join('');
 
           return `
-            <tr class="ledger-row-item">
-              <td data-label="Sipariş No"><strong>#${o.id}</strong></td>
-              <td data-label="Müşteri"><strong style="color: var(--text-accent);">${this.escape(customerName)}</strong></td>
-              <td data-label="Model & Renkler">
-                <div style="font-weight: 700; font-size: 1rem; margin-bottom: 4px; color: #0f172a;">${this.escape(o.modelCode)}</div>
-                <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;">${colorBadges}</div>
-                <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">${this.escape(detailsText)}</div>
+            <tr class="ledger-row-item order-main-row" onclick="Orders.toggleAccordion(${o.id}, event)" title="Detayları açmak/kapatmak için tıklayın">
+              <td data-label="Detay" class="order-arrow-cell" id="order-arrow-${o.id}">▶</td>
+              <td data-label="Sipariş No"><strong style="color: #6366f1;">#${o.id}</strong></td>
+              <td data-label="Müşteri"><strong style="color: #0f172a;">${this.escape(customerName)}</strong></td>
+              <td data-label="Model Kodu">
+                <span style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">${this.escape(o.modelCode)}</span>
+                ${colorCountTag}
               </td>
-              <td data-label="Toplam Adet" style="text-align: center;"><strong>${o.qty} Çift</strong></td>
+              <td data-label="Toplam Çift" style="text-align: center;"><strong>${o.qty} Çift</strong></td>
               <td data-label="Birim Fiyat" style="text-align: right; font-family: monospace;">${sym}${o.price.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
-              <td data-label="Toplam Tutar" style="text-align: right; font-weight: 700; font-family: monospace; color: var(--color-warning);">${sym}${totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
-              <td data-label="Tarih / Termin">
-                <div style="font-size: 12px; font-weight: 500;">Sip: ${orderDate}</div>
-                <div style="font-size: 12px; font-weight: 600; color: var(--color-warning); margin-top: 2px;">Ter: ${deadlineDate}</div>
+              <td data-label="Toplam Tutar" style="text-align: right; font-weight: 700; font-family: monospace; color: #059669;">${sym}${totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+              <td data-label="Termin" style="font-size: 12px; font-weight: 600; color: #d97706;">
+                <div>Ter: ${deadlineDate}</div>
+                <div style="font-size: 11px; color: #94a3b8; font-weight: normal;">Sip: ${orderDate}</div>
               </td>
-              <td data-label="Durum" style="text-align: center;">${statusBadge}</td>
-              <td data-label="İşlemler">
-                <div class="actions-cell">
-                  <button class="btn-icon" style="background: rgba(99, 102, 241, 0.12); color: #818cf8; border-color: rgba(99, 102, 241, 0.25);" title="İmalat Fişlerine / Partilere Böl" onclick="Orders.openSplitModal(${o.id})">🏭</button>
-                  <button class="btn-icon success" style="background: rgba(37, 211, 102, 0.1); color: #25d366; border-color: rgba(37, 211, 102, 0.2);" title="WhatsApp Bildirimi Gönder" onclick="Orders.sendWhatsAppNotification(${o.id})">💬</button>
-                  <button class="btn-icon success" title="Teslim Fişi Oluştur" onclick="Orders.openInvoiceModal(${o.id})">🧾</button>
-                  <button class="btn-icon warning" title="Koli Etiketi Yazdır" onclick="Orders.openLabelModal(${o.id})">🏷️</button>
-                  <button class="btn-icon info" title="Durum Değiştir" onclick="Orders.openModal(${o.id})">✏️</button>
-                  <button class="btn-icon danger" title="Sil" onclick="Orders.deleteOrder(${o.id})">🗑️</button>
+              <td data-label="Durum" style="text-align: center;" onclick="event.stopPropagation()">
+                <div class="order-status-dropdown-wrap">
+                  <button type="button" class="order-status-btn" onclick="Orders.toggleStatusDropdown(${o.id}, event)" style="background: ${curStatus.bg}; color: ${curStatus.color}; border-color: ${curStatus.border};" title="Durumu Değiştirmek İçin Tıklayın">
+                    <span>${curStatus.label}</span>
+                    <span style="font-size: 9px; opacity: 0.7;">▼</span>
+                  </button>
+                  <div class="order-status-menu" id="status-menu-${o.id}">
+                    <div class="order-status-menu-item status-opt-beklemede" onclick="Orders.changeOrderStatusDirect(${o.id}, 'beklemede', event)">⏳ Beklemede</div>
+                    <div class="order-status-menu-item status-opt-kargoda" onclick="Orders.changeOrderStatusDirect(${o.id}, 'kargoda', event)">🚚 Kargoda</div>
+                    <div class="order-status-menu-item status-opt-tamamlandi" onclick="Orders.changeOrderStatusDirect(${o.id}, 'tamamlandi', event)">✅ Tamamlandı</div>
+                    <div class="order-status-menu-item status-opt-iptal" onclick="Orders.changeOrderStatusDirect(${o.id}, 'iptal', event)">❌ İptal</div>
+                  </div>
+                </div>
+              </td>
+              <td data-label="İşlemler" onclick="event.stopPropagation()">
+                <div class="actions-cell order-actions-cell">
+                  <button type="button" class="btn-action-pill pill-split" onclick="Orders.openSplitModal(${o.id})" title="İmalat Fişlerine / Partilere Böl">
+                    <span class="btn-action-icon">🏭</span>
+                    <span class="btn-action-label">İmalat</span>
+                  </button>
+                  <button type="button" class="btn-action-pill pill-wa" onclick="Orders.sendWhatsAppNotification(${o.id})" title="WhatsApp Bildirimi Gönder">
+                    <span class="btn-action-icon">💬</span>
+                    <span class="btn-action-label">WhatsApp</span>
+                  </button>
+                  <button type="button" class="btn-action-pill pill-invoice" onclick="Orders.openInvoiceModal(${o.id})" title="Teslim Fişi Oluştur">
+                    <span class="btn-action-icon">🧾</span>
+                    <span class="btn-action-label">Fiş</span>
+                  </button>
+                  <button type="button" class="btn-action-pill pill-label" onclick="Orders.openLabelModal(${o.id})" title="Koli Etiketi Yazdır">
+                    <span class="btn-action-icon">🏷️</span>
+                    <span class="btn-action-label">Etiket</span>
+                  </button>
+                  <button type="button" class="btn-action-pill pill-edit" onclick="Orders.openModal(${o.id})" title="Siparişi Düzenle">
+                    <span class="btn-action-icon">✏️</span>
+                    <span class="btn-action-label">Düzenle</span>
+                  </button>
+                  <button type="button" class="btn-action-pill pill-delete" onclick="Orders.deleteOrder(${o.id})" title="Siparişi Sil">
+                    <span class="btn-action-icon">🗑️</span>
+                    <span class="btn-action-label">Sil</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Accordion Detail Row -->
+            <tr class="order-detail-row" id="order-detail-${o.id}" style="display: none;">
+              <td colspan="10" style="padding: 10px 16px 14px 28px;">
+                <div class="order-detail-card">
+                  <div class="order-detail-header">
+                    <div>
+                      <span style="font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">📦 Renk & Beden Asorti Dağılımı</span>
+                      <span style="color: #64748b; margin-left: 8px;">(Toplam: ${o.qty} Çift)</span>
+                    </div>
+                    <div style="font-size: 11.5px; color: #64748b;">
+                      <span>Klişe: <b style="color: #0f172a;">${this.escape(o.klise || '-')}</b></span>
+                      <span style="margin: 0 6px;">|</span>
+                      <span>Aksesuar: <b style="color: #0f172a;">${this.escape(o.accessoryColor || '-')}</b></span>
+                    </div>
+                  </div>
+                  <div class="order-color-grid">
+                    ${colorBoxes}
+                  </div>
                 </div>
               </td>
             </tr>
