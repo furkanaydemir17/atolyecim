@@ -95,9 +95,29 @@ export const JobTickets = {
     }
   },
 
+  extractSerialNumeric(serialNo) {
+    if (!serialNo) return Infinity;
+    const str = String(serialNo).trim();
+    const match = str.match(/\d+/);
+    return match ? parseInt(match[0], 10) : Infinity;
+  },
+
+  sortTicketsBySerial(tickets) {
+    if (!Array.isArray(tickets)) return [];
+    return [...tickets].sort((a, b) => {
+      const numA = this.extractSerialNumeric(a.serialNo);
+      const numB = this.extractSerialNumeric(b.serialNo);
+      if (numA !== numB) {
+        return numA - numB; // Küçükten büyüğe (ascending)
+      }
+      return String(a.serialNo || '').localeCompare(String(b.serialNo || ''), undefined, { numeric: true });
+    });
+  },
+
   async loadTickets() {
     try {
-      this.activeTickets = await window.dbGetAll('job_tickets') || [];
+      const raw = await window.dbGetAll('job_tickets') || [];
+      this.activeTickets = this.sortTicketsBySerial(raw);
       this.updateMetrics();
       this.renderTable();
     } catch (err) {
@@ -137,7 +157,7 @@ export const JobTickets = {
     const searchInput = document.getElementById('search-job-tickets');
     const search = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
-    let filtered = this.activeTickets || [];
+    let filtered = this.sortTicketsBySerial(this.activeTickets || []);
 
     // Stage filter
     if (this.currentFilter !== 'all') {
@@ -214,7 +234,6 @@ export const JobTickets = {
           <td>${dateStr}</td>
           <td>
             <div class="actions-cell">
-              <button class="btn-icon success" onclick="window.WhatsAppManager && window.WhatsAppManager.openForJobTicket('${ticketId}')" title="Müşteriye WhatsApp Bildirimi Gönder" style="color: #25d366; background: rgba(37,211,102,0.12); border: 1px solid rgba(37,211,102,0.25); cursor: pointer; padding: 4px 6px; font-size: 13px;">📲</button>
               <button class="btn btn-sm btn-primary" onclick="window.JobTickets.printA5Ticket('${ticketId}')" title="A5 İmalat Fişini Yazdır" style="padding: 4px 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; background: #0284c7; border-color: #0284c7; cursor: pointer;">
                 🖨️ A5 Fiş
               </button>
