@@ -128,6 +128,7 @@ export const JobTickets = {
   updateMetrics() {
     const tickets = this.activeTickets || [];
     const total = tickets.length;
+    const beklemede = tickets.filter(t => t.stage === 'beklemede').reduce((sum, t) => sum + (Number(t.totalPairs) || 0), 0);
     const kesim = tickets.filter(t => t.stage === 'kesim').reduce((sum, t) => sum + (Number(t.totalPairs) || 0), 0);
     const saya = tickets.filter(t => t.stage === 'saya').reduce((sum, t) => sum + (Number(t.totalPairs) || 0), 0);
     const montaj = tickets.filter(t => t.stage === 'montaj').reduce((sum, t) => sum + (Number(t.totalPairs) || 0), 0);
@@ -135,6 +136,7 @@ export const JobTickets = {
     const bitti = tickets.filter(t => t.stage === 'tamamlandi').length;
 
     const elTotal = document.getElementById('metric-jt-total');
+    const elBeklemede = document.getElementById('metric-jt-beklemede');
     const elKesim = document.getElementById('metric-jt-kesim');
     const elSaya = document.getElementById('metric-jt-saya');
     const elMontaj = document.getElementById('metric-jt-montaj');
@@ -142,6 +144,7 @@ export const JobTickets = {
     const elBitti = document.getElementById('metric-jt-bitti');
 
     if (elTotal) elTotal.textContent = total;
+    if (elBeklemede) elBeklemede.textContent = beklemede + ' Çift';
     if (elKesim) elKesim.textContent = kesim + ' Çift';
     if (elSaya) elSaya.textContent = saya + ' Çift';
     if (elMontaj) elMontaj.textContent = montaj + ' Çift';
@@ -187,15 +190,16 @@ export const JobTickets = {
     if (emptyState) emptyState.style.display = 'none';
 
     const stageNames = {
-      kesim: { text: '✂️ Kesimde', class: 'stage-badge stage-kesim' },
-      saya: { text: '🧵 Sayada', class: 'stage-badge stage-saya' },
-      montaj: { text: '🔨 Montajda', class: 'stage-badge stage-montaj' },
-      paketleme: { text: '📦 Paketlemede', class: 'stage-badge stage-paket' },
-      tamamlandi: { text: '✅ Bitti', class: 'stage-badge stage-done' }
+      beklemede: { text: '⏳ Beklemede', class: 'stage-beklemede' },
+      kesim: { text: '✂️ Kesimde', class: 'stage-kesim' },
+      saya: { text: '🧵 Sayada', class: 'stage-saya' },
+      montaj: { text: '🔨 Montajda', class: 'stage-montaj' },
+      paketleme: { text: '📦 Paketlemede', class: 'stage-paket' },
+      tamamlandi: { text: '✅ Bitti', class: 'stage-done' }
     };
 
     tbody.innerHTML = filtered.map(t => {
-      const stageInfo = stageNames[t.stage] || { text: t.stage, class: 'stage-badge' };
+      const stageInfo = stageNames[t.stage] || { text: t.stage, class: 'stage-beklemede' };
       const dateStr = t.deliveryDate ? t.deliveryDate.split('-').reverse().join('.') : '-';
       const sizeSummary = this.formatSizeSummary(t.sizes);
       const ticketId = String(t.id);
@@ -222,7 +226,8 @@ export const JobTickets = {
           </td>
           <td>
             <div class="stage-dropdown-wrap">
-              <select class="jt-stage-select ${stageInfo.class}" onchange="window.JobTickets.changeStage('${ticketId}', this.value)" style="padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              <select class="jt-stage-select ${stageInfo.class}" onchange="window.JobTickets.changeStage('${ticketId}', this.value)">
+                <option value="beklemede" ${t.stage === 'beklemede' ? 'selected' : ''}>⏳ Beklemede</option>
                 <option value="kesim" ${t.stage === 'kesim' ? 'selected' : ''}>✂️ Kesimde</option>
                 <option value="saya" ${t.stage === 'saya' ? 'selected' : ''}>🧵 Sayada</option>
                 <option value="montaj" ${t.stage === 'montaj' ? 'selected' : ''}>🔨 Montajda</option>
@@ -366,7 +371,7 @@ export const JobTickets = {
         document.getElementById('jt-order-placer').value = ticket.orderPlacer || '';
         document.getElementById('jt-notes').value = ticket.notes || '';
         document.getElementById('jt-packaging').value = ticket.packaging || '';
-        document.getElementById('jt-stage').value = ticket.stage || 'kesim';
+        document.getElementById('jt-stage').value = ticket.stage || 'beklemede';
         document.getElementById('jt-total-pairs').value = ticket.totalPairs || 0;
 
         const sizeType = ticket.sizeType || 'kadin';
@@ -380,6 +385,7 @@ export const JobTickets = {
 
       // Otomatik yeni seri numarası önerisi (bir önceki kaydın bir sonraki numarası)
       document.getElementById('jt-serial-no').value = this.getNextSerialNo();
+      document.getElementById('jt-stage').value = 'beklemede';
       
       const typeSelect = document.getElementById('jt-size-range-type');
       const sizeType = typeSelect ? typeSelect.value : 'kadin';
@@ -422,7 +428,7 @@ export const JobTickets = {
       orderPlacer: document.getElementById('jt-order-placer').value.trim(),
       notes: document.getElementById('jt-notes').value.trim(),
       packaging: document.getElementById('jt-packaging').value.trim(),
-      stage: document.getElementById('jt-stage').value || 'kesim',
+      stage: document.getElementById('jt-stage').value || 'beklemede',
       sizeType: document.getElementById('jt-size-range-type').value || 'kadin',
       sizes,
       totalPairs,

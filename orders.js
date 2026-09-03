@@ -1723,7 +1723,7 @@ const Orders = {
               orderPlacer: customerName,
               packaging: 'Standart Kutu / Koli',
               notes: `Sipariş #${order.id} | Renk: ${item.colorName} (Parti ${item.batchIndex}/${item.totalBatchesForColor})`,
-              stage: 'kesim',
+              stage: 'beklemede',
               orderId: order.id,
               deliveryDate: deliveryDate,
               createdAt: new Date().toISOString()
