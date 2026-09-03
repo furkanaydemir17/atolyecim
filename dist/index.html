@@ -43,7 +43,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/main-BguKUI1G.js"></script>
+  <script type="module" crossorigin src="/assets/main-B91afVS5.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/index-v2aColDa.js">
   <link rel="stylesheet" crossorigin href="/assets/index-W5agQ_6S.css">
 </head>
@@ -3887,7 +3887,7 @@
         <button type="button" class="modal-close" data-modal="expense-modal">&times;</button>
       </div>
       <div class="modal-body" style="padding: 20px;">
-        <form id="expense-form" autocomplete="off" style="display: flex; flex-direction: column; gap: 14px;">
+        <form id="expense-form" novalidate autocomplete="off" style="display: flex; flex-direction: column; gap: 14px;">
           <input type="hidden" id="expense-id">
 
           <div class="form-row" style="display: flex; gap: 12px; flex-wrap: wrap;">
@@ -3915,7 +3915,7 @@
             <div class="form-group" style="flex: 1.5; min-width: 200px; margin-bottom: 0; display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
               <div>
                 <label for="expense-amount">Tutar <span style="color: var(--color-danger);">*</span></label>
-                <input type="number" id="expense-amount" step="0.01" min="0.01" placeholder="0.00" required autocomplete="off">
+                <input type="text" inputmode="decimal" id="expense-amount" placeholder="0.00" required autocomplete="off">
               </div>
               <div>
                 <label for="expense-currency">Para Birimi</label>
