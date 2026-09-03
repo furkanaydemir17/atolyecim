@@ -133,14 +133,6 @@ function initNavigation() {
       const pageName = item.dataset.page;
       if (!pageName) return;
 
-      // Stop camera if navigating away from barcode scanner
-      const activeNav = document.querySelector('.nav-item.active');
-      if (activeNav && activeNav.dataset.page === 'barcode' && pageName !== 'barcode') {
-        if (typeof BarcodeScanner !== 'undefined') {
-          BarcodeScanner.stopScan();
-        }
-      }
-
       navItems.forEach(n => n.classList.remove('active'));
       item.classList.add('active');
 
@@ -203,7 +195,6 @@ function initNavigation() {
           }
         }
         else if (pageName.startsWith('stock-') && window.Stocks) window.Stocks.render(pageName);
-        else if (pageName === 'barcode' && window.BarcodeScanner) window.BarcodeScanner.render();
         else if (pageName === 'manager') initManagerPage();
         else if (pageName === 'recycle') initRecycleBinPage();
         else if (pageName === 'admin') initAdminPage();
@@ -344,7 +335,7 @@ function initLogin() {
       const workshops = getWorkshops();
       const currentWorkshop = workshops.find(w => w.company === company);
       const modules = (currentWorkshop && currentWorkshop.modules) ? currentWorkshop.modules : {
-        orders: true, products: true, contacts: true, stocks: true, barcode: true, manager: true, recycle: true
+        orders: true, products: true, contacts: true, stocks: true, manager: true, recycle: true
       };
 
       document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
@@ -356,7 +347,6 @@ function initLogin() {
         else if (page === 'products') isAllowed = !!modules.products;
         else if (page === 'contacts') isAllowed = !!modules.contacts;
         else if (page.startsWith('stock-')) isAllowed = !!modules.stocks;
-        else if (page === 'barcode') isAllowed = !!modules.barcode;
         else if (page === 'manager') isAllowed = !!modules.manager;
         else if (page === 'recycle') isAllowed = !!modules.recycle;
 
@@ -1948,14 +1938,13 @@ function openWorkshopModulesModal(companyName, email) {
   const workshops = getWorkshops();
   const target = workshops.find(w => w.email.toLowerCase() === email.toLowerCase());
   const modules = (target && target.modules) ? target.modules : {
-    orders: true, products: true, contacts: true, stocks: true, barcode: true, manager: true, recycle: true
+    orders: true, products: true, contacts: true, stocks: true, manager: true, recycle: true
   };
 
   document.getElementById('mod-chk-orders').checked = modules.orders !== false;
   document.getElementById('mod-chk-products').checked = modules.products !== false;
   document.getElementById('mod-chk-contacts').checked = modules.contacts !== false;
   document.getElementById('mod-chk-stocks').checked = modules.stocks !== false;
-  document.getElementById('mod-chk-barcode').checked = modules.barcode !== false;
   document.getElementById('mod-chk-manager').checked = modules.manager !== false;
   document.getElementById('mod-chk-recycle').checked = modules.recycle !== false;
 
@@ -1979,7 +1968,6 @@ function initAdminModulesForm() {
       products: document.getElementById('mod-chk-products').checked,
       contacts: document.getElementById('mod-chk-contacts').checked,
       stocks: document.getElementById('mod-chk-stocks').checked,
-      barcode: document.getElementById('mod-chk-barcode').checked,
       manager: document.getElementById('mod-chk-manager').checked,
       recycle: document.getElementById('mod-chk-recycle').checked
     };

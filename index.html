@@ -242,10 +242,6 @@
           <span class="sidebar-icon">📦</span>
           <span>Asorti Şablonları</span>
         </li>
-        <li class="nav-item" data-page="barcode" role="menuitem" tabindex="0" aria-label="Barkod Okutma">
-          <span class="sidebar-icon">🔍</span>
-          <span>Barkod Okutma</span>
-        </li>
         <li class="nav-item" data-page="manager" role="menuitem" tabindex="0" aria-label="Yönetici Ayarları">
           <span class="sidebar-icon">⚙️</span>
           <span>Yönetici</span>
@@ -701,77 +697,6 @@
             <span>👥</span>
             <p>Henüz cari hesap eklenmedi</p>
             <button class="btn btn-primary btn-sm" id="add-contact-empty-btn">İlk Cari Ekle</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- ======= BARKOD OKUTMA PAGE ======= -->
-      <section id="page-barcode" class="page">
-        <div class="page-header">
-          <div>
-            <h1>Barkod Okutma Sistemi</h1>
-            <p class="page-desc">Kamera veya el terminali ile hızlı işlem yapın</p>
-          </div>
-        </div>
-
-        <div class="dashboard-row">
-          <!-- Scanner Camera Area -->
-          <div class="dashboard-card scanner-card">
-            <div class="card-header">
-              <h3>Barkod Okuyucu Kamera</h3>
-              <button class="btn btn-primary btn-sm" id="btn-toggle-scan">Taramayı Başlat</button>
-            </div>
-            <div class="scanner-container">
-              <div class="scanner-viewport" style="position: relative; display: flex; align-items: center; justify-content: center;">
-                <!-- Live Video Stream Target -->
-                <div id="scanner-reader" style="width: 100%; height: 100%; object-fit: cover;"></div>
-                
-                <!-- Laser and Corner Overlays -->
-                <div class="scanner-laser" style="z-index: 10;"></div>
-                <div class="scanner-corner tl" style="z-index: 10;"></div>
-                <div class="scanner-corner tr" style="z-index: 10;"></div>
-                <div class="scanner-corner bl" style="z-index: 10;"></div>
-                <div class="scanner-corner br" style="z-index: 10;"></div>
-                
-                <!-- Placeholder details (hidden when scanning starts) -->
-                <div id="scanner-placeholder" style="position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5;">
-                  <div class="scanner-placeholder-icon">📷</div>
-                  <p style="font-size: 13px; text-align: center; color: var(--text-secondary); max-width: 220px;">
-                    Kamera kapalı. Taramayı başlatmak için yukarıdaki butona tıklayın.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="scanner-manual-input">
-              <label for="barcode-manual">Barkod Numarasını Elle Gir:</label>
-              <div class="input-group">
-                <input type="text" id="barcode-manual" placeholder="">
-                <button class="btn btn-primary" id="btn-manual-scan">Sorgula</button>
-              </div>
-            </div>
-            
-            <div class="scanner-file-input" style="margin-top: 15px; border-top: 1px dashed var(--border-card); padding-top: 15px;">
-              <label style="display: block; margin-bottom: 8px;">Fotoğraftan Barkod Oku (Resim Yükle):</label>
-              <div style="position: relative;">
-                <input type="file" id="barcode-file" accept="image/*" style="display: none;">
-                <button type="button" class="btn btn-ghost" id="btn-trigger-file-select" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px dashed var(--border-input); padding: 12px; border-radius: var(--radius-sm); cursor: pointer; background: rgba(255,255,255,0.02); color: var(--text-secondary); transition: all var(--transition-fast);">
-                  <span>📷</span> Fotoğraf Çek veya Galeriden Seç
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Scan History & Info -->
-          <div class="dashboard-card scan-history-card">
-            <div class="card-header">
-              <h3>Son Okutulan Barkodlar</h3>
-            </div>
-            <div class="scan-history-list">
-              <div class="empty-state">
-                <span>📟</span>
-                <p>Henüz barkod okutulmadı</p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -1781,11 +1706,6 @@
             <label style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg-input); border-radius: 8px; border: 1px solid var(--border-card); cursor: pointer;">
               <span style="font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px;">🧱 Stoklarım (Taban, Aksesuar, Deri, Ham Madde)</span>
               <input type="checkbox" id="mod-chk-stocks" style="width: 18px; height: 18px; accent-color: var(--color-primary);" checked>
-            </label>
-
-            <label style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg-input); border-radius: 8px; border: 1px solid var(--border-card); cursor: pointer;">
-              <span style="font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px;">📷 Barkod Okutma Servisi</span>
-              <input type="checkbox" id="mod-chk-barcode" style="width: 18px; height: 18px; accent-color: var(--color-primary);" checked>
             </label>
 
             <label style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg-input); border-radius: 8px; border: 1px solid var(--border-card); cursor: pointer;">
@@ -4046,7 +3966,6 @@
   <script src="contractors.js" type="module"></script>
   <script src="job-tickets.js" type="module"></script>
   <script src="whatsapp.js" type="module"></script>
-  <script src="barcode.js" type="module"></script>
   <script src="ai-assistant.js" type="module"></script>
   <script src="app.js" type="module"></script>
 </body>
