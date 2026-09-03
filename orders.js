@@ -610,23 +610,23 @@ const Orders = {
           const detailsText = `Klişe: ${o.klise || '-'} | Aks. Rengi: ${o.accessoryColor || '-'}`;
 
           return `
-            <tr>
-              <td><strong>#${o.id}</strong></td>
-              <td>${this.escape(customerName)}</td>
-              <td>
-                <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">${this.escape(o.modelCode)}</div>
+            <tr class="ledger-row-item">
+              <td data-label="Sipariş No"><strong>#${o.id}</strong></td>
+              <td data-label="Müşteri"><strong style="color: var(--text-accent);">${this.escape(customerName)}</strong></td>
+              <td data-label="Model & Renkler">
+                <div style="font-weight: 700; font-size: 1rem; margin-bottom: 4px; color: #0f172a;">${this.escape(o.modelCode)}</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;">${colorBadges}</div>
                 <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">${this.escape(detailsText)}</div>
               </td>
-              <td><strong>${o.qty} Çift</strong></td>
-              <td>${sym}${o.price.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
-              <td><strong>${sym}${totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</strong></td>
-              <td>
+              <td data-label="Toplam Adet" style="text-align: center;"><strong>${o.qty} Çift</strong></td>
+              <td data-label="Birim Fiyat" style="text-align: right; font-family: monospace;">${sym}${o.price.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+              <td data-label="Toplam Tutar" style="text-align: right; font-weight: 700; font-family: monospace; color: var(--color-warning);">${sym}${totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+              <td data-label="Tarih / Termin">
                 <div style="font-size: 12px; font-weight: 500;">Sip: ${orderDate}</div>
                 <div style="font-size: 12px; font-weight: 600; color: var(--color-warning); margin-top: 2px;">Ter: ${deadlineDate}</div>
               </td>
-              <td>${statusBadge}</td>
-              <td>
+              <td data-label="Durum" style="text-align: center;">${statusBadge}</td>
+              <td data-label="İşlemler">
                 <div class="actions-cell">
                   <button class="btn-icon" style="background: rgba(99, 102, 241, 0.12); color: #818cf8; border-color: rgba(99, 102, 241, 0.25);" title="İmalat Fişlerine / Partilere Böl" onclick="Orders.openSplitModal(${o.id})">🏭</button>
                   <button class="btn-icon success" style="background: rgba(37, 211, 102, 0.1); color: #25d366; border-color: rgba(37, 211, 102, 0.2);" title="WhatsApp Bildirimi Gönder" onclick="Orders.sendWhatsAppNotification(${o.id})">💬</button>
@@ -670,17 +670,17 @@ const Orders = {
           }).join(' ');
 
           return `
-            <tr>
-              <td>${orderDate}</td>
-              <td style="font-weight: 600; color: var(--text-accent);">${this.escape(rawCustomer)}</td>
-              <td>
-                <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">${this.escape(o.modelCode)}</div>
+            <tr class="ledger-row-item">
+              <td data-label="Tarih">${orderDate}</td>
+              <td data-label="Müşteri" style="font-weight: 600; color: var(--text-accent);">${this.escape(rawCustomer)}</td>
+              <td data-label="Model & Renkler">
+                <div style="font-weight: 700; font-size: 1rem; margin-bottom: 4px; color: #0f172a;">${this.escape(o.modelCode)}</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;">${colorBadges}</div>
               </td>
-              <td><strong>${o.qty} Çift</strong></td>
-              <td>₺${(o.price || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
-              <td style="font-size: 12.5px; color: var(--text-secondary); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${this.escape(o.note || '-')}">${this.escape(o.note || '-')}</td>
-              <td>
+              <td data-label="Toplam Adet" style="text-align: center;"><strong>${o.qty} Çift</strong></td>
+              <td data-label="Birim Fiyat" style="text-align: right; font-family: monospace;">₺${(o.price || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+              <td data-label="Müşteri Notu" style="font-size: 12.5px; color: var(--text-secondary); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${this.escape(o.note || '-')}">${this.escape(o.note || '-')}</td>
+              <td data-label="İşlemler">
                 <div class="actions-cell">
                   <button class="btn btn-secondary btn-sm" onclick="Orders.openApproveModal('${o.id}')" style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 600; border-color: rgba(16, 185, 129, 0.2);" title="Siparişi Onayla">✔️ Onayla</button>
                   <button class="btn btn-secondary btn-sm" onclick="Orders.rejectIncomingOrder('${o.id}')" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-weight: 600; border-color: rgba(239, 68, 68, 0.2);" title="Siparişi Reddet">🗑️ Reddet</button>

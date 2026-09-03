@@ -43,9 +43,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/main-6F-u-mCY.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/index-xQhTEy45.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-Cdg5GCz-.css">
+  <script type="module" crossorigin src="/assets/main-C0Dj08f0.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/index-6uxiDgyW.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-BRwbPoLt.css">
 </head>
 <body>
   <!-- O21 Düzeltme: JS devre dışı bırakıldığında noscript uyarısı -->
@@ -575,18 +575,18 @@
 
         <!-- Orders Table (Active) -->
         <div id="orders-active-container" class="table-container">
-          <table class="data-table" id="orders-table">
-            <thead>
+          <table class="data-table ledger-data-table" id="orders-table">
+            <thead class="excel-header">
               <tr>
-                <th>Sipariş No</th>
-                <th>Müşteri</th>
-                <th>Model Kodu / Renk Detayları</th>
-                <th>Toplam Adet</th>
-                <th>Birim Fiyat</th>
-                <th>Toplam Tutar</th>
-                <th>Sipariş / Termin Tarihi</th>
-                <th>Durum</th>
-                <th>İşlemler</th>
+                <th style="width: 7%;">Sipariş No</th>
+                <th style="width: 13%;">Müşteri</th>
+                <th style="width: 26%;">Model & Renkler</th>
+                <th style="width: 8%; text-align: center;">Toplam Adet</th>
+                <th style="width: 8%; text-align: right;">Birim Fiyat</th>
+                <th style="width: 9%; text-align: right;">Toplam Tutar</th>
+                <th style="width: 12%;">Tarih / Termin</th>
+                <th style="width: 8%; text-align: center;">Durum</th>
+                <th style="width: 9%; text-align: center;">İşlemler</th>
               </tr>
             </thead>
             <tbody id="orders-tbody"></tbody>
@@ -600,16 +600,16 @@
 
         <!-- Incoming Orders Table (Gelen Siparişler) -->
         <div id="orders-incoming-container" class="table-container" style="display: none;">
-          <table class="data-table" id="incoming-orders-table">
-            <thead>
+          <table class="data-table ledger-data-table" id="incoming-orders-table">
+            <thead class="excel-header">
               <tr>
-                <th style="width: 110px;">Tarih</th>
-                <th>Müşteri (Giriş Yapılan)</th>
-                <th>Model Kodu / Renk Detayları</th>
-                <th>Toplam Adet</th>
-                <th>Birim Fiyat (Katalog)</th>
-                <th>Müşteri Notu</th>
-                <th>İşlemler</th>
+                <th style="width: 10%;">Tarih</th>
+                <th style="width: 18%;">Müşteri</th>
+                <th style="width: 28%;">Model & Renkler</th>
+                <th style="width: 10%; text-align: center;">Toplam Adet</th>
+                <th style="width: 10%; text-align: right;">Birim Fiyat</th>
+                <th style="width: 14%;">Müşteri Notu</th>
+                <th style="width: 10%; text-align: center;">İşlemler</th>
               </tr>
             </thead>
             <tbody id="incoming-orders-tbody"></tbody>
