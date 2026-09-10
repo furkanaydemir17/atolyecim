@@ -800,20 +800,98 @@ const Contacts = {
       netEl.textContent = formatLedgerNet();
       netEl.style.color = 'var(--text-accent)';
 
-      // Populate Standard Ledger Table
+      // Date filter elements
+      const dateStartInput = document.getElementById('contact-ledger-date-start');
+      const dateEndInput = document.getElementById('contact-ledger-date-end');
+      const clearDatesBtn = document.getElementById('btn-contact-ledger-clear-dates');
+      const countSpan = document.getElementById('contact-ledger-filter-count');
+      if (dateStartInput) dateStartInput.value = '';
+      if (dateEndInput) dateEndInput.value = '';
+
       const tbody = document.getElementById('ledger-tbody');
       const emptyState = document.getElementById('ledger-empty');
 
-      if (standardTx.length === 0) {
-        tbody.innerHTML = '';
-        emptyState.style.display = 'block';
-      } else {
-        emptyState.style.display = 'none';
-        
-        const cumulativeBalances = { TRY: 0, USD: 0, EUR: 0 };
-        const totalRows = standardTx.length;
+      const renderFilteredStandardTxs = () => {
+        const startDate = dateStartInput?.value || '';
+        const endDate = dateEndInput?.value || '';
 
-        tbody.innerHTML = standardTx.map((tx, idx) => {
+        let filteredTxs = [...standardTx];
+        const priorBalances = { TRY: 0, USD: 0, EUR: 0 };
+        let hasPrior = false;
+
+        if (startDate) {
+          standardTx.forEach(tx => {
+            const txDate = tx.date ? tx.date.split('T')[0] : '';
+            if (txDate < startDate) {
+              const curr = tx.currency || 'TRY';
+              let d = 0, c = 0;
+              if (tx.type === 'alacak' || tx.type === 'odeme') d = Number(tx.amount) || 0;
+              else if (tx.type === 'tahsilat' || tx.type === 'borc') c = Number(tx.amount) || 0;
+              priorBalances[curr] = (priorBalances[curr] || 0) + (d - c);
+              hasPrior = true;
+            }
+          });
+          filteredTxs = filteredTxs.filter(tx => {
+            const txDate = tx.date ? tx.date.split('T')[0] : '';
+            return txDate >= startDate;
+          });
+        }
+
+        if (endDate) {
+          filteredTxs = filteredTxs.filter(tx => {
+            const txDate = tx.date ? tx.date.split('T')[0] : '';
+            return txDate <= endDate;
+          });
+        }
+
+        if (countSpan) {
+          if (startDate || endDate) {
+            countSpan.textContent = `(${filteredTxs.length} işlem listelendi)`;
+          } else {
+            countSpan.textContent = `(Toplam ${standardTx.length} işlem)`;
+          }
+        }
+
+        if (filteredTxs.length === 0 && !hasPrior) {
+          tbody.innerHTML = '';
+          emptyState.style.display = 'block';
+          return;
+        }
+
+        emptyState.style.display = 'none';
+
+        const cumulativeBalances = { ...priorBalances };
+        const totalRows = filteredTxs.length;
+
+        let rowsHtml = '';
+
+        // Render prior balance row if startDate was selected and there is prior history
+        if (hasPrior) {
+          const priorParts = [];
+          for (const [c, val] of Object.entries(priorBalances)) {
+            if (val !== 0) {
+              const sym = symbols[c] || '₺';
+              const type = val >= 0 ? '(B)' : '(A)';
+              priorParts.push(`${sym}${Math.abs(val).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${type}`);
+            }
+          }
+          const priorStr = priorParts.length > 0 ? priorParts.join(' | ') : '₺0,00';
+          rowsHtml += `
+            <tr style="background: #fef9c3; font-weight: 700;" class="ledger-row-item">
+              <td data-label="Tarih" style="color: #854d0e;">${startDate.split('-').reverse().join('.')}</td>
+              <td data-label="Evrak No" style="color: #854d0e;">-</td>
+              <td data-label="İşlem Türü"><span class="ledger-type-badge" style="background: #fef08a; color: #854d0e;">DEVİR</span></td>
+              <td data-label="Açıklama" style="color: #854d0e;">⏳ <strong>Önceki Dönem Devir Bakiyesi</strong></td>
+              <td data-label="Borçlu" style="text-align: right;">-</td>
+              <td data-label="Alacaklı" style="text-align: right;">-</td>
+              <td data-label="B. Borçlu" style="text-align: right; color: #ef4444;">${priorBalances['TRY'] > 0 ? priorStr : '-'}</td>
+              <td data-label="B. Alacaklı" style="text-align: right; color: #10b981;">${priorBalances['TRY'] < 0 ? priorStr : '-'}</td>
+              <td data-label="İşlemler" style="text-align: center;">-</td>
+            </tr>
+          `;
+        }
+
+        rowsHtml += filteredTxs.map((tx, idx) => {
           const dateStr = new Date(tx.date).toLocaleDateString('tr-TR');
           const curr = tx.currency || 'TRY';
           const txSymbol = symbols[curr] || '₺';
@@ -982,6 +1060,22 @@ const Contacts = {
             </tr>
           `;
         }).join('');
+
+        tbody.innerHTML = rowsHtml;
+      };
+
+      // Initial render
+      renderFilteredStandardTxs();
+
+      // Bind date filtering inputs
+      if (dateStartInput) dateStartInput.onchange = renderFilteredStandardTxs;
+      if (dateEndInput) dateEndInput.onchange = renderFilteredStandardTxs;
+      if (clearDatesBtn) {
+        clearDatesBtn.onclick = () => {
+          if (dateStartInput) dateStartInput.value = '';
+          if (dateEndInput) dateEndInput.value = '';
+          renderFilteredStandardTxs();
+        };
       }
 
       // Populate Packaging Table (Kutu & Koli Takibi)
@@ -1040,7 +1134,9 @@ const Contacts = {
       const printBtn = document.getElementById('btn-ledger-print');
       if (printBtn) {
         printBtn.onclick = async () => {
-          await this.printLedger(contact, standardTx);
+          const startDate = dateStartInput?.value || '';
+          const endDate = dateEndInput?.value || '';
+          await this.printLedger(contact, standardTx, startDate, endDate);
         };
       }
 
@@ -1058,7 +1154,7 @@ const Contacts = {
     }
   },
 
-  async printLedger(contact, transactions) {
+  async printLedger(contact, transactions, startDate = '', endDate = '') {
     const printArea = document.getElementById('ledger-print-area');
     if (!printArea) return;
 
@@ -1076,17 +1172,58 @@ const Contacts = {
       ordersMap[o.id] = o;
     });
 
-    // Calculate totals
-    let totalDebit = 0;
-    let totalCredit = 0;
-    
+    // Calculate prior balances for transactions before startDate
+    let priorDebit = 0;
+    let priorCredit = 0;
+    let hasPrior = false;
+
+    if (startDate) {
+      transactions.forEach(tx => {
+        const txDate = tx.date ? tx.date.split('T')[0] : '';
+        if (txDate < startDate) {
+          const amt = Number(tx.amount) || 0;
+          if (tx.type === 'alacak' || tx.type === 'odeme') priorDebit += amt;
+          else if (tx.type === 'tahsilat' || tx.type === 'borc') priorCredit += amt;
+          hasPrior = true;
+        }
+      });
+    }
+
+    // Filter transactions for date range
+    let filteredTxs = transactions.filter(tx => {
+      const txDate = tx.date ? tx.date.split('T')[0] : '';
+      if (startDate && txDate < startDate) return false;
+      if (endDate && txDate > endDate) return false;
+      return true;
+    });
+
     // Sort transactions by date ascending for chronological order in print
-    const sortedTxs = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const sortedTxs = [...filteredTxs].sort((a, b) => new Date(a.date) - new Date(b.date));
 
     const symbols = { TRY: '₺', USD: '$', EUR: '€' };
 
-    let balance = 0;
+    let totalDebit = 0;
+    let totalCredit = 0;
+    let balance = priorDebit - priorCredit;
     const rows = [];
+
+    // Add prior balance row if exists
+    if (hasPrior) {
+      const priorNet = priorDebit - priorCredit;
+      const priorType = priorNet >= 0 ? '(B)' : '(A)';
+      const priorStr = '₺' + Math.abs(priorNet).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + priorType;
+      rows.push(`
+        <tr style="background: #fef9c3; border-bottom: 1.5px solid #cbd5e1; font-weight: 700;">
+          <td style="padding: 7px 5px; text-align: left; color: #854d0e;">${startDate.split('-').reverse().join('.')}</td>
+          <td style="padding: 7px 5px; text-align: left; color: #854d0e;">-</td>
+          <td style="padding: 7px 5px; text-align: left; color: #854d0e;">DEVİR</td>
+          <td style="padding: 7px 5px; text-align: left; color: #854d0e;">⏳ Önceki Dönem Devir Bakiyesi</td>
+          <td style="padding: 7px 5px; text-align: right;">-</td>
+          <td style="padding: 7px 5px; text-align: right;">-</td>
+          <td style="padding: 7px 5px; text-align: right; color: #854d0e;">${priorStr}</td>
+        </tr>
+      `);
+    }
 
     for (const tx of sortedTxs) {
       const amount = Number(tx.amount) || 0;
@@ -1181,9 +1318,9 @@ const Contacts = {
                     <th style="padding: 4px;">Renk</th>
                     <th style="padding: 4px; text-align: right;">Miktar</th>
                     <th style="padding: 4px;">Birim</th>
-                    <th style="padding: 4px; text-align: right;">Fiyat Kur</th>
+                    <th style="padding: 4px; text-align: right;">Fiyat</th>
                     <th style="padding: 4px; text-align: right;">İskonto</th>
-                    <th style="padding: 4px; text-align: right;">Net Fiyat</th>
+                    <th style="padding: 4px; text-align: right;">Net</th>
                     <th style="padding: 4px; text-align: right;">Tutar</th>
                   </tr>
                 </thead>
@@ -1191,25 +1328,8 @@ const Contacts = {
                   ${detailRows}
                 </tbody>
               </table>
-              <div style="display: flex; justify-content: flex-end; margin-top: 5px; font-size: 10px;">
-                <div style="width: 180px; border-top: 1px solid #cbd5e1; padding-top: 4px; color: #475569;">
-                  <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                    <span>Miktar Toplamı:</span>
-                    <span style="font-weight: bold; color: #0f172a;">${totalQty}</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                    <span>Fiş Toplamı:</span>
-                    <span style="font-weight: bold; color: #0f172a;">${txSymbol}${subtotal.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                    <span>KDV Toplamı (${kdvRate}%):</span>
-                    <span style="font-weight: bold; color: #0f172a;">${txSymbol}${kdvAmount.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; font-weight: bold; color: #0284c7; margin-top: 3px; border-top: 1px dashed #cbd5e1; padding-top: 3px;">
-                    <span>Genel Toplam:</span>
-                    <span>${txSymbol}${grandTotal.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</span>
-                  </div>
-                </div>
+              <div style="text-align: right; font-weight: bold; padding: 4px 0; border-top: 1px dashed #cbd5e1; color: #0f172a;">
+                Ara Toplam: ${txSymbol}${subtotal.toLocaleString('tr-TR', {minimumFractionDigits: 2})} | KDV (%${kdvRate}): ${txSymbol}${kdvAmount.toLocaleString('tr-TR', {minimumFractionDigits: 2})} | Toplam: ${txSymbol}${grandTotal.toLocaleString('tr-TR', {minimumFractionDigits: 2})}
               </div>
             </td>
           </tr>
@@ -1219,9 +1339,19 @@ const Contacts = {
 
     const rowHtml = rows.join('');
 
-    const netBalance = totalDebit - totalCredit;
-    const netBalanceType = netBalance >= 0 ? 'Borçlu (B)' : 'Alacaklı (A)';
-    const netBalanceStr = '₺' + Math.abs(netBalance).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' (' + netBalanceType + ')';
+    const finalNetBalance = (priorDebit + totalDebit) - (priorCredit + totalCredit);
+    const netBalanceType = finalNetBalance >= 0 ? 'Borçlu (B)' : 'Alacaklı (A)';
+    const netBalanceStr = '₺' + Math.abs(finalNetBalance).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' (' + netBalanceType + ')';
+
+    // Date range label
+    let dateRangeText = 'Tüm Hareketler';
+    if (startDate && endDate) {
+      dateRangeText = `${startDate.split('-').reverse().join('.')} — ${endDate.split('-').reverse().join('.')}`;
+    } else if (startDate) {
+      dateRangeText = `${startDate.split('-').reverse().join('.')} tarihinden itibaren`;
+    } else if (endDate) {
+      dateRangeText = `${endDate.split('-').reverse().join('.')} tarihine kadar`;
+    }
 
     // Inject A5 Portrait @page CSS dynamically
     let pageStyle = document.getElementById('dynamic-print-page-style');
@@ -1242,21 +1372,27 @@ const Contacts = {
           </div>
           <div style="text-align: right;">
             <h1 style="font-weight: 800; font-size: 1.3rem; color: #0284c7; margin: 0 0 3px 0; letter-spacing: 0.02em;">HESAP EKSTRESİ</h1>
-            <p style="font-size: 11px; margin: 0; color: #64748b;"><strong>Tarih:</strong> ${dateStr}</p>
+            <p style="font-size: 11px; margin: 0; color: #64748b;"><strong>Yazdırma Tarihi:</strong> ${dateStr}</p>
           </div>
         </div>
 
-        <!-- Customer Section -->
-        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px 14px; border-radius: 4px; border: 1px solid #cbd5e1; margin-bottom: 14px; font-size: 11.5px; color: #0f172a;">
-          <div>
-            <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Cari Müşteri / Firma:</span>
-            <p style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin: 2px 0 0 0;">${this.escape(contact.name)}</p>
-            <p style="margin: 2px 0 0 0; color: #475569; font-size: 11px;"><strong>Tel:</strong> ${this.escape(contact.phone || 'Kayıtlı Değil')}</p>
+        <!-- Customer Section & Date Range Banner -->
+        <div style="background: #f8fafc; padding: 10px 14px; border-radius: 4px; border: 1px solid #cbd5e1; margin-bottom: 14px; font-size: 11.5px; color: #0f172a;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div>
+              <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Cari Müşteri / Firma:</span>
+              <p style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin: 2px 0 0 0;">${this.escape(contact.name)}</p>
+              <p style="margin: 2px 0 0 0; color: #475569; font-size: 11px;"><strong>Tel:</strong> ${this.escape(contact.phone || 'Kayıtlı Değil')}</p>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Bakiye Durumu:</span>
+              <p style="margin: 2px 0 0 0; font-size: 13.5px; font-weight: 800; color: ${finalNetBalance >= 0 ? '#ef4444' : '#10b981'};">${netBalanceStr}</p>
+              <p style="margin: 2px 0 0 0; color: #475569; font-size: 11px;"><strong>Para Birimi:</strong> TRY (₺)</p>
+            </div>
           </div>
-          <div style="text-align: right;">
-            <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Bakiye Durumu:</span>
-            <p style="margin: 2px 0 0 0; font-size: 13.5px; font-weight: 800; color: ${netBalance >= 0 ? '#ef4444' : '#10b981'};">${netBalanceStr}</p>
-            <p style="margin: 2px 0 0 0; color: #475569; font-size: 11px;"><strong>Para Birimi:</strong> TRY (₺)</p>
+          <div style="border-top: 1px dashed #cbd5e1; padding-top: 5px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 10.5px; color: #0284c7; font-weight: 700;">📅 Ekstre Aralığı: ${dateRangeText}</span>
+            <span style="font-size: 10px; color: #64748b;">Hareket Adedi: ${sortedTxs.length} kayıt</span>
           </div>
         </div>
 
@@ -1279,27 +1415,33 @@ const Contacts = {
         </table>
 
         <!-- Summary & Balance -->
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 25px;">
-          <div style="width: 270px; font-size: 11.5px; background: #f8fafc; padding: 10px 14px; border-radius: 4px; border: 1.5px solid #cbd5e1;">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+          <div style="width: 260px; font-size: 11px; background: #f8fafc; padding: 10px 14px; border-radius: 4px; border: 1.5px solid #cbd5e1;">
+            ${hasPrior ? `
+              <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #854d0e; font-weight: 600;">
+                <span>Önceki Devir:</span>
+                <span>₺${Math.abs(priorDebit - priorCredit).toLocaleString('tr-TR', {minimumFractionDigits: 2})} ${priorDebit >= priorCredit ? '(B)' : '(A)'}</span>
+              </div>
+            ` : ''}
             <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #475569;">
-              <span>Toplam Borç (Satış/Ödeme):</span>
+              <span>Dönem Borç Toplamı:</span>
               <span style="font-weight: 700; color: #0f172a;">₺${totalDebit.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #475569; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px;">
-              <span>Toplam Alacak (Tahsilat/Alış):</span>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #475569; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px;">
+              <span>Dönem Alacak Toplamı:</span>
               <span style="font-weight: 700; color: #0f172a;">₺${totalCredit.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 13px; color: ${netBalance >= 0 ? '#ef4444' : '#10b981'}; padding-top: 2px;">
-              <span>Net Bakiye:</span>
-              <span>${netBalanceStr}</span>
+            <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 12.5px; color: #0f172a; padding-top: 3px;">
+              <span>Genel Bakiye:</span>
+              <span style="color: ${finalNetBalance >= 0 ? '#ef4444' : '#10b981'};">${netBalanceStr}</span>
             </div>
           </div>
         </div>
 
-        <!-- Footer / Signatures -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; text-align: center; font-size: 11px;">
+        <!-- Signature Section -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 25px; text-align: center; font-size: 11px;">
           <div style="border-top: 1px dashed #94a3b8; padding-top: 8px; margin: 0 15px;">
-            <p style="font-weight: 700; margin: 0 0 3px 0; color: #0f172a;">Düzenleyen Yetkili</p>
+            <p style="font-weight: 700; margin: 0 0 3px 0; color: #0f172a;">Teslim Eden / Firma</p>
             <p style="color: #64748b; margin: 0; font-size: 10px;">${this.escape(companyName)}</p>
           </div>
           <div style="border-top: 1px dashed #94a3b8; padding-top: 8px; margin: 0 15px;">

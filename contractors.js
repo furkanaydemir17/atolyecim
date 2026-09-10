@@ -264,76 +264,154 @@ const Contractors = {
       // Sort by date
       ledgerEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      // Calculate totals and running balances
-      const totalHakedis = { TRY: 0, USD: 0, EUR: 0 };
-      const totalOdenen = { TRY: 0, USD: 0, EUR: 0 };
-      const runningBalance = { TRY: 0, USD: 0, EUR: 0 };
+      // Reset date inputs on open
+      const dateStartInput = document.getElementById('c-ledger-date-start');
+      const dateEndInput = document.getElementById('c-ledger-date-end');
+      const clearDatesBtn = document.getElementById('btn-c-ledger-clear-dates');
+      if (dateStartInput) dateStartInput.value = '';
+      if (dateEndInput) dateEndInput.value = '';
 
-      const tbody = document.getElementById('c-ledger-tbody');
-      const emptyState = document.getElementById('c-ledger-empty');
-      tbody.innerHTML = '';
+      const renderFilteredLedger = () => {
+        const startDate = dateStartInput?.value || '';
+        const endDate = dateEndInput?.value || '';
 
-      if (ledgerEntries.length === 0) {
-        emptyState.style.display = 'block';
-      } else {
-        emptyState.style.display = 'none';
+        let filteredEntries = [...ledgerEntries];
+        const priorBalance = { TRY: 0, USD: 0, EUR: 0 };
+        let hasPrior = false;
 
-        ledgerEntries.forEach(entry => {
-          const curr = entry.currency || 'TRY';
-          totalHakedis[curr] = (totalHakedis[curr] || 0) + entry.hakedis;
-          totalOdenen[curr] = (totalOdenen[curr] || 0) + entry.odenen;
-          
-          runningBalance[curr] = (runningBalance[curr] || 0) + entry.hakedis - entry.odenen;
+        if (startDate) {
+          ledgerEntries.forEach(entry => {
+            if (entry.date < startDate) {
+              const curr = entry.currency || 'TRY';
+              priorBalance[curr] = (priorBalance[curr] || 0) + entry.hakedis - entry.odenen;
+              hasPrior = true;
+            }
+          });
+          filteredEntries = filteredEntries.filter(entry => entry.date >= startDate);
+        }
 
-          const tr = document.createElement('tr');
-          const isPayment = entry.type === 'tx' && entry.odenen > 0;
-          const isJob = entry.type === 'job';
+        if (endDate) {
+          filteredEntries = filteredEntries.filter(entry => entry.date <= endDate);
+        }
 
-          const dateFormatted = entry.date.split('-').reverse().join('.');
-          const hakedisStr = entry.hakedis > 0 ? formatMoney(entry.hakedis, curr) : '-';
-          const odenenStr = entry.odenen > 0 ? formatMoney(entry.odenen, curr) : '-';
-          const balanceStr = formatMoney(runningBalance[curr], curr);
+        const tbody = document.getElementById('c-ledger-tbody');
+        const emptyState = document.getElementById('c-ledger-empty');
+        const countSpan = document.getElementById('c-ledger-filter-count');
+        tbody.innerHTML = '';
 
-          tr.className = 'ledger-row-item';
-          tr.innerHTML = `
-            <td data-label="Tarih">${dateFormatted}</td>
-            <td data-label="Açıklama">
-              <div style="font-weight: 500; font-size: 0.9rem;">
-                ${isJob ? '📦 ' : '💵 '}${escapeHtml(entry.description)}
-              </div>
-            </td>
-            <td data-label="Hakediş" style="text-align: right; font-weight: 600;">${hakedisStr}</td>
-            <td data-label="Ödenen" style="text-align: right; font-weight: 600; color: var(--color-success);">${odenenStr}</td>
-            <td data-label="Bakiye" style="text-align: right; font-weight: 700; color: ${runningBalance[curr] >= 0 ? 'var(--color-danger)' : 'var(--color-success)'};">
-              ${balanceStr}
-            </td>
-            <td data-label="İşlem" style="text-align: center;">
-              <button class="btn-icon danger btn-delete-ledger-entry" data-id="${entry.id}" data-type="${entry.type}" title="Sil" style="font-size: 1rem; border: none; background: transparent; cursor: pointer; color: var(--color-danger);">&times;</button>
-            </td>
-          `;
-          tbody.appendChild(tr);
+        if (countSpan) {
+          if (startDate || endDate) {
+            countSpan.textContent = `(${filteredEntries.length} işlem listelendi)`;
+          } else {
+            countSpan.textContent = `(Toplam ${ledgerEntries.length} işlem)`;
+          }
+        }
+
+        const runningBalance = { ...priorBalance };
+        const totalHakedis = { TRY: 0, USD: 0, EUR: 0 };
+        const totalOdenen = { TRY: 0, USD: 0, EUR: 0 };
+
+        if (filteredEntries.length === 0 && !hasPrior) {
+          emptyState.style.display = 'block';
+        } else {
+          emptyState.style.display = 'none';
+
+          // Prior balance row
+          if (hasPrior) {
+            const priorBalStr = formatMultiCurrency(priorBalance);
+            const priorTr = document.createElement('tr');
+            priorTr.className = 'ledger-row-item';
+            priorTr.style.background = '#fef9c3';
+            priorTr.style.fontWeight = '700';
+            priorTr.innerHTML = `
+              <td data-label="Tarih" style="color: #854d0e;">${startDate.split('-').reverse().join('.')}</td>
+              <td data-label="Açıklama" style="color: #854d0e;">
+                <div>⏳ <strong>Önceki Dönem Devir Bakiyesi</strong></div>
+              </td>
+              <td data-label="Hakediş" style="text-align: right;">-</td>
+              <td data-label="Ödenen" style="text-align: right;">-</td>
+              <td data-label="Bakiye" style="text-align: right; color: ${this.hasNegativeBalance(priorBalance) ? 'var(--color-success)' : 'var(--color-danger)'};">
+                ${priorBalStr}
+              </td>
+              <td data-label="İşlem" style="text-align: center;">-</td>
+            `;
+            tbody.appendChild(priorTr);
+          }
+
+          filteredEntries.forEach(entry => {
+            const curr = entry.currency || 'TRY';
+            totalHakedis[curr] = (totalHakedis[curr] || 0) + entry.hakedis;
+            totalOdenen[curr] = (totalOdenen[curr] || 0) + entry.odenen;
+            runningBalance[curr] = (runningBalance[curr] || 0) + entry.hakedis - entry.odenen;
+
+            const tr = document.createElement('tr');
+            const isJob = entry.type === 'job';
+            const dateFormatted = entry.date.split('-').reverse().join('.');
+            const hakedisStr = entry.hakedis > 0 ? formatMoney(entry.hakedis, curr) : '-';
+            const odenenStr = entry.odenen > 0 ? formatMoney(entry.odenen, curr) : '-';
+            const balanceStr = formatMoney(runningBalance[curr], curr);
+
+            tr.className = 'ledger-row-item';
+            tr.innerHTML = `
+              <td data-label="Tarih">${dateFormatted}</td>
+              <td data-label="Açıklama">
+                <div style="font-weight: 500; font-size: 0.9rem;">
+                  ${isJob ? '📦 ' : '💵 '}${escapeHtml(entry.description)}
+                </div>
+              </td>
+              <td data-label="Hakediş" style="text-align: right; font-weight: 600;">${hakedisStr}</td>
+              <td data-label="Ödenen" style="text-align: right; font-weight: 600; color: var(--color-success);">${odenenStr}</td>
+              <td data-label="Bakiye" style="text-align: right; font-weight: 700; color: ${runningBalance[curr] >= 0 ? 'var(--color-danger)' : 'var(--color-success)'};">
+                ${balanceStr}
+              </td>
+              <td data-label="İşlem" style="text-align: center;">
+                <button class="btn-icon danger btn-delete-ledger-entry" data-id="${entry.id}" data-type="${entry.type}" title="Sil" style="font-size: 1rem; border: none; background: transparent; cursor: pointer; color: var(--color-danger);">&times;</button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+
+        // Render summary cards
+        document.getElementById('c-ledger-total-hakedis').textContent = formatMultiCurrency(totalHakedis);
+        document.getElementById('c-ledger-total-odenen').textContent = formatMultiCurrency(totalOdenen);
+        document.getElementById('c-ledger-balance').textContent = formatMultiCurrency(runningBalance);
+
+        // Bind delete events
+        document.querySelectorAll('.btn-delete-ledger-entry').forEach(btn => {
+          bindOnce(btn, 'click', async () => {
+            if (confirm('Bu hareketi silmek istediğinizden emin misiniz?')) {
+              await this.deleteLedgerEntry(parseInt(btn.dataset.id), btn.dataset.type);
+            }
+          }, 'btn_delete_l_' + btn.dataset.type + '_' + btn.dataset.id);
         });
+      };
+
+      // Initial render
+      renderFilteredLedger();
+
+      // Bind date inputs change events
+      if (dateStartInput) {
+        dateStartInput.onchange = renderFilteredLedger;
+      }
+      if (dateEndInput) {
+        dateEndInput.onchange = renderFilteredLedger;
+      }
+      if (clearDatesBtn) {
+        clearDatesBtn.onclick = () => {
+          if (dateStartInput) dateStartInput.value = '';
+          if (dateEndInput) dateEndInput.value = '';
+          renderFilteredLedger();
+        };
       }
 
-      // Render summary cards
-      document.getElementById('c-ledger-total-hakedis').textContent = formatMultiCurrency(totalHakedis);
-      document.getElementById('c-ledger-total-odenen').textContent = formatMultiCurrency(totalOdenen);
-      document.getElementById('c-ledger-balance').textContent = formatMultiCurrency(runningBalance);
-
-      // Bind delete events
-      document.querySelectorAll('.btn-delete-ledger-entry').forEach(btn => {
-        bindOnce(btn, 'click', async () => {
-          if (confirm('Bu hareketi silmek istediğinizden emin misiniz?')) {
-            await this.deleteLedgerEntry(parseInt(btn.dataset.id), btn.dataset.type);
-          }
-        }, 'btn_delete_l_' + btn.dataset.type + '_' + btn.dataset.id);
-      });
-
-      // Bind Print Button
+      // Bind Print Button with selected dates
       const printBtn = document.getElementById('btn-c-ledger-print');
       if (printBtn) {
         printBtn.onclick = () => {
-          this.printLedger(c, ledgerEntries);
+          const startDate = dateStartInput?.value || '';
+          const endDate = dateEndInput?.value || '';
+          this.printLedger(c, ledgerEntries, startDate, endDate);
         };
       }
 
@@ -386,19 +464,60 @@ const Contractors = {
     }
   },
 
-  printLedger(c, entries) {
+  printLedger(c, allEntries, startDate = '', endDate = '') {
     const printArea = document.getElementById('ledger-print-area');
     if (!printArea) return;
 
     const companyName = localStorage.getItem('atolyecim_auth_company') || 'Atölyecim Master';
     const dateStr = new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-    // Calculate totals
+    // Filter by dates & calculate prior balance if startDate is provided
+    let filteredEntries = [...allEntries];
+    const priorBalance = {};
+    let hasPrior = false;
+
+    if (startDate) {
+      allEntries.forEach(entry => {
+        if (entry.date < startDate) {
+          const curr = entry.currency || 'TRY';
+          priorBalance[curr] = (priorBalance[curr] || 0) + entry.hakedis - entry.odenen;
+          hasPrior = true;
+        }
+      });
+      filteredEntries = filteredEntries.filter(entry => entry.date >= startDate);
+    }
+
+    if (endDate) {
+      filteredEntries = filteredEntries.filter(entry => entry.date <= endDate);
+    }
+
+    // Calculate totals for the period
     const totalHakedis = {};
     const totalOdenen = {};
-    const balance = {};
+    const balance = { ...priorBalance };
 
-    const rowHtml = entries.map(entry => {
+    let priorRowHtml = '';
+    if (hasPrior) {
+      const priorBalParts = [];
+      const symbols = { TRY: '₺', USD: '$', EUR: '€' };
+      for (const [code, val] of Object.entries(priorBalance)) {
+        if (val !== 0) {
+          priorBalParts.push(`${symbols[code] || code}${val.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`);
+        }
+      }
+      const priorBalStr = priorBalParts.length > 0 ? priorBalParts.join(' | ') : '₺0,00';
+      priorRowHtml = `
+        <tr style="background: #fef9c3; border-bottom: 1.5px solid #cbd5e1; font-weight: 700;">
+          <td style="padding: 6px 5px; text-align: left; color: #854d0e;">${startDate.split('-').reverse().join('.')}</td>
+          <td style="padding: 6px 5px; text-align: left; color: #854d0e;">⏳ Önceki Dönem Devir Bakiyesi</td>
+          <td style="padding: 6px 5px; text-align: right;">-</td>
+          <td style="padding: 6px 5px; text-align: right;">-</td>
+          <td style="padding: 6px 5px; text-align: right; color: #854d0e;">${priorBalStr}</td>
+        </tr>
+      `;
+    }
+
+    const rowHtml = priorRowHtml + filteredEntries.map(entry => {
       const curr = entry.currency || 'TRY';
       totalHakedis[curr] = (totalHakedis[curr] || 0) + entry.hakedis;
       totalOdenen[curr] = (totalOdenen[curr] || 0) + entry.odenen;
@@ -435,6 +554,17 @@ const Contractors = {
     const totalHakedisStr = formatCurrenciesSummary(totalHakedis);
     const totalOdenenStr = formatCurrenciesSummary(totalOdenen);
     const totalBalanceStr = formatCurrenciesSummary(balance);
+    const priorBalanceStr = formatCurrenciesSummary(priorBalance);
+
+    // Date range label
+    let dateRangeText = 'Tüm Hareketler';
+    if (startDate && endDate) {
+      dateRangeText = `${startDate.split('-').reverse().join('.')} — ${endDate.split('-').reverse().join('.')}`;
+    } else if (startDate) {
+      dateRangeText = `${startDate.split('-').reverse().join('.')} tarihinden itibaren`;
+    } else if (endDate) {
+      dateRangeText = `${endDate.split('-').reverse().join('.')} tarihine kadar`;
+    }
 
     // Inject A5 Portrait @page CSS dynamically
     let pageStyle = document.getElementById('dynamic-print-page-style');
@@ -455,13 +585,13 @@ const Contractors = {
           </div>
           <div style="text-align: right;">
             <h1 style="font-weight: 800; font-size: 1.25rem; color: #0284c7; margin: 0 0 2px 0; letter-spacing: 0.02em;">FASON HESAP EKSTRESİ</h1>
-            <p style="font-size: 10px; margin: 0; color: #64748b;"><strong>Tarih:</strong> ${dateStr}</p>
+            <p style="font-size: 10px; margin: 0; color: #64748b;"><strong>Yazdırma Tarihi:</strong> ${dateStr}</p>
           </div>
         </div>
 
-        <!-- Subcontractor Section -->
+        <!-- Subcontractor Section & Date Range Banner -->
         <div style="background: #f8fafc; padding: 8px 12px; border-radius: 4px; border: 1px solid #cbd5e1; margin-bottom: 10px;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
             <div>
               <span style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Fason Usta / Firma:</span>
               <p style="font-size: 12.5px; font-weight: 800; color: #0f172a; margin: 1px 0 0 0;">${escapeHtml(c.name)}</p>
@@ -470,6 +600,10 @@ const Contractors = {
               <span style="font-size: 10.5px; color: #334155;"><strong>Alan:</strong> ${escapeHtml(c.role || '-')}</span>
               <span style="margin-left: 12px; font-size: 10.5px; color: #334155;"><strong>Tel:</strong> ${escapeHtml(c.phone || '-')}</span>
             </div>
+          </div>
+          <div style="border-top: 1px dashed #cbd5e1; padding-top: 4px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 10px; color: #0284c7; font-weight: 700;">📅 Ekstre Aralığı: ${dateRangeText}</span>
+            <span style="font-size: 9.5px; color: #64748b;">Hareket Adedi: ${filteredEntries.length} kayıt</span>
           </div>
         </div>
 
@@ -491,13 +625,19 @@ const Contractors = {
 
         <!-- Summary & Balance -->
         <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
-          <div style="width: 230px; font-size: 10.5px; background: #f8fafc; padding: 8px 12px; border-radius: 4px; border: 1.5px solid #cbd5e1;">
+          <div style="width: 250px; font-size: 10.5px; background: #f8fafc; padding: 8px 12px; border-radius: 4px; border: 1.5px solid #cbd5e1;">
+            ${hasPrior ? `
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #854d0e; font-weight: 600;">
+                <span>Önceki Devir Bakiye:</span>
+                <span>${priorBalanceStr}</span>
+              </div>
+            ` : ''}
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #475569;">
-              <span>Toplam Hakediş:</span>
+              <span>Dönem Hakediş:</span>
               <span style="font-weight: 700; color: #0f172a;">${totalHakedisStr}</span>
             </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #475569; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px;">
-              <span>Toplam Ödenen:</span>
+              <span>Dönem Ödenen:</span>
               <span style="font-weight: 700; color: #10b981;">${totalOdenenStr}</span>
             </div>
             <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 12px; color: #0f172a; padding-top: 2px;">

@@ -43,7 +43,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/main-Ckh54eE-.js"></script>
+  <script type="module" crossorigin src="/assets/main-WPG6zQTo.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/index-8ufTItJR.js">
   <link rel="stylesheet" crossorigin href="/assets/index-D7MxfXXQ.css">
 </head>
@@ -2406,6 +2406,21 @@
           </div>
         </div>
 
+        <!-- Cari Ekstre Tarih Filtresi Barı -->
+        <div class="ledger-filter-bar" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 14px;">
+          <span style="font-size: 12px; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 4px;">📅 Yazdırma & Tarih Aralığı:</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label for="contact-ledger-date-start" style="font-size: 11px; color: #64748b; margin: 0; font-weight: 600;">Başlangıç:</label>
+            <input type="date" id="contact-ledger-date-start" style="padding: 4px 8px; font-size: 12px; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #0f172a;">
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label for="contact-ledger-date-end" style="font-size: 11px; color: #64748b; margin: 0; font-weight: 600;">Bitiş:</label>
+            <input type="date" id="contact-ledger-date-end" style="padding: 4px 8px; font-size: 12px; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #0f172a;">
+          </div>
+          <button type="button" class="btn btn-sm btn-ghost" id="btn-contact-ledger-clear-dates" style="padding: 4px 10px; font-size: 11px; height: 32px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer; color: #475569;">Tümünü Göster</button>
+          <span id="contact-ledger-filter-count" style="font-size: 11.5px; color: #0284c7; font-weight: 700; margin-left: auto;"></span>
+        </div>
+
         <div class="table-container" style="max-height: 480px; overflow-y: auto; border: 1px solid var(--border-card); border-radius: 8px; margin-bottom: 24px;">
           <table class="data-table ledger-data-table">
             <thead class="excel-header">
@@ -3374,6 +3389,21 @@
             <button type="button" class="btn btn-sm btn-secondary" id="btn-c-ledger-add-job">+ İş / Hakediş Ekle</button>
             <button type="button" class="btn btn-sm btn-primary" id="btn-c-ledger-add-pay" style="background: #10b981; border-color: #10b981; color: #fff;">+ Ödeme Yap</button>
           </div>
+        </div>
+
+        <!-- Tarih Filtresi Barı -->
+        <div class="ledger-filter-bar" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 14px;">
+          <span style="font-size: 12px; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 4px;">📅 Yazdırma & Tarih Aralığı:</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label for="c-ledger-date-start" style="font-size: 11px; color: #64748b; margin: 0; font-weight: 600;">Başlangıç:</label>
+            <input type="date" id="c-ledger-date-start" style="padding: 4px 8px; font-size: 12px; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #0f172a;">
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label for="c-ledger-date-end" style="font-size: 11px; color: #64748b; margin: 0; font-weight: 600;">Bitiş:</label>
+            <input type="date" id="c-ledger-date-end" style="padding: 4px 8px; font-size: 12px; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #0f172a;">
+          </div>
+          <button type="button" class="btn btn-sm btn-ghost" id="btn-c-ledger-clear-dates" style="padding: 4px 10px; font-size: 11px; height: 32px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer; color: #475569;">Tümünü Göster</button>
+          <span id="c-ledger-filter-count" style="font-size: 11.5px; color: #0284c7; font-weight: 700; margin-left: auto;"></span>
         </div>
 
         <div class="table-container" style="max-height: 320px; overflow-y: auto;">
