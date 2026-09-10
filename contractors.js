@@ -573,49 +573,49 @@ const Contractors = {
       pageStyle.id = 'dynamic-print-page-style';
       document.head.appendChild(pageStyle);
     }
-    pageStyle.innerHTML = '@page { size: A5 portrait !important; margin: 6mm 8mm !important; }';
+    pageStyle.innerHTML = '@page { size: A5 portrait !important; margin: 8mm 10mm !important; }';
 
     printArea.innerHTML = `
-      <div style="width: 100%; box-sizing: border-box; background: #fff; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
+      <div style="width: 100%; box-sizing: border-box; background: #fff; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; padding: 1mm 2mm;">
         <!-- Header -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 6px; margin-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 5px; margin-bottom: 8px;">
           <div>
-            <h2 style="font-weight: 800; font-size: 1.25rem; color: #0f172a; margin: 0 0 2px 0; letter-spacing: -0.02em;">${escapeHtml(companyName)}</h2>
-            <p style="font-size: 10px; color: #475569; margin: 0; font-weight: 500;">Ayakkabı İmalat & Fason İşçilik Ekstresi</p>
+            <h2 style="font-weight: 800; font-size: 1.15rem; color: #0f172a; margin: 0 0 2px 0; letter-spacing: -0.02em;">${escapeHtml(companyName)}</h2>
+            <p style="font-size: 9.5px; color: #475569; margin: 0; font-weight: 500;">Ayakkabı İmalat & Fason İşçilik Ekstresi</p>
           </div>
           <div style="text-align: right;">
-            <h1 style="font-weight: 800; font-size: 1.25rem; color: #0284c7; margin: 0 0 2px 0; letter-spacing: 0.02em;">FASON HESAP EKSTRESİ</h1>
-            <p style="font-size: 10px; margin: 0; color: #64748b;"><strong>Yazdırma Tarihi:</strong> ${dateStr}</p>
+            <h1 style="font-weight: 800; font-size: 1.15rem; color: #0284c7; margin: 0 0 2px 0; letter-spacing: 0.02em;">FASON HESAP EKSTRESİ</h1>
+            <p style="font-size: 9.5px; margin: 0; color: #64748b;"><strong>Yazdırma Tarihi:</strong> ${dateStr}</p>
           </div>
         </div>
 
         <!-- Subcontractor Section & Date Range Banner -->
-        <div style="background: #f8fafc; padding: 8px 12px; border-radius: 4px; border: 1px solid #cbd5e1; margin-bottom: 10px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+        <div style="background: #f8fafc; padding: 6px 10px; border-radius: 4px; border: 1px solid #cbd5e1; margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
             <div>
-              <span style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Fason Usta / Firma:</span>
-              <p style="font-size: 12.5px; font-weight: 800; color: #0f172a; margin: 1px 0 0 0;">${escapeHtml(c.name)}</p>
+              <span style="font-size: 8.5px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Fason Usta / Firma:</span>
+              <p style="font-size: 12px; font-weight: 800; color: #0f172a; margin: 1px 0 0 0;">${escapeHtml(c.name)}</p>
             </div>
             <div style="text-align: right;">
-              <span style="font-size: 10.5px; color: #334155;"><strong>Alan:</strong> ${escapeHtml(c.role || '-')}</span>
-              <span style="margin-left: 12px; font-size: 10.5px; color: #334155;"><strong>Tel:</strong> ${escapeHtml(c.phone || '-')}</span>
+              <span style="font-size: 10px; color: #334155;"><strong>Alan:</strong> ${escapeHtml(c.role || '-')}</span>
+              <span style="margin-left: 10px; font-size: 10px; color: #334155;"><strong>Tel:</strong> ${escapeHtml(c.phone || '-')}</span>
             </div>
           </div>
-          <div style="border-top: 1px dashed #cbd5e1; padding-top: 4px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 10px; color: #0284c7; font-weight: 700;">📅 Ekstre Aralığı: ${dateRangeText}</span>
-            <span style="font-size: 9.5px; color: #64748b;">Hareket Adedi: ${filteredEntries.length} kayıt</span>
+          <div style="border-top: 1px dashed #cbd5e1; padding-top: 3px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 9.5px; color: #0284c7; font-weight: 700;">📅 Ekstre Aralığı: ${dateRangeText}</span>
+            <span style="font-size: 9px; color: #64748b;">Hareket Adedi: ${filteredEntries.length} kayıt</span>
           </div>
         </div>
 
         <!-- Table -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 10px;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 9.5px;">
           <thead>
             <tr style="border-top: 1.5px solid #0f172a; border-bottom: 1.5px solid #0f172a; text-align: left; font-weight: 700; background: #f1f5f9;">
-              <th style="padding: 5px 4px; width: 17%;">Tarih</th>
-              <th style="padding: 5px 4px; width: 41%;">İş Açıklaması / Detay</th>
-              <th style="padding: 5px 4px; width: 14%; text-align: right;">Hakediş</th>
-              <th style="padding: 5px 4px; width: 14%; text-align: right;">Ödenen</th>
-              <th style="padding: 5px 4px; width: 14%; text-align: right;">Bakiye</th>
+              <th style="padding: 4px 3px; width: 17%;">Tarih</th>
+              <th style="padding: 4px 3px; width: 41%;">İş Açıklaması / Detay</th>
+              <th style="padding: 4px 3px; width: 14%; text-align: right;">Hakediş</th>
+              <th style="padding: 4px 3px; width: 14%; text-align: right;">Ödenen</th>
+              <th style="padding: 4px 3px; width: 14%; text-align: right;">Bakiye</th>
             </tr>
           </thead>
           <tbody>
@@ -624,23 +624,23 @@ const Contractors = {
         </table>
 
         <!-- Summary & Balance -->
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
-          <div style="width: 250px; font-size: 10.5px; background: #f8fafc; padding: 8px 12px; border-radius: 4px; border: 1.5px solid #cbd5e1;">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 14px;">
+          <div style="width: 230px; font-size: 10px; background: #f8fafc; padding: 6px 10px; border-radius: 4px; border: 1.5px solid #cbd5e1;">
             ${hasPrior ? `
-              <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #854d0e; font-weight: 600;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px; color: #854d0e; font-weight: 600;">
                 <span>Önceki Devir Bakiye:</span>
                 <span>${priorBalanceStr}</span>
               </div>
             ` : ''}
-            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #475569;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px; color: #475569;">
               <span>Dönem Hakediş:</span>
               <span style="font-weight: 700; color: #0f172a;">${totalHakedisStr}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #475569; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px; color: #475569; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px;">
               <span>Dönem Ödenen:</span>
               <span style="font-weight: 700; color: #10b981;">${totalOdenenStr}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 12px; color: #0f172a; padding-top: 2px;">
+            <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 11.5px; color: #0f172a; padding-top: 2px;">
               <span>Kalan Alacak:</span>
               <span style="color: #ef4444;">${totalBalanceStr}</span>
             </div>

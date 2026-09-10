@@ -577,7 +577,7 @@ export const JobTickets = {
       const couponSizeQtyHtml = sizeKeys.map(k => `<td style="border: 0.5px solid #000; padding: 1px 0.5px; font-size: 8px; font-weight: 700; text-align: center;">${sizes[k] || ''}</td>`).join('');
 
       printArea.innerHTML = `
-        <div class="a5-job-ticket-wrapper" style="width: 100%; max-width: 100%; height: 95mm; min-height: 95mm; max-height: 95mm; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; border: 1px solid #000; box-sizing: border-box; display: flex; flex-direction: row; margin: 0; padding: 0; overflow: hidden; page-break-inside: avoid; break-inside: avoid;">
+        <div class="a5-job-ticket-wrapper" style="width: 100%; max-width: 100%; height: 90mm; min-height: 90mm; max-height: 90mm; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; border: 1px solid #000; box-sizing: border-box; display: flex; flex-direction: row; margin: 0 auto; padding: 0; overflow: hidden; page-break-inside: avoid; break-inside: avoid;">
           
           <!-- ================= SOL ANA FİŞ BÖLÜMÜ (1/3 A4 ŞERİT DÜZENİ) ================= -->
           <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; border-right: 1.5px dashed #000; box-sizing: border-box;">
@@ -662,7 +662,7 @@ export const JobTickets = {
           </div>
 
           <!-- ================= SAĞ KESİKLİ KOÇAN / 4 KUPON BÖLÜMÜ ================= -->
-          <div style="width: 72mm; min-width: 72mm; max-width: 72mm; height: 100%; display: flex; flex-direction: row; background: #fafafa; box-sizing: border-box;">
+          <div style="width: 68mm; min-width: 68mm; max-width: 68mm; height: 100%; display: flex; flex-direction: row; background: #fafafa; box-sizing: border-box;">
             
             <!-- 1. KUPON: KESİM -->
             <div style="flex: 1; border-right: 1px dashed #555; padding: 4px 2px; display: flex; flex-direction: column; justify-content: space-between; font-size: 8px; line-height: 1.25; box-sizing: border-box;">
@@ -737,14 +737,14 @@ export const JobTickets = {
         </div>
       `;
 
-      // Set @page to A4 portrait with minimal margins (Dikey A4, 1/3 A4 şerit boyutu)
+      // Set @page to A4 portrait with safe printer margins (Dikey A4, 1/3 A4 şerit boyutu)
       let pageStyle = document.getElementById('dynamic-print-page-style');
       if (!pageStyle) {
         pageStyle = document.createElement('style');
         pageStyle.id = 'dynamic-print-page-style';
         document.head.appendChild(pageStyle);
       }
-      pageStyle.innerHTML = '@page { size: A4 portrait !important; margin: 0 !important; }';
+      pageStyle.innerHTML = '@page { size: A4 portrait !important; margin: 4mm 6mm !important; }';
 
       document.body.classList.add('printing-job-ticket');
       const cleanup = () => {
