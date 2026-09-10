@@ -545,7 +545,6 @@ export const JobTickets = {
       }
 
       const esc = (s) => (window.escapeHtml ? window.escapeHtml(s) : String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
-      const companyName = localStorage.getItem('atolyecim_auth_company') || 'Atölyecim';
       const deliveryDateStr = ticket.deliveryDate ? ticket.deliveryDate.split('-').reverse().join('.') : '';
       const sizes = ticket.sizes || {};
 
@@ -606,9 +605,6 @@ export const JobTickets = {
       const kliseSizeHeaderHtml = sizeKeys.map(k => `<th style="border: 0.5px solid #000; padding: 0; text-align: center; font-size: 6.5px; font-weight: 700;">${k}</th>`).join('');
       const kliseSizeQtyHtml = sizeKeys.map(k => `<td style="border: 0.5px solid #000; padding: 0; text-align: center; font-size: 7px; font-weight: 800; font-family: 'Courier New', monospace;">${sizes[k] || ''}</td>`).join('');
 
-      // Watermark helper
-      const watermarkHtml = `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-12deg); font-family: 'Brush Script MT', cursive, serif; font-size: 20px; color: rgba(0, 0, 0, 0.06); pointer-events: none; user-select: none; z-index: 0;">${esc(companyName || 'Sipil')}</div>`;
-
       // Helper to generate a single authentic job ticket
       const renderSingleTicket = (copyIdx) => `
         <div class="a5-job-ticket-card" style="width: 196mm; min-width: 196mm; max-width: 196mm; height: 92mm; min-height: 92mm; max-height: 92mm; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; border: 1.5px solid #000; box-sizing: border-box; display: flex; flex-direction: row; margin: 0 auto; padding: 0; overflow: hidden; page-break-inside: avoid; break-inside: avoid; position: relative;">
@@ -620,10 +616,7 @@ export const JobTickets = {
             <div style="height: 9mm; display: flex; flex-direction: row; border-bottom: 1px solid #000; box-sizing: border-box;">
               <!-- Seri No -->
               <div style="width: 28mm; min-width: 28mm; max-width: 28mm; border-right: 1px solid #000; height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; box-sizing: border-box;">
-                <div style="display: flex; flex-direction: column; line-height: 1.05; flex-shrink: 0;">
-                  <span style="font-size: 9.5px; font-weight: 800; letter-spacing: -0.2px;">Seri No:</span>
-                  <span style="font-size: 6.5px; font-style: italic; color: #555; font-family: 'Brush Script MT', cursive, serif;">${esc(companyName || 'Sipil Comfort')}</span>
-                </div>
+                <span style="font-size: 10px; font-weight: 800; white-space: nowrap; flex-shrink: 0;">Seri No :</span>
                 <span style="color: #c00; font-family: 'Courier New', monospace; font-size: 14px; font-weight: 900; letter-spacing: 0.5px; flex-shrink: 0;">${cleanSerial}</span>
               </div>
               
@@ -654,13 +647,11 @@ export const JobTickets = {
               </thead>
               <tbody>
                 <tr>
-                  <td style="border-right: 1px solid #000; border-bottom: 1px solid #000; text-align: center; vertical-align: middle; padding: 2px; height: 26mm; position: relative;">
-                    ${watermarkHtml}
-                    <span style="font-size: 12.5px; font-weight: 900; position: relative; z-index: 1;">${esc(ticket.modelCode || '')}</span>
+                  <td style="border-right: 1px solid #000; border-bottom: 1px solid #000; text-align: center; vertical-align: middle; padding: 2px; height: 26mm;">
+                    <span style="font-size: 13px; font-weight: 900;">${esc(ticket.modelCode || '')}</span>
                   </td>
-                  <td style="border-right: 1px solid #000; border-bottom: 1px solid #000; text-align: center; vertical-align: middle; padding: 2px; height: 26mm; position: relative;">
-                    ${watermarkHtml}
-                    <span style="font-size: 11.5px; font-weight: 800; position: relative; z-index: 1;">${esc(ticket.leather || '')}</span>
+                  <td style="border-right: 1px solid #000; border-bottom: 1px solid #000; text-align: center; vertical-align: middle; padding: 2px; height: 26mm;">
+                    <span style="font-size: 12px; font-weight: 800;">${esc(ticket.leather || '')}</span>
                   </td>
                   <td style="border-right: 1px solid #000; border-bottom: 1px solid #000; text-align: center; vertical-align: middle; padding: 2px; height: 26mm; font-size: 10.5px; font-weight: 700;">
                     ${esc(ticket.lining || '')}
@@ -752,13 +743,12 @@ export const JobTickets = {
                   </div>
                 </div>
                 <!-- Satır 2: Model & Deri -->
-                <div style="display: flex; flex-direction: row; height: 5mm; border-bottom: 0.75px solid #000; align-items: center; position: relative; box-sizing: border-box;">
-                  ${watermarkHtml}
-                  <div style="width: 48%; border-right: 0.75px solid #000; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap; position: relative; z-index: 1;">
+                <div style="display: flex; flex-direction: row; height: 5mm; border-bottom: 0.75px solid #000; align-items: center; box-sizing: border-box;">
+                  <div style="width: 48%; border-right: 0.75px solid #000; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap;">
                     <span style="font-weight: 700; margin-right: 2px;">Model:</span>
                     <b style="font-size: 8px;">${esc(ticket.modelCode || '')}</b>
                   </div>
-                  <div style="width: 52%; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap; position: relative; z-index: 1;">
+                  <div style="width: 52%; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap;">
                     <span style="font-weight: 700; margin-right: 2px;">Deri:</span>
                     <span style="font-weight: 800; font-size: 8px;">${esc(ticket.leather || '')}</span>
                   </div>
@@ -789,13 +779,12 @@ export const JobTickets = {
                   </div>
                 </div>
                 <!-- Satır 2: Model & Deri -->
-                <div style="display: flex; flex-direction: row; height: 5mm; border-bottom: 0.75px solid #000; align-items: center; position: relative; box-sizing: border-box;">
-                  ${watermarkHtml}
-                  <div style="width: 48%; border-right: 0.75px solid #000; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap; position: relative; z-index: 1;">
+                <div style="display: flex; flex-direction: row; height: 5mm; border-bottom: 0.75px solid #000; align-items: center; box-sizing: border-box;">
+                  <div style="width: 48%; border-right: 0.75px solid #000; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap;">
                     <span style="font-weight: 700; margin-right: 2px;">Model:</span>
                     <b style="font-size: 8px;">${esc(ticket.modelCode || '')}</b>
                   </div>
-                  <div style="width: 52%; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap; position: relative; z-index: 1;">
+                  <div style="width: 52%; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap;">
                     <span style="font-weight: 700; margin-right: 2px;">Deri:</span>
                     <span style="font-weight: 800; font-size: 8px;">${esc(ticket.leather || '')}</span>
                   </div>
@@ -826,13 +815,12 @@ export const JobTickets = {
                   </div>
                 </div>
                 <!-- Satır 2: Model & Astar (4.5mm) -->
-                <div style="display: flex; flex-direction: row; height: 4.5mm; border-bottom: 0.75px solid #000; align-items: center; position: relative; box-sizing: border-box;">
-                  ${watermarkHtml}
-                  <div style="width: 48%; border-right: 0.75px solid #000; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap; position: relative; z-index: 1;">
+                <div style="display: flex; flex-direction: row; height: 4.5mm; border-bottom: 0.75px solid #000; align-items: center; box-sizing: border-box;">
+                  <div style="width: 48%; border-right: 0.75px solid #000; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap;">
                     <span style="font-weight: 700; margin-right: 2px;">Model:</span>
                     <b style="font-size: 8px;">${esc(ticket.modelCode || '')}</b>
                   </div>
-                  <div style="width: 52%; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap; position: relative; z-index: 1;">
+                  <div style="width: 52%; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap;">
                     <span style="font-weight: 700; margin-right: 2px;">Astar:</span>
                     <span style="font-weight: 700; font-size: 8px;">${esc(ticket.lining || '')}</span>
                   </div>
@@ -878,13 +866,12 @@ export const JobTickets = {
                   </div>
                 </div>
                 <!-- Satır 2: Model & Deri -->
-                <div style="display: flex; flex-direction: row; height: 5mm; border-bottom: 0.75px solid #000; align-items: center; position: relative; box-sizing: border-box;">
-                  ${watermarkHtml}
-                  <div style="width: 48%; border-right: 0.75px solid #000; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap; position: relative; z-index: 1;">
+                <div style="display: flex; flex-direction: row; height: 5mm; border-bottom: 0.75px solid #000; align-items: center; box-sizing: border-box;">
+                  <div style="width: 48%; border-right: 0.75px solid #000; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap;">
                     <span style="font-weight: 700; margin-right: 2px;">Model:</span>
                     <b style="font-size: 8px;">${esc(ticket.modelCode || '')}</b>
                   </div>
-                  <div style="width: 52%; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap; position: relative; z-index: 1;">
+                  <div style="width: 52%; height: 100%; display: flex; align-items: center; padding: 0 4px; font-size: 7.5px; overflow: hidden; white-space: nowrap;">
                     <span style="font-weight: 700; margin-right: 2px;">Deri:</span>
                     <span style="font-weight: 800; font-size: 8px;">${esc(ticket.leather || '')}</span>
                   </div>
