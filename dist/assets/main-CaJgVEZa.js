@@ -1306,27 +1306,27 @@ Termin: 10 gün içinde`}).forEach(([y,b])=>{const f=document.getElementById(`bt
           <!-- ================= SOL ANA FİŞ BÖLÜMÜ (128mm) ================= -->
           <div style="width: 128mm; min-width: 128mm; max-width: 128mm; height: 100%; display: flex; flex-direction: column; border-right: 1.5px dashed #000; box-sizing: border-box;">
             
-            <!-- 1. Üst Satır: Seri No, Müşteri, Teslim Tarihi (8.5mm) -->
-            <div style="height: 8.5mm; display: flex; flex-direction: row; border-bottom: 1px solid #000; box-sizing: border-box;">
+            <!-- 1. Üst Satır: Seri No, Müşteri, Teslim Tarihi (9mm) -->
+            <div style="height: 9mm; display: flex; flex-direction: row; border-bottom: 1px solid #000; box-sizing: border-box;">
               <!-- Seri No -->
-              <div style="width: 32mm; border-right: 1px solid #000; height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; box-sizing: border-box;">
-                <div style="display: flex; flex-direction: column; line-height: 1.05;">
-                  <span style="font-size: 10px; font-weight: 800; letter-spacing: -0.2px;">Seri No:</span>
+              <div style="width: 28mm; min-width: 28mm; max-width: 28mm; border-right: 1px solid #000; height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; box-sizing: border-box;">
+                <div style="display: flex; flex-direction: column; line-height: 1.05; flex-shrink: 0;">
+                  <span style="font-size: 9.5px; font-weight: 800; letter-spacing: -0.2px;">Seri No:</span>
                   <span style="font-size: 6.5px; font-style: italic; color: #555; font-family: 'Brush Script MT', cursive, serif;">${n(a||"Sipil Comfort")}</span>
                 </div>
-                <span style="color: #c00; font-family: 'Courier New', monospace; font-size: 14.5px; font-weight: 900; letter-spacing: 0.5px;">${g}</span>
+                <span style="color: #c00; font-family: 'Courier New', monospace; font-size: 14px; font-weight: 900; letter-spacing: 0.5px; flex-shrink: 0;">${g}</span>
               </div>
               
               <!-- Müşteri -->
-              <div style="flex: 1; border-right: 1px solid #000; height: 100%; display: flex; align-items: center; padding: 0 6px; gap: 5px; box-sizing: border-box; overflow: hidden;">
-                <span style="font-size: 11px; font-weight: 800; white-space: nowrap;">Müşteri :</span>
-                <span style="font-size: 12.5px; font-weight: 900; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${n(i.customer||"")}</span>
+              <div style="flex: 1; min-width: 0; border-right: 1px solid #000; height: 100%; display: flex; align-items: center; padding: 0 5px; gap: 4px; box-sizing: border-box; overflow: hidden;">
+                <span style="font-size: 10.5px; font-weight: 800; white-space: nowrap; flex-shrink: 0;">Müşteri :</span>
+                <span style="font-size: 12px; font-weight: 900; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${n(i.customer||"")}</span>
               </div>
               
-              <!-- Teslim Tarihi -->
-              <div style="width: 34mm; height: 100%; display: flex; align-items: center; padding: 0 4px; gap: 4px; box-sizing: border-box; overflow: hidden;">
-                <span style="font-size: 9.5px; font-weight: 800; white-space: nowrap;">Teslim Tarihi :</span>
-                <span style="font-size: 11px; font-weight: 900; white-space: nowrap;">${r}</span>
+              <!-- Teslim Tarihi (Genişletildi, Asla Taşmaz) -->
+              <div style="width: 52mm; min-width: 52mm; max-width: 52mm; height: 100%; display: flex; align-items: center; padding: 0 5px; gap: 5px; box-sizing: border-box; overflow: hidden;">
+                <span style="font-size: 9.5px; font-weight: 800; white-space: nowrap; flex-shrink: 0;">Teslim Tarihi :</span>
+                <span style="font-size: 11.5px; font-weight: 900; white-space: nowrap; flex-shrink: 0; font-family: monospace;">${r}</span>
               </div>
             </div>
 
