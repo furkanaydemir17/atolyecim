@@ -2202,24 +2202,27 @@ div[style*="overflow: auto"]::-webkit-scrollbar-thumb:hover {
     margin: 0 !important;
     padding: 0 !important;
     background: #fff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   body.printing-job-ticket #job-ticket-print-area,
   body.printing-job-ticket #job-ticket-print-area * {
     visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   body.printing-job-ticket #job-ticket-print-area {
     display: block !important;
     position: static !important;
     width: 100% !important;
     max-width: 100% !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
     padding: 0 !important;
     border: none !important;
     box-shadow: none !important;
     background: #fff !important;
     color: #000 !important;
     box-sizing: border-box !important;
-    overflow: hidden !important;
   }
 
   /* Thermal label printing */
