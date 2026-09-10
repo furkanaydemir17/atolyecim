@@ -908,31 +908,17 @@ export const JobTickets = {
         </div>
       `;
 
-      // Build cut guide divider
-      const cutGuideHtml = `
-        <div class="ticket-cut-guide" style="width: 196mm; margin: 3.5mm auto; display: flex; align-items: center; justify-content: center; gap: 8px; color: #888; font-size: 9px; font-family: sans-serif; box-sizing: border-box;">
-          <span style="font-size: 11px;">✂</span>
-          <span style="flex: 1; border-bottom: 1.2px dashed #999;"></span>
-          <span style="font-weight: 700; text-transform: uppercase; font-size: 8.5px; letter-spacing: 0.5px; color: #666;">1/3 A4 Kesim Çizgisi</span>
-          <span style="flex: 1; border-bottom: 1.2px dashed #999;"></span>
-          <span style="font-size: 11px;">✂</span>
-        </div>
-      `;
-
       let ticketsHtml = '';
       if (copyCount === 3) {
         ticketsHtml = `
           ${renderSingleTicket(1)}
-          ${cutGuideHtml}
+          <div style="height: 2.5mm;"></div>
           ${renderSingleTicket(2)}
-          ${cutGuideHtml}
+          <div style="height: 2.5mm;"></div>
           ${renderSingleTicket(3)}
         `;
       } else {
-        ticketsHtml = `
-          ${renderSingleTicket(1)}
-          ${cutGuideHtml}
-        `;
+        ticketsHtml = renderSingleTicket(1);
       }
 
       printArea.innerHTML = ticketsHtml;
