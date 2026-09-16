@@ -246,7 +246,7 @@
           <span class="sidebar-icon">⚙️</span>
           <span>Yönetici</span>
         </li>
-        <li class="nav-item" id="nav-item-support" role="menuitem" tabindex="0" aria-label="Destek & Geri Bildirim" style="cursor: pointer;">
+        <li class="nav-item" id="nav-item-support" data-page="support" role="menuitem" tabindex="0" aria-label="Destek & Geri Bildirim" style="cursor: pointer;">
           <span class="sidebar-icon">💬</span>
           <span>Destek & Bildirim</span>
         </li>
@@ -296,6 +296,11 @@
             <p class="db-subtitle" id="header-date">Yükleniyor...</p>
           </div>
           <div class="db-header-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <!-- Support Header Button -->
+            <button type="button" class="btn-top-support" id="btn-top-support" onclick="window.openSupportModal ? window.openSupportModal('new') : null" title="Hata veya Destek Bildir" style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff !important; border: none; border-radius: 8px; padding: 9px 16px; font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35); transition: all 0.2s ease;">
+              <span style="font-size: 16px; line-height: 1;">💬</span>
+              <span>Destek & Hata Bildir</span>
+            </button>
             <!-- AI Assistant Header Button -->
             <button type="button" class="btn-top-ai-assistant" id="btn-top-ai-assistant" onclick="AiAssistant.toggleDrawer(true)" title="Atölyecim Akıllı Yapay Zeka Asistanı">
               <span class="ai-sparkle-dot"></span>
@@ -1123,6 +1128,108 @@
         </div>
       </section>
 
+      <!-- ============ SUPPORT & TICKETS PAGE ============ -->
+      <section id="page-support" class="page">
+        <div class="page-header">
+          <div>
+            <h1 style="display: flex; align-items: center; gap: 10px;">
+              <span>💬</span> Destek, Hata & Görüş Bildirim Merkezi
+            </h1>
+            <p class="page-desc">Uygulama ile ilgili karşılaştığınız hataları, soru ve yeni özellik önerilerinizi buradan iletebilir, geçmiş taleplerinizin durumunu ve yönetici yanıtlarını takip edebilirsiniz.</p>
+          </div>
+          <div>
+            <button type="button" class="btn btn-primary" onclick="window.switchPageSupportTab ? window.switchPageSupportTab('new') : null" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; font-weight: 700; padding: 10px 20px; border-radius: 8px;">
+              ➕ Yeni Bildirim Gönder
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 24px;">
+          <div class="stat-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05)); border-left: 4px solid #3b82f6;">
+            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">📋</div>
+            <div>
+              <div class="stat-label">Toplam Bildirimlerim</div>
+              <div class="stat-value" id="page-support-stat-total">0</div>
+            </div>
+          </div>
+
+          <div class="stat-card" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05)); border-left: 4px solid #ef4444;">
+            <div class="stat-icon" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">⏳</div>
+            <div>
+              <div class="stat-label">İncelenen / Açık Talepler</div>
+              <div class="stat-value" id="page-support-stat-open" style="color: #ef4444;">0</div>
+            </div>
+          </div>
+
+          <div class="stat-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05)); border-left: 4px solid #10b981;">
+            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">✅</div>
+            <div>
+              <div class="stat-label">Çözülen Talepler</div>
+              <div class="stat-value" id="page-support-stat-resolved" style="color: #10b981;">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Support Container with Tabs -->
+        <div class="card" style="padding: 24px;">
+          <div style="display: flex; gap: 12px; border-bottom: 2px solid #e2e8f0; margin-bottom: 24px; padding-bottom: 4px;">
+            <button type="button" id="btn-page-tab-list" class="page-support-tab-btn active" style="padding: 10px 20px; font-weight: 700; font-size: 14px; border: none; background: transparent; color: #3b82f6; border-bottom: 3px solid #3b82f6; cursor: pointer;">
+              📋 Taleplerim & Yönetici Yanıtları (<span id="page-tab-tickets-count">0</span>)
+            </button>
+            <button type="button" id="btn-page-tab-new" class="page-support-tab-btn" style="padding: 10px 20px; font-weight: 600; font-size: 14px; border: none; background: transparent; color: #64748b; border-bottom: 3px solid transparent; cursor: pointer;">
+              ➕ Yeni Talep / Hata Bildir
+            </button>
+          </div>
+
+          <!-- View 1: List & Replies -->
+          <div id="page-support-view-list">
+            <div id="page-my-tickets-container">
+              <!-- Dynamic tickets list -->
+            </div>
+            <div id="page-my-tickets-empty" class="empty-state" style="padding: 50px 20px; text-align: center; display: none;">
+              <div style="font-size: 44px; margin-bottom: 12px;">📭</div>
+              <h3 style="margin: 0 0 6px 0; color: var(--text-primary);">Henüz Bir Destek veya Hata Bildiriminiz Yok</h3>
+              <p style="margin: 0; font-size: 13px; color: var(--text-muted);">Karşılaştığınız herhangi bir sorunu veya önerilerinizi "Yeni Talep / Hata Bildir" sekmesinden iletebilirsiniz.</p>
+            </div>
+          </div>
+
+          <!-- View 2: New Form -->
+          <div id="page-support-view-new" style="display: none; max-width: 700px;">
+            <form id="page-support-ticket-form">
+              <div class="form-group" style="margin-bottom: 18px;">
+                <label for="page-ticket-category" style="font-weight: 600; font-size: 13px; margin-bottom: 8px; display: block;">Bildirim Türü / Kategori <span style="color: #ef4444;">*</span></label>
+                <select id="page-ticket-category" required style="width: 100%; height: 42px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 12px; font-size: 13px; background: #fff;">
+                  <option value="bug">🐞 Hata Bildirimi (Bir fonksiyon çalışmıyor / hata verdi)</option>
+                  <option value="suggestion">💡 Görüş & Öneri (Yeni özellik / kolaylaştırıcı fikir)</option>
+                  <option value="question">❓ Soru & Kullanım Desteği (Nasıl yapılır?)</option>
+                  <option value="other">📝 Diğer Talepler</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 18px;">
+                <label for="page-ticket-title" style="font-weight: 600; font-size: 13px; margin-bottom: 8px; display: block;">Konu Başlığı <span style="color: #ef4444;">*</span></label>
+                <input type="text" id="page-ticket-title" placeholder="Örn: Barkod okurken uyarı veriyor / Yeni rapor şablonu isteği" required style="width: 100%; height: 42px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 12px; font-size: 13px; background: #fff;">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 20px;">
+                <label for="page-ticket-message" style="font-weight: 600; font-size: 13px; margin-bottom: 8px; display: block;">Açıklama & Detaylar <span style="color: #ef4444;">*</span></label>
+                <textarea id="page-ticket-message" rows="6" placeholder="Lütfen karşılaştığınız sorunu veya önerinizi detaylıca yazınız..." required style="width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; padding: 12px; font-size: 13px; font-family: var(--font-family); resize: vertical; background: #fff;"></textarea>
+              </div>
+
+              <div style="background: #f1f5f9; border-radius: 8px; padding: 14px; font-size: 13px; color: #475569; margin-bottom: 24px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 20px;">ℹ️</span>
+                <span>Bildirim Sahibi: <strong id="page-ticket-sender-info">Atölye</strong> — Talebiniz anında Süper Admin paneline iletilir ve yönetici yanıtı burada görüntülenir.</span>
+              </div>
+
+              <button type="submit" class="btn btn-primary" id="btn-page-submit-ticket" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; font-weight: 700; padding: 12px 32px; border-radius: 8px; font-size: 14px; display: inline-flex; align-items: center; gap: 8px;">
+                <span>Talebi İlet 🚀</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
       <!-- ============ SUPER ADMIN PAGE ============ -->
       <section id="page-admin" class="page">
         <div class="page-header">
@@ -1132,6 +1239,20 @@
             </h1>
             <p class="page-desc">Atölyecim SaaS Platformu Kayıtlı Müşteri ve Sistem Metrikleri Takibi</p>
           </div>
+        </div>
+
+        <!-- Açık Destek / Hata Bildirimleri Üst Uyarı Kutusu -->
+        <div id="admin-tickets-top-alert" style="display: none; background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.05)); border: 1.5px solid #ef4444; border-radius: 12px; padding: 14px 20px; margin-bottom: 20px; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 24px;">🔔</span>
+            <div>
+              <div style="font-weight: 700; color: #dc2626; font-size: 14px;"><span id="admin-alert-tickets-count">0</span> adet yeni müşteri destek / hata bildirimi incelenmeyi bekliyor!</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Müşterilerinizin ilettiği sorun ve önerilere cevap vermek için tıklayın.</div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm" style="background: #ef4444; color: #fff; font-weight: 700; padding: 8px 18px; border-radius: 6px; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);" onclick="document.getElementById('admin-tickets-section').scrollIntoView({ behavior: 'smooth' })">
+            Bildirimleri İncele 👇
+          </button>
         </div>
 
         <!-- Metric Cards -->

@@ -1,6 +1,7 @@
 /**
  * support.js - Atölyecim Destek, Hata ve Görüş Bildirimi Sistemi
  * Müşteri atölyelerin bildirimlerini global ayarlarda toplar, Süper Admin paneline iletir.
+ * Hem tam sayfa (#page-support) hem de açılır modal (#support-modal) desteğine sahiptir.
  */
 
 // Helper: Escape HTML to prevent XSS
@@ -80,16 +81,6 @@ function getStatusBadge(status) {
   }
 }
 
-// Kategori ismi
-function getCategoryName(category) {
-  switch (category) {
-    case 'bug': return '🐞 Hata';
-    case 'suggestion': return '💡 Öneri';
-    case 'question': return '❓ Soru';
-    default: return '📝 Diğer';
-  }
-}
-
 // Destek Modalı Açma
 function openSupportModal(tab = 'new') {
   const modal = document.getElementById('support-modal');
@@ -112,7 +103,7 @@ function closeSupportModal() {
   if (modal) modal.style.display = 'none';
 }
 
-// Sekme Değiştirme
+// Modal Sekme Değiştirme
 function switchSupportTab(tab) {
   const tabNewBtn = document.getElementById('tab-btn-new-ticket');
   const tabListBtn = document.getElementById('tab-btn-my-tickets');
@@ -149,62 +140,136 @@ function switchSupportTab(tab) {
   }
 }
 
-// Kullanıcının kendi taleplerini render et
+// Tam Sayfa (#page-support) Sekme Değiştirme
+function switchPageSupportTab(tab) {
+  const btnList = document.getElementById('btn-page-tab-list');
+  const btnNew = document.getElementById('btn-page-tab-new');
+  const viewList = document.getElementById('page-support-view-list');
+  const viewNew = document.getElementById('page-support-view-new');
+
+  if (tab === 'new') {
+    if (btnNew) {
+      btnNew.classList.add('active');
+      btnNew.style.color = '#3b82f6';
+      btnNew.style.borderBottom = '3px solid #3b82f6';
+    }
+    if (btnList) {
+      btnList.classList.remove('active');
+      btnList.style.color = '#64748b';
+      btnList.style.borderBottom = '3px solid transparent';
+    }
+    if (viewNew) viewNew.style.display = 'block';
+    if (viewList) viewList.style.display = 'none';
+
+    // Sender bilgisi güncelle
+    const senderInfo = document.getElementById('page-ticket-sender-info');
+    if (senderInfo) {
+      const currentCompany = localStorage.getItem('atolyecim_auth_company') || 'Atölyem';
+      const currentUser = localStorage.getItem('atolyecim_auth_username') || '';
+      senderInfo.textContent = `${currentCompany} (${currentUser})`;
+    }
+  } else {
+    if (btnList) {
+      btnList.classList.add('active');
+      btnList.style.color = '#3b82f6';
+      btnList.style.borderBottom = '3px solid #3b82f6';
+    }
+    if (btnNew) {
+      btnNew.classList.remove('active');
+      btnNew.style.color = '#64748b';
+      btnNew.style.borderBottom = '3px solid transparent';
+    }
+    if (viewList) viewList.style.display = 'block';
+    if (viewNew) viewNew.style.display = 'none';
+    renderMyTickets();
+  }
+}
+
+// Kullanıcının kendi taleplerini render et (Hem modal hem tam sayfa için)
 async function renderMyTickets() {
-  const container = document.getElementById('my-tickets-container');
-  const emptyEl = document.getElementById('my-tickets-empty');
-  const countEl = document.getElementById('my-tickets-count');
-  if (!container) return;
+  const modalContainer = document.getElementById('my-tickets-container');
+  const modalEmpty = document.getElementById('my-tickets-empty');
+  const modalCount = document.getElementById('my-tickets-count');
+
+  const pageContainer = document.getElementById('page-my-tickets-container');
+  const pageEmpty = document.getElementById('page-my-tickets-empty');
+  const pageCount = document.getElementById('page-tab-tickets-count');
+
+  const statTotal = document.getElementById('page-support-stat-total');
+  const statOpen = document.getElementById('page-support-stat-open');
+  const statResolved = document.getElementById('page-support-stat-resolved');
 
   const currentCompany = localStorage.getItem('atolyecim_auth_company') || '';
   const tickets = await fetchSupportTickets();
   const myTickets = tickets.filter(t => t.company === currentCompany);
 
-  if (countEl) countEl.textContent = myTickets.length;
+  const openCount = myTickets.filter(t => t.status === 'open').length;
+  const resolvedCount = myTickets.filter(t => t.status === 'resolved').length;
 
-  if (myTickets.length === 0) {
-    container.innerHTML = '';
-    if (emptyEl) emptyEl.style.display = 'block';
-    return;
-  }
+  if (modalCount) modalCount.textContent = myTickets.length;
+  if (pageCount) pageCount.textContent = myTickets.length;
 
-  if (emptyEl) emptyEl.style.display = 'none';
+  if (statTotal) statTotal.textContent = myTickets.length;
+  if (statOpen) statOpen.textContent = openCount;
+  if (statResolved) statResolved.textContent = resolvedCount;
 
-  container.innerHTML = myTickets.map(t => {
+  const cardsHtml = myTickets.map(t => {
     const hasAdminReply = t.adminNote && t.adminNote.trim().length > 0;
     return `
-      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: transform 0.15s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
             ${getCategoryBadge(t.category)}
-            <span style="font-size: 11px; color: #94a3b8;">${escapeHtml(t.createdAt || '')}</span>
+            <span style="font-size: 12px; color: #94a3b8;">📅 ${escapeHtml(t.createdAt || '')}</span>
           </div>
           <div>
             ${getStatusBadge(t.status)}
           </div>
         </div>
 
-        <h4 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 700; color: #1e293b;">${escapeHtml(t.title)}</h4>
-        <p style="margin: 0 0 10px 0; font-size: 13px; color: #475569; line-height: 1.5; white-space: pre-wrap;">${escapeHtml(t.message)}</p>
+        <h4 style="margin: 0 0 8px 0; font-size: 15px; font-weight: 700; color: #1e293b;">${escapeHtml(t.title)}</h4>
+        <p style="margin: 0 0 12px 0; font-size: 13.5px; color: #475569; line-height: 1.5; white-space: pre-wrap; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">${escapeHtml(t.message)}</p>
 
         ${hasAdminReply ? `
-          <div style="background: #f0fdf4; border-left: 3px solid #10b981; padding: 10px 14px; border-radius: 6px; margin-top: 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-              <span style="font-weight: 700; font-size: 12px; color: #15803d; display: flex; align-items: center; gap: 4px;">
+          <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 14px; border-radius: 8px; margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; font-size: 13px; color: #15803d; display: flex; align-items: center; gap: 6px;">
                 <span>👑</span> Yönetici Yanıtı:
               </span>
-              ${t.resolvedAt ? `<span style="font-size: 11px; color: #16a34a;">${escapeHtml(t.resolvedAt)}</span>` : ''}
+              ${t.resolvedAt ? `<span style="font-size: 11px; color: #16a34a; font-weight: 600;">${escapeHtml(t.resolvedAt)}</span>` : ''}
             </div>
-            <div style="font-size: 13px; color: #166534; line-height: 1.5; white-space: pre-wrap;">${escapeHtml(t.adminNote)}</div>
+            <div style="font-size: 13px; color: #166534; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(t.adminNote)}</div>
           </div>
         ` : `
-          <div style="background: #f8fafc; padding: 6px 12px; border-radius: 6px; font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+          <div style="background: #f8fafc; padding: 8px 14px; border-radius: 6px; font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 8px;">
             <span>⏳</span> Talebiniz sistem yöneticimiz tarafından sıraya alındı, inceleniyor.
           </div>
         `}
       </div>
     `;
   }).join('');
+
+  // Update modal view
+  if (modalContainer) {
+    if (myTickets.length === 0) {
+      modalContainer.innerHTML = '';
+      if (modalEmpty) modalEmpty.style.display = 'block';
+    } else {
+      if (modalEmpty) modalEmpty.style.display = 'none';
+      modalContainer.innerHTML = cardsHtml;
+    }
+  }
+
+  // Update full page view
+  if (pageContainer) {
+    if (myTickets.length === 0) {
+      pageContainer.innerHTML = '';
+      if (pageEmpty) pageEmpty.style.display = 'block';
+    } else {
+      if (pageEmpty) pageEmpty.style.display = 'none';
+      pageContainer.innerHTML = cardsHtml;
+    }
+  }
 }
 
 // Süper Admin Paneli Biletlerini Render Et
@@ -228,6 +293,18 @@ async function renderAdminTickets(filter) {
   const badgeEl = document.getElementById('admin-tickets-count-badge');
   const statCardEl = document.getElementById('admin-stat-tickets');
   const sidebarBadge = document.getElementById('sidebar-admin-tickets-badge');
+
+  // Admin üst uyarı kutusu
+  const topAlert = document.getElementById('admin-tickets-top-alert');
+  const topAlertCount = document.getElementById('admin-alert-tickets-count');
+  if (topAlert) {
+    if (openTickets.length > 0) {
+      topAlert.style.display = 'flex';
+      if (topAlertCount) topAlertCount.textContent = openTickets.length;
+    } else {
+      topAlert.style.display = 'none';
+    }
+  }
 
   if (countAllEl) countAllEl.textContent = totalCount;
   if (countOpenEl) countOpenEl.textContent = openTickets.length;
@@ -360,6 +437,7 @@ async function quickResolveTicket(ticketId) {
     await saveSupportTickets(tickets);
     if (window.showToast) window.showToast('Talep çözüldü olarak işaretlendi! ✅', 'success');
     renderAdminTickets();
+    renderMyTickets();
   } catch (err) {
     console.error('[Support] quickResolve error:', err);
     if (window.showToast) window.showToast('İşlem başarısız!', 'error');
@@ -376,10 +454,43 @@ async function deleteSupportTicket(ticketId) {
     if (window.showToast) window.showToast('Bildirim kaydı silindi! 🗑️', 'info');
     closeAdminTicketModal();
     renderAdminTickets();
+    renderMyTickets();
   } catch (err) {
     console.error('[Support] delete error:', err);
     if (window.showToast) window.showToast('Silinemedi!', 'error');
   }
+}
+
+// Ortak Talep Gönderme Fonksiyonu
+async function handleTicketSubmission(category, title, message) {
+  const company = localStorage.getItem('atolyecim_auth_company') || 'Atölyem';
+  const userEmail = localStorage.getItem('atolyecim_auth_username') || 'kullanici';
+
+  const newTicket = {
+    id: 'ticket_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+    company: company,
+    userEmail: userEmail,
+    category: category,
+    title: title,
+    message: message,
+    status: 'open',
+    adminNote: '',
+    createdAt: new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    timestamp: Date.now(),
+    resolvedAt: null
+  };
+
+  const existingTickets = await fetchSupportTickets();
+  existingTickets.unshift(newTicket);
+  await saveSupportTickets(existingTickets);
+
+  if (window.showToast) {
+    window.showToast('✅ Bildiriminiz yöneticimize iletildi. Teşekkür ederiz!', 'success');
+  }
+
+  // Hem sayfa hem modal listesini güncelle
+  renderMyTickets();
+  if (window.renderAdminTickets) window.renderAdminTickets();
 }
 
 // Başlatıcı ve Olay Dinleyicileri
@@ -389,13 +500,6 @@ function initSupport() {
   if (floatBtn && !floatBtn._bound) {
     floatBtn._bound = true;
     floatBtn.addEventListener('click', () => openSupportModal('new'));
-  }
-
-  // Sol menü butonu
-  const navSupport = document.getElementById('nav-item-support');
-  if (navSupport && !navSupport._bound) {
-    navSupport._bound = true;
-    navSupport.addEventListener('click', () => openSupportModal('new'));
   }
 
   // Modalı kapatma butonları
@@ -411,7 +515,7 @@ function initSupport() {
     cancelBtn.addEventListener('click', closeSupportModal);
   }
 
-  // Sekmeler
+  // Modal Sekmeleri
   const tabNew = document.getElementById('tab-btn-new-ticket');
   if (tabNew && !tabNew._bound) {
     tabNew._bound = true;
@@ -424,11 +528,24 @@ function initSupport() {
     tabList.addEventListener('click', () => switchSupportTab('list'));
   }
 
-  // Bilet Gönderme Formu
-  const form = document.getElementById('support-ticket-form');
-  if (form && !form._bound) {
-    form._bound = true;
-    form.addEventListener('submit', async (e) => {
+  // Tam Sayfa (#page-support) Sekmeleri
+  const btnPageTabList = document.getElementById('btn-page-tab-list');
+  if (btnPageTabList && !btnPageTabList._bound) {
+    btnPageTabList._bound = true;
+    btnPageTabList.addEventListener('click', () => switchPageSupportTab('list'));
+  }
+
+  const btnPageTabNew = document.getElementById('btn-page-tab-new');
+  if (btnPageTabNew && !btnPageTabNew._bound) {
+    btnPageTabNew._bound = true;
+    btnPageTabNew.addEventListener('click', () => switchPageSupportTab('new'));
+  }
+
+  // Modal Bilet Gönderme Formu
+  const modalForm = document.getElementById('support-ticket-form');
+  if (modalForm && !modalForm._bound) {
+    modalForm._bound = true;
+    modalForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const submitBtn = document.getElementById('btn-submit-ticket');
       if (submitBtn) submitBtn.disabled = true;
@@ -437,37 +554,39 @@ function initSupport() {
         const category = document.getElementById('ticket-category').value;
         const title = document.getElementById('ticket-title').value.trim();
         const message = document.getElementById('ticket-message').value.trim();
-        const company = localStorage.getItem('atolyecim_auth_company') || 'Atölyem';
-        const userEmail = localStorage.getItem('atolyecim_auth_username') || 'kullanici';
 
-        const newTicket = {
-          id: 'ticket_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-          company: company,
-          userEmail: userEmail,
-          category: category,
-          title: title,
-          message: message,
-          status: 'open',
-          adminNote: '',
-          createdAt: new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-          timestamp: Date.now(),
-          resolvedAt: null
-        };
-
-        const existingTickets = await fetchSupportTickets();
-        existingTickets.unshift(newTicket);
-        await saveSupportTickets(existingTickets);
-
-        form.reset();
-        if (window.showToast) {
-          window.showToast('✅ Bildiriminiz yöneticimize iletildi. Teşekkür ederiz!', 'success');
-        }
-
-        // Taleplerim sekmesine geç
+        await handleTicketSubmission(category, title, message);
+        modalForm.reset();
         switchSupportTab('list');
       } catch (err) {
         console.error('[Support] submit error:', err);
-        if (window.showToast) window.showToast('Bildirim gönderilirken hata oluştu!', 'error');
+        if (window.showToast) window.showToast('Bildirim gönderilemedi!', 'error');
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    });
+  }
+
+  // Tam Sayfa Bilet Gönderme Formu
+  const pageForm = document.getElementById('page-support-ticket-form');
+  if (pageForm && !pageForm._bound) {
+    pageForm._bound = true;
+    pageForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-page-submit-ticket');
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        const category = document.getElementById('page-ticket-category').value;
+        const title = document.getElementById('page-ticket-title').value.trim();
+        const message = document.getElementById('page-ticket-message').value.trim();
+
+        await handleTicketSubmission(category, title, message);
+        pageForm.reset();
+        switchPageSupportTab('list');
+      } catch (err) {
+        console.error('[Support] page submit error:', err);
+        if (window.showToast) window.showToast('Bildirim gönderilemedi!', 'error');
       } finally {
         if (submitBtn) submitBtn.disabled = false;
       }
@@ -499,6 +618,7 @@ function initSupport() {
         if (window.showToast) window.showToast('Yanıtınız ve talep durumu kaydedildi! 💾', 'success');
         closeAdminTicketModal();
         renderAdminTickets();
+        renderMyTickets();
       } catch (err) {
         console.error('[Support] admin reply save error:', err);
         if (window.showToast) window.showToast('Kaydedilemedi!', 'error');
@@ -551,6 +671,9 @@ function initSupport() {
       if (window.showToast) window.showToast('Talepler güncellendi 🔄', 'info');
     });
   }
+
+  // İlk veri yüklemesi
+  renderMyTickets();
 }
 
 // Window bindings
@@ -560,6 +683,7 @@ window.Support = {
   openSupportModal,
   closeSupportModal,
   switchSupportTab,
+  switchPageSupportTab,
   renderMyTickets,
   renderAdminTickets,
   openAdminTicketModal,
@@ -571,6 +695,8 @@ window.Support = {
 
 window.openSupportModal = openSupportModal;
 window.closeSupportModal = closeSupportModal;
+window.switchPageSupportTab = switchPageSupportTab;
+window.renderMyTickets = renderMyTickets;
 window.renderAdminTickets = renderAdminTickets;
 window.openAdminTicketModal = openAdminTicketModal;
 window.closeAdminTicketModal = closeAdminTicketModal;

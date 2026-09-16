@@ -3831,3 +3831,13 @@ input[type="number"],
 .support-tab-btn:hover {
   color: #2563eb !important;
 }
+
+
+.floating-support-btn {
+  z-index: 99999 !important;
+  display: flex !important;
+}
+.btn-top-support:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.45) !important;
+}

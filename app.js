@@ -198,6 +198,9 @@ function initNavigation() {
         else if (pageName === 'manager') initManagerPage();
         else if (pageName === 'recycle') initRecycleBinPage();
         else if (pageName === 'admin') initAdminPage();
+        else if (pageName === 'support') {
+          if (window.renderMyTickets) window.renderMyTickets();
+        }
         else if (pageName === 'ai-assistant') {
           if (window.AiAssistant) window.AiAssistant.init();
         }
