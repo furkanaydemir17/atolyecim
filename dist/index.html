@@ -43,9 +43,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/main-B5bwbb8F.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/index-D68Ak_hW.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-DdjA9C3X.css">
+  <script type="module" crossorigin src="/assets/main-BWaw2b9P.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/index-C8S0Hd3N.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-CS0VyR8a.css">
 </head>
 <body>
   <!-- O21 Düzeltme: JS devre dışı bırakıldığında noscript uyarısı -->
@@ -248,6 +248,10 @@
           <span class="sidebar-icon">⚙️</span>
           <span>Yönetici</span>
         </li>
+        <li class="nav-item" id="nav-item-support" role="menuitem" tabindex="0" aria-label="Destek & Geri Bildirim" style="cursor: pointer;">
+          <span class="sidebar-icon">💬</span>
+          <span>Destek & Bildirim</span>
+        </li>
         <li class="nav-item" data-page="recycle" role="menuitem" tabindex="0" aria-label="Son Silinenler">
           <span class="sidebar-icon">🗑️</span>
           <span>Son Silinenler</span>
@@ -255,7 +259,8 @@
         <li class="nav-item" data-page="admin" id="nav-item-admin" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.15)); border-left: 3px solid var(--color-warning);">
           <span class="sidebar-icon">👑</span>
           <span style="font-weight: 700; color: #f59e0b; flex: 1;">Süper Admin</span>
-          <span id="sidebar-admin-pending-badge" style="display: none; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px;">0</span>
+          <span id="sidebar-admin-tickets-badge" style="display: none; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-right: 4px;" title="Açık Destek Talepleri">0</span>
+          <span id="sidebar-admin-pending-badge" style="display: none; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px;" title="Onay Bekleyen Üyeler">0</span>
         </li>
         <li class="nav-item" id="nav-item-logout-menu" style="margin-top: 12px; border-top: 1px solid var(--border-card); color: #ef4444; cursor: pointer;">
           <span class="sidebar-icon">🚪</span>
@@ -1172,6 +1177,13 @@
               <div class="stat-value" id="admin-stat-pending" style="color: #d97706;">0</div>
             </div>
           </div>
+          <div class="stat-card" id="admin-card-tickets" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05)); border-left: 4px solid #ef4444; cursor: pointer;">
+            <div class="stat-icon" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">💬</div>
+            <div>
+              <div class="stat-label">Açık Destek / Hata</div>
+              <div class="stat-value" id="admin-stat-tickets" style="color: #ef4444;">0</div>
+            </div>
+          </div>
         </div>
 
         <!-- Onay Bekleyen Üyelik İstekleri Kartı -->
@@ -1226,6 +1238,47 @@
             <div id="admin-workshops-empty" class="empty-state" style="padding: 40px; display: flex; flex-direction: column; align-items: center;">
               <span>🏭</span>
               <p style="margin-top: 8px; font-size: 13px;">Henüz kayıtlı başka bir atölye bulunmuyor.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Destek & Hata Bildirimleri (Müşteri Ticketları) -->
+        <div class="card" id="admin-tickets-section" style="padding: 24px; margin-top: 24px; border: 1.5px solid rgba(239, 68, 68, 0.25);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h3 style="margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 8px; font-size: 1.15rem; font-weight: 700;">
+                <span>💬</span> Müşteri Destek & Hata Bildirimleri
+                <span id="admin-tickets-count-badge" style="background: #ef4444; color: white; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;">0</span>
+              </h3>
+              <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-muted);">Atölye kullanıcılarından gelen tüm hata raporları, soru ve özellik önerileri burada listelenir.</p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn btn-sm ticket-filter-btn active" data-filter="all" id="ticket-filter-all" style="padding: 6px 14px; font-size: 12px; font-weight: 700; border-radius: 6px;">Tümü (<span id="count-ticket-all">0</span>)</button>
+              <button type="button" class="btn btn-sm ticket-filter-btn" data-filter="open" id="ticket-filter-open" style="padding: 6px 14px; font-size: 12px; font-weight: 700; border-radius: 6px;">⏳ Açık (<span id="count-ticket-open">0</span>)</button>
+              <button type="button" class="btn btn-sm ticket-filter-btn" data-filter="resolved" id="ticket-filter-resolved" style="padding: 6px 14px; font-size: 12px; font-weight: 700; border-radius: 6px;">✅ Çözülen (<span id="count-ticket-resolved">0</span>)</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-refresh-admin-tickets" style="padding: 6px 12px; font-size: 12px;" title="Yenile">🔄 Yenile</button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="admin-tickets-table">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">Tarih</th>
+                  <th style="width: 180px;">Atölye / Kullanıcı</th>
+                  <th style="width: 150px;">Kategori</th>
+                  <th>Başlık & Mesaj Detayı</th>
+                  <th style="width: 120px;">Durum</th>
+                  <th style="width: 160px; text-align: right;">İşlem</th>
+                </tr>
+              </thead>
+              <tbody id="admin-tickets-tbody">
+                <!-- Dinamik ticket satırları -->
+              </tbody>
+            </table>
+            <div id="admin-tickets-empty" class="empty-state" style="padding: 40px; display: flex; flex-direction: column; align-items: center;">
+              <span style="font-size: 36px;">📬</span>
+              <p style="margin-top: 8px; font-size: 13px; color: var(--text-muted); font-weight: 600;">Henüz bildirilmiş bir destek talebi veya hata kaydı yok.</p>
             </div>
           </div>
         </div>
@@ -3976,6 +4029,151 @@
     </div>
   </div>
 
+  <!-- ============ SUPPORT & TICKET MODAL ============ -->
+  <div class="modal-backdrop" id="support-modal" style="display: none;">
+    <div class="modal modal-lg" style="max-width: 650px; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35);">
+      <div class="modal-header" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #fff; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 26px;">💬</span>
+          <div>
+            <h2 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #fff;">Destek & Geri Bildirim Merkezi</h2>
+            <p style="margin: 2px 0 0 0; font-size: 12px; color: #94a3b8;">Hata bildirimleri, görüş, öneri ve destek talepleriniz doğrudan yöneticiye iletilir.</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" id="btn-close-support-modal" style="background: transparent; border: none; font-size: 24px; color: #94a3b8; cursor: pointer; line-height: 1;">&times;</button>
+      </div>
+
+      <!-- Tabs Header -->
+      <div style="display: flex; background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 0 24px;">
+        <button type="button" id="tab-btn-new-ticket" class="support-tab-btn active" style="padding: 12px 18px; border: none; background: transparent; font-weight: 700; font-size: 13px; color: #3b82f6; border-bottom: 2px solid #3b82f6; cursor: pointer;">
+          ➕ Yeni Destek & Hata Bildirimi
+        </button>
+        <button type="button" id="tab-btn-my-tickets" class="support-tab-btn" style="padding: 12px 18px; border: none; background: transparent; font-weight: 600; font-size: 13px; color: #64748b; border-bottom: 2px solid transparent; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          📋 Taleplerim & Cevaplar <span id="my-tickets-count" style="background: #e2e8f0; color: #475569; font-size: 11px; padding: 1px 7px; border-radius: 999px; font-weight: 700;">0</span>
+        </button>
+      </div>
+
+      <div class="modal-body" style="padding: 24px; max-height: 75vh; overflow-y: auto;">
+        <!-- TAB 1: New Ticket Form -->
+        <div id="support-tab-new">
+          <form id="support-ticket-form">
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label for="ticket-category" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block; color: var(--text-primary);">Bildirim Türü / Kategori <span style="color: #ef4444;">*</span></label>
+              <select id="ticket-category" required style="width: 100%; height: 42px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 12px; font-size: 13px; background: #fff;">
+                <option value="bug">🐞 Hata Bildirimi (Bir fonksiyon çalışmıyor / hata verdi)</option>
+                <option value="suggestion">💡 Görüş & Öneri (Yeni özellik / kolaylaştırıcı fikir)</option>
+                <option value="question">❓ Soru & Kullanım Desteği (Nasıl yapılır?)</option>
+                <option value="other">📝 Diğer Talepler</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label for="ticket-title" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block; color: var(--text-primary);">Konu Başlığı <span style="color: #ef4444;">*</span></label>
+              <input type="text" id="ticket-title" placeholder="Örn: Sipariş eklerken barkod okumadı / Yeni ekstre tasarımı" required style="width: 100%; height: 42px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 12px; font-size: 13px; background: #fff;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label for="ticket-message" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block; color: var(--text-primary);">Açıklama & Detaylar <span style="color: #ef4444;">*</span></label>
+              <textarea id="ticket-message" rows="5" placeholder="Lütfen karşılaştığınız hatayı, hangi sayfada olduğunu veya önerinizi detaylıca anlatınız..." required style="width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; padding: 10px 12px; font-size: 13px; resize: vertical; font-family: var(--font-family); background: #fff;"></textarea>
+            </div>
+
+            <div style="background: #f1f5f9; border-radius: 8px; padding: 12px; font-size: 12px; color: #64748b; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 16px;">ℹ️</span>
+              <span>Bildirim Sahibi: <strong id="ticket-sender-info" style="color: #1e293b;">Atölye</strong> — Gönderdiğiniz bildirim anında Süper Admin paneline düşer.</span>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+              <button type="button" class="btn btn-ghost" id="btn-cancel-ticket" style="padding: 10px 18px;">Vazgeç</button>
+              <button type="submit" class="btn btn-primary" id="btn-submit-ticket" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; font-weight: 700; padding: 10px 24px; border-radius: 8px; display: flex; align-items: center; gap: 8px;">
+                <span>Talebi Gönder 🚀</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB 2: My Tickets List -->
+        <div id="support-tab-list" style="display: none;">
+          <div id="my-tickets-container">
+            <!-- Rendered dynamically -->
+          </div>
+          <div id="my-tickets-empty" style="text-align: center; padding: 40px 20px; color: #94a3b8; display: none;">
+            <div style="font-size: 40px; margin-bottom: 10px;">📭</div>
+            <p style="font-weight: 600; color: #64748b; margin: 0 0 4px 0;">Henüz Gönderilmiş Bir Talebiniz Yok</p>
+            <p style="font-size: 12px; margin: 0;">Karşılaştığınız sorunları veya önerilerinizi "Yeni Destek" sekmesinden iletebilirsiniz.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SUPER ADMIN TICKET DETAIL & REPLY MODAL ============ -->
+  <div class="modal-backdrop" id="admin-ticket-modal" style="display: none;">
+    <div class="modal modal-lg" style="max-width: 600px; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);">
+      <div class="modal-header" style="background: #0f172a; color: #fff; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">🎫</span>
+          <div>
+            <h2 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #fff;" id="adm-modal-title">Talep Detayı & Yanıt</h2>
+            <span style="font-size: 12px; color: #94a3b8;" id="adm-modal-id">#ID</span>
+          </div>
+        </div>
+        <button type="button" class="btn-close" id="btn-close-admin-ticket-modal" style="background: transparent; border: none; font-size: 24px; color: #94a3b8; cursor: pointer; line-height: 1;">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 24px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <span id="adm-ticket-category-badge" class="category-badge" style="font-weight: 700;">Hata</span>
+              <span style="font-size: 12px; color: #64748b; margin-left: 8px;" id="adm-ticket-date">Tarih</span>
+            </div>
+            <div style="font-weight: 600; font-size: 13px; color: #1e293b;">
+              🏭 <span id="adm-ticket-company">Atölye Adı</span> (<span id="adm-ticket-user" style="color: #64748b; font-family: monospace;">user</span>)
+            </div>
+          </div>
+          <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 1.05rem; font-weight: 700;" id="adm-ticket-subject">Başlık</h4>
+          <div style="font-size: 13px; color: #334155; line-height: 1.6; white-space: pre-wrap; background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;" id="adm-ticket-body">Mesaj içeriği</div>
+        </div>
+
+        <form id="admin-ticket-reply-form">
+          <input type="hidden" id="adm-reply-ticket-id">
+
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label for="adm-ticket-status-select" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block; color: var(--text-primary);">Talep Durumu</label>
+            <select id="adm-ticket-status-select" style="width: 100%; height: 40px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 12px; font-size: 13px; font-weight: 600; background: #fff;">
+              <option value="open">⏳ Açık (İnceleniyor / İşlemde)</option>
+              <option value="resolved">✅ Çözüldü (İşlem Tamamlandı)</option>
+              <option value="closed">🔒 Kapatıldı (Gerekli Bilgi Verildi)</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 20px;">
+            <label for="adm-ticket-note-input" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block; color: var(--text-primary);">Yönetici Yanıtı / Notu (Atölyeye Gösterilir)</label>
+            <textarea id="adm-ticket-note-input" rows="4" placeholder="Müşteriye iletilecek çözüm veya açıklama notunu yazın..." style="width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; padding: 10px 12px; font-size: 13px; font-family: var(--font-family); background: #fff;"></textarea>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-adm-delete-ticket" style="color: #ef4444; font-weight: 600;">
+              🗑️ Talebi Sil
+            </button>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-secondary" id="btn-adm-cancel-reply" style="padding: 8px 16px;">Kapat</button>
+              <button type="submit" class="btn btn-primary" style="background: #10b981; color: white; font-weight: 700; padding: 8px 20px; border-radius: 8px;">
+                💾 Güncelle ve Kaydet
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Yüzen Destek & Hata Bildirimi Butonu -->
+  <button id="floating-support-btn" class="floating-support-btn" title="Destek / Hata & Görüş Bildir">
+    <span class="floating-icon">💬</span>
+    <span class="floating-text">Destek & Hata Bildir</span>
+  </button>
+
   <!-- ============ AI ASSISTANT COPILOT DRAWER ============ -->
   <div class="ai-drawer-overlay" id="ai-drawer-overlay" onclick="AiAssistant.toggleDrawer(false)"></div>
   <aside class="ai-copilot-drawer" id="ai-copilot-drawer" aria-label="Atölyecim Yapay Zeka Asistanı">
@@ -4026,6 +4224,57 @@
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" type="text/javascript"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <!-- ============ AI ASSISTANT COPILOT DRAWER ============ -->
+  <div class="ai-drawer-overlay" id="ai-drawer-overlay" onclick="AiAssistant.toggleDrawer(false)"></div>
+  <aside class="ai-copilot-drawer" id="ai-copilot-drawer" aria-label="Atölyecim Yapay Zeka Asistanı">
+    <!-- Header -->
+    <div class="ai-drawer-header">
+      <div class="ai-drawer-header-left">
+        <div class="ai-drawer-avatar">🤖</div>
+        <div>
+          <h3 class="ai-drawer-title">Atölyecim AI Copilot</h3>
+          <div class="ai-drawer-status">
+            <span class="ai-sparkle-dot"></span>
+            <span>Canlı Yerel Zeka & Analiz</span>
+          </div>
+        </div>
+      </div>
+      <div class="ai-drawer-header-actions">
+        <button type="button" class="ai-drawer-btn-icon" id="btn-ai-clear-chat" title="Sohbeti Temizle">🗑️</button>
+        <button type="button" class="ai-drawer-btn-icon" id="btn-ai-close-drawer" title="Kapat (ESC)">&times;</button>
+      </div>
+    </div>
+
+    <!-- Message Feed -->
+    <div class="ai-drawer-body" id="ai-drawer-chat-messages">
+      <!-- Dynamic Messages -->
+    </div>
+
+    <!-- Quick Questions & Input Bar -->
+    <div class="ai-drawer-footer">
+      <div class="ai-suggestions-scroll" id="ai-quick-suggestions">
+        <button type="button" class="ai-quick-chip" data-query="Bugünün genel atölye özeti ve yapılacaklar nedir?">📊 Günlük Brifing</button>
+        <button type="button" class="ai-quick-chip" data-query="Kritik ve biten malzemeleri listele">⚠️ Kritik Stoklar</button>
+        <button type="button" class="ai-quick-chip" data-query="Termini yaklaşan ve geciken siparişler hangileri?">⏳ Termin Durumu</button>
+        <button type="button" class="ai-quick-chip" data-query="Alacak ve borç dengesini özetle">💰 Cari Bakiyeler</button>
+        <button type="button" class="ai-quick-chip" data-query="Kesim, saya ve montajdaki işleri göster">✂️ İmalat Durumu</button>
+      </div>
+
+      <form id="ai-drawer-chat-form" style="margin: 0;">
+        <div class="ai-input-wrapper">
+          <input type="text" class="ai-input-field" id="ai-drawer-input" placeholder="Bir soru sorun veya işlem emri verin..." autocomplete="off">
+          <button type="button" class="ai-voice-btn" id="btn-ai-voice-input" title="Sesle Konuş (Mikrofon)">🎙️</button>
+          <button type="submit" class="ai-send-btn" id="btn-ai-send" title="Gönder">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  </aside>
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </body>
 </html>

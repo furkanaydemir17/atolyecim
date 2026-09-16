@@ -749,6 +749,7 @@ async function loadApp() {
     if (window.Expenses && typeof window.Expenses.init === 'function') window.Expenses.init();
     if (window.MaterialPrices && typeof window.MaterialPrices.init === 'function') window.MaterialPrices.init();
     if (window.WhatsAppManager && typeof window.WhatsAppManager.init === 'function') window.WhatsAppManager.init();
+    if (window.initSupport && typeof window.initSupport === 'function') window.initSupport();
 
     // Sync B2B settings from DB
     try {
@@ -1742,6 +1743,20 @@ async function initAdminPage() {
       dbGet('settings', 'global_gemini_api_key').then(setting => {
         globalKeyInput.value = setting && setting.value ? setting.value : '';
       }).catch(err => console.warn('Could not load global gemini api key setting:', err));
+    }
+
+        // Render Destek & Hata Bildirimleri
+    if (window.renderAdminTickets && typeof window.renderAdminTickets === 'function') {
+      window.renderAdminTickets();
+    }
+
+    const ticketsCard = document.getElementById('admin-card-tickets');
+    if (ticketsCard && !ticketsCard._bound) {
+      ticketsCard._bound = true;
+      ticketsCard.addEventListener('click', () => {
+        const sec = document.getElementById('admin-tickets-section');
+        if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+      });
     }
 
     // Save global settings handler

@@ -3760,3 +3760,74 @@ input[type="number"],
 
 
 
+
+
+/* =========================================================
+   SUPPORT & TICKET MANAGEMENT SYSTEM STYLES
+   ========================================================= */
+.floating-support-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 998;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff !important;
+  border: none;
+  border-radius: 50px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4), 0 2px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+}
+.floating-support-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 22px rgba(37, 99, 235, 0.5);
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+}
+.floating-support-btn:active {
+  transform: translateY(0);
+}
+.floating-support-btn .floating-icon {
+  font-size: 17px;
+  line-height: 1;
+}
+
+@media (max-width: 768px) {
+  .floating-support-btn {
+    bottom: 74px;
+    right: 16px;
+    padding: 9px 14px;
+    font-size: 12px;
+  }
+}
+
+.ticket-filter-btn {
+  background: var(--bg-card, #f8fafc);
+  color: var(--text-muted, #64748b);
+  border: 1px solid var(--border-color, #e2e8f0);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.ticket-filter-btn:hover {
+  background: #f1f5f9;
+  color: var(--text-primary, #0f172a);
+}
+.ticket-filter-btn.active {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.25);
+}
+
+.support-tab-btn {
+  transition: all 0.2s ease;
+}
+.support-tab-btn:hover {
+  color: #2563eb !important;
+}
