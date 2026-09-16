@@ -297,7 +297,7 @@
           </div>
           <div class="db-header-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <!-- Support Header Button -->
-            <button type="button" class="btn-top-support" id="btn-top-support" onclick="window.openSupportModal ? window.openSupportModal('new') : null" title="Hata veya Destek Bildir" style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff !important; border: none; border-radius: 8px; padding: 9px 16px; font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35); transition: all 0.2s ease;">
+            <button type="button" class="btn-top-support" id="btn-top-support" onclick="window.navigateToSupportPage ? window.navigateToSupportPage('new') : null" style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff !important; border: none; border-radius: 8px; padding: 9px 16px; font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35); transition: all 0.2s ease;">
               <span style="font-size: 16px; line-height: 1;">💬</span>
               <span>Destek & Hata Bildir</span>
             </button>
@@ -1305,6 +1305,48 @@
           </div>
         </div>
 
+        <!-- Destek & Hata Bildirimleri (Müşteri Ticketları) -->
+        <div class="card" id="admin-tickets-section" style="padding: 24px; margin-top: 24px; border: 1.5px solid rgba(239, 68, 68, 0.25);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h3 style="margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 8px; font-size: 1.15rem; font-weight: 700;">
+                <span>💬</span> Müşteri Destek & Hata Bildirimleri
+                <span id="admin-tickets-count-badge" style="background: #ef4444; color: white; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;">0</span>
+              </h3>
+              <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-muted);">Atölye kullanıcılarından gelen tüm hata raporları, soru ve özellik önerileri burada listelenir.</p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn btn-sm ticket-filter-btn active" data-filter="all" id="ticket-filter-all" style="padding: 6px 14px; font-size: 12px; font-weight: 700; border-radius: 6px;">Tümü (<span id="count-ticket-all">0</span>)</button>
+              <button type="button" class="btn btn-sm ticket-filter-btn" data-filter="open" id="ticket-filter-open" style="padding: 6px 14px; font-size: 12px; font-weight: 700; border-radius: 6px;">⏳ Açık (<span id="count-ticket-open">0</span>)</button>
+              <button type="button" class="btn btn-sm ticket-filter-btn" data-filter="resolved" id="ticket-filter-resolved" style="padding: 6px 14px; font-size: 12px; font-weight: 700; border-radius: 6px;">✅ Çözülen (<span id="count-ticket-resolved">0</span>)</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-refresh-admin-tickets" style="padding: 6px 12px; font-size: 12px;" title="Yenile">🔄 Yenile</button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="admin-tickets-table">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">Tarih</th>
+                  <th style="width: 180px;">Atölye / Kullanıcı</th>
+                  <th style="width: 150px;">Kategori</th>
+                  <th>Başlık & Mesaj Detayı</th>
+                  <th style="width: 120px;">Durum</th>
+                  <th style="width: 160px; text-align: right;">İşlem</th>
+                </tr>
+              </thead>
+              <tbody id="admin-tickets-tbody">
+                <!-- Dinamik ticket satırları -->
+              </tbody>
+            </table>
+            <div id="admin-tickets-empty" class="empty-state" style="padding: 40px; display: flex; flex-direction: column; align-items: center;">
+              <span style="font-size: 36px;">📬</span>
+              <p style="margin-top: 8px; font-size: 13px; color: var(--text-muted); font-weight: 600;">Henüz bildirilmiş bir destek talebi veya hata kaydı yok.</p>
+            </div>
+          </div>
+        </div>
+
+        
         <!-- Onay Bekleyen Üyelik İstekleri Kartı -->
         <div class="card" id="admin-pending-section" style="padding: 24px; margin-bottom: 24px; border: 1.5px solid #f59e0b; background: rgba(245, 158, 11, 0.03); display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
@@ -1357,47 +1399,6 @@
             <div id="admin-workshops-empty" class="empty-state" style="padding: 40px; display: flex; flex-direction: column; align-items: center;">
               <span>🏭</span>
               <p style="margin-top: 8px; font-size: 13px;">Henüz kayıtlı başka bir atölye bulunmuyor.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Destek & Hata Bildirimleri (Müşteri Ticketları) -->
-        <div class="card" id="admin-tickets-section" style="padding: 24px; margin-top: 24px; border: 1.5px solid rgba(239, 68, 68, 0.25);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
-            <div>
-              <h3 style="margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 8px; font-size: 1.15rem; font-weight: 700;">
-                <span>💬</span> Müşteri Destek & Hata Bildirimleri
-                <span id="admin-tickets-count-badge" style="background: #ef4444; color: white; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;">0</span>
-              </h3>
-              <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-muted);">Atölye kullanıcılarından gelen tüm hata raporları, soru ve özellik önerileri burada listelenir.</p>
-            </div>
-            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-              <button type="button" class="btn btn-sm ticket-filter-btn active" data-filter="all" id="ticket-filter-all" style="padding: 6px 14px; font-size: 12px; font-weight: 700; border-radius: 6px;">Tümü (<span id="count-ticket-all">0</span>)</button>
-              <button type="button" class="btn btn-sm ticket-filter-btn" data-filter="open" id="ticket-filter-open" style="padding: 6px 14px; font-size: 12px; font-weight: 700; border-radius: 6px;">⏳ Açık (<span id="count-ticket-open">0</span>)</button>
-              <button type="button" class="btn btn-sm ticket-filter-btn" data-filter="resolved" id="ticket-filter-resolved" style="padding: 6px 14px; font-size: 12px; font-weight: 700; border-radius: 6px;">✅ Çözülen (<span id="count-ticket-resolved">0</span>)</button>
-              <button type="button" class="btn btn-secondary btn-sm" id="btn-refresh-admin-tickets" style="padding: 6px 12px; font-size: 12px;" title="Yenile">🔄 Yenile</button>
-            </div>
-          </div>
-
-          <div class="table-container">
-            <table class="data-table" id="admin-tickets-table">
-              <thead>
-                <tr>
-                  <th style="width: 140px;">Tarih</th>
-                  <th style="width: 180px;">Atölye / Kullanıcı</th>
-                  <th style="width: 150px;">Kategori</th>
-                  <th>Başlık & Mesaj Detayı</th>
-                  <th style="width: 120px;">Durum</th>
-                  <th style="width: 160px; text-align: right;">İşlem</th>
-                </tr>
-              </thead>
-              <tbody id="admin-tickets-tbody">
-                <!-- Dinamik ticket satırları -->
-              </tbody>
-            </table>
-            <div id="admin-tickets-empty" class="empty-state" style="padding: 40px; display: flex; flex-direction: column; align-items: center;">
-              <span style="font-size: 36px;">📬</span>
-              <p style="margin-top: 8px; font-size: 13px; color: var(--text-muted); font-weight: 600;">Henüz bildirilmiş bir destek talebi veya hata kaydı yok.</p>
             </div>
           </div>
         </div>
@@ -4288,7 +4289,7 @@
   </div>
 
   <!-- Yüzen Destek & Hata Bildirimi Butonu -->
-  <button id="floating-support-btn" class="floating-support-btn" title="Destek / Hata & Görüş Bildir">
+  <button id="floating-support-btn" class="floating-support-btn" onclick="window.navigateToSupportPage ? window.navigateToSupportPage('new') : null" title="Destek / Hata & Görüş Bildir">
     <span class="floating-icon">💬</span>
     <span class="floating-text">Destek & Hata Bildir</span>
   </button>

@@ -1,3 +1,45 @@
+
+// Doğrudan Destek Sayfasına Gitme (Aşağı kaydırma yapmadan anında tepeye açılır)
+function navigateToSupportPage(tab = 'new') {
+  // Modal varsa kapat
+  const modal = document.getElementById('support-modal');
+  if (modal) {
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+  }
+
+  // Sayfaları değiştir
+  const pages = document.querySelectorAll('.page');
+  pages.forEach(p => p.classList.remove('active'));
+
+  const supportPage = document.getElementById('page-support');
+  if (supportPage) {
+    supportPage.classList.add('active');
+  }
+
+  // Sol menüyü aktif yap
+  const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+  navItems.forEach(n => n.classList.remove('active'));
+  const navSupport = document.getElementById('nav-item-support');
+  if (navSupport) {
+    navSupport.classList.add('active');
+  }
+
+  // Tepeye sıfırla (aşağı iniş yok!)
+  window.scrollTo(0, 0);
+  const content = document.getElementById('content');
+  if (content) content.scrollTo(0, 0);
+
+  // İlgili sekmeye geç
+  switchPageSupportTab(tab);
+
+  // Mobil menüyü kapat
+  if (window._closeMobileSidebar) window._closeMobileSidebar();
+}
+
+window.navigateToSupportPage = navigateToSupportPage;
+window.openSupportModal = navigateToSupportPage;
+
 /**
  * support.js - Atölyecim Destek, Hata ve Görüş Bildirimi Sistemi
  * Müşteri atölyelerin bildirimlerini global ayarlarda toplar, Süper Admin paneline iletir.
