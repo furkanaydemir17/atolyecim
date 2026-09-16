@@ -43,7 +43,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/main-KMvZWp0x.js"></script>
+  <script type="module" crossorigin src="/assets/main-B5bwbb8F.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/index-D68Ak_hW.js">
   <link rel="stylesheet" crossorigin href="/assets/index-DdjA9C3X.css">
 </head>
@@ -254,7 +254,8 @@
         </li>
         <li class="nav-item" data-page="admin" id="nav-item-admin" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.15)); border-left: 3px solid var(--color-warning);">
           <span class="sidebar-icon">👑</span>
-          <span style="font-weight: 700; color: #f59e0b;">Süper Admin</span>
+          <span style="font-weight: 700; color: #f59e0b; flex: 1;">Süper Admin</span>
+          <span id="sidebar-admin-pending-badge" style="display: none; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px;">0</span>
         </li>
         <li class="nav-item" id="nav-item-logout-menu" style="margin-top: 12px; border-top: 1px solid var(--border-card); color: #ef4444; cursor: pointer;">
           <span class="sidebar-icon">🚪</span>
@@ -1162,6 +1163,42 @@
               <div class="stat-label">Aktif Abonelikler</div>
               <div class="stat-value" id="admin-stat-active">Sınırsız (V.I.P)</div>
             </div>
+          </div>
+
+          <div class="stat-card" id="admin-card-pending" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.04)); border-left: 4px solid #f59e0b;">
+            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">⏳</div>
+            <div>
+              <div class="stat-label">Onay Bekleyen Başvuru</div>
+              <div class="stat-value" id="admin-stat-pending" style="color: #d97706;">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Onay Bekleyen Üyelik İstekleri Kartı -->
+        <div class="card" id="admin-pending-section" style="padding: 24px; margin-bottom: 24px; border: 1.5px solid #f59e0b; background: rgba(245, 158, 11, 0.03); display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+            <h3 style="margin: 0; color: #b45309; display: flex; align-items: center; gap: 8px; font-size: 1.15rem; font-weight: 700;">
+              <span>🔔</span> Onay Bekleyen Üyelik İstekleri
+              <span id="admin-pending-badge" style="background: #f59e0b; color: white; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;">0</span>
+            </h3>
+            <span style="font-size: 12px; color: var(--text-muted);">Yeni kayıt olan atölyelerin sisteme erişebilmesi için onay vermeniz gerekir.</span>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="admin-pending-table">
+              <thead>
+                <tr>
+                  <th>Firma / Atölye Adı</th>
+                  <th>E-posta Adresi</th>
+                  <th>Başvuru Tarihi</th>
+                  <th>Durum</th>
+                  <th style="text-align: right;">Onay İşlemi</th>
+                </tr>
+              </thead>
+              <tbody id="admin-pending-tbody">
+                <!-- Dinamik onay bekleyen satırlar -->
+              </tbody>
+            </table>
           </div>
         </div>
 

@@ -323,6 +323,15 @@ function initLogin() {
 
     if (adminNavItem) {
       adminNavItem.style.display = isAdmin ? 'flex' : 'none';
+      if (isAdmin) {
+        const workshops = getWorkshops();
+        const pendingCount = (workshops || []).filter(w => w.status === 'pending').length;
+        const pendingBadge = document.getElementById('sidebar-admin-pending-badge');
+        if (pendingBadge) {
+          pendingBadge.textContent = pendingCount;
+          pendingBadge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
+        }
+      }
     }
 
     const dbBadge = document.getElementById('db-status-badge');
@@ -492,6 +501,12 @@ function initLogin() {
           loginError.style.display = 'block';
           return;
         }
+        // YENİ: Bekleyen üyelik kontrolü (Mevcut üyelerde status tanımsız/active olduğu için asla engellenmez)
+        if (found.status === 'pending') {
+          loginError.innerHTML = '⏳ <strong>Üyelik Onayı Bekleniyor</strong><br><span style="font-size: 12px; margin-top: 4px; display: inline-block;">Kaydınız başarıyla alındı fakat henüz platform yöneticisi tarafından onaylanmadı. Yönetici onayından sonra giriş yapabilirsiniz.</span>';
+          loginError.style.display = 'block';
+          return;
+        }
         isAuthenticated = true;
         displayName = found.company;
         companyName = found.company;
@@ -503,16 +518,26 @@ function initLogin() {
             password: passwordInput
           });
           if (data && data.user) {
-            isAuthenticated = true;
-            displayName = data.user.email.split('@')[0];
-            companyName = displayName + ' Atölyesi';
-
             // Atölye listesinde e-posta ile eşleştir (loginWorkshops zaten çekildi, tekrar istek yok)
             const matched = loginWorkshops.find(w => w.email && w.email.toLowerCase() === data.user.email.toLowerCase());
             if (matched) {
+              if (matched.blocked) {
+                loginError.textContent = '⛔ Hesabınız dondurulmuş / bloke edilmiştir! Lütfen platform yöneticinizle iletişime geçin.';
+                loginError.style.display = 'block';
+                return;
+              }
+              if (matched.status === 'pending') {
+                loginError.innerHTML = '⏳ <strong>Üyelik Onayı Bekleniyor</strong><br><span style="font-size: 12px; margin-top: 4px; display: inline-block;">Kaydınız başarıyla alındı fakat henüz platform yöneticisi tarafından onaylanmadı. Yönetici onayından sonra giriş yapabilirsiniz.</span>';
+                loginError.style.display = 'block';
+                return;
+              }
               displayName = matched.company;
               companyName = matched.company;
+            } else {
+              displayName = data.user.email.split('@')[0];
+              companyName = displayName + ' Atölyesi';
             }
+            isAuthenticated = true;
           }
         } catch (err) {
           console.warn('Supabase Auth login fallback:', err);
@@ -630,7 +655,9 @@ function initLogin() {
           email: email,
           password: hashedPassword,
           createdAt: new Date().toLocaleDateString('tr-TR'),
-          plan: 'Standard'
+          plan: 'Standard',
+          status: 'pending', // ⏳ Yönetici onayı bekliyor
+          approved: false
         };
 
         workshops.push(newWorkshop);
@@ -649,12 +676,17 @@ function initLogin() {
         }
 
         registerError.style.display = 'none';
-        if (window.showToast) window.showToast('Atölye kaydınız başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.', 'success');
+        if (window.showToast) window.showToast('Üyelik başvurunuz alındı! Yönetici onayından sonra giriş yapabilirsiniz.', 'info');
 
         // Switch to login tab and prefill
         tabBtnLogin.click();
         document.getElementById('login-username').value = email;
-        document.getElementById('login-password').value = password;
+        document.getElementById('login-password').value = '';
+        loginError.innerHTML = 'ℹ️ <strong>Başvurunuz Alındı</strong><br><span style="font-size: 12px; margin-top: 4px; display: inline-block;">Üyelik isteğiniz süper admin paneline iletildi. Onay verildikten sonra şifrenizle giriş yapabilirsiniz.</span>';
+        loginError.style.background = 'rgba(59, 130, 246, 0.1)';
+        loginError.style.color = '#3b82f6';
+        loginError.style.borderColor = 'rgba(59, 130, 246, 0.2)';
+        loginError.style.display = 'block';
 
       } catch (err) {
         console.error('Registration failed:', err);
@@ -1584,6 +1616,62 @@ async function initAdminPage() {
 
     const workshops = await window.getAdminWorkshops();
 
+    // Onay bekleyen üyeler filtresi
+    const pendingWorkshops = (workshops || []).filter(w => w.status === 'pending');
+    const pendingCount = pendingWorkshops.length;
+
+    // Metrik ve Yan Menü Rozetlerini Güncelle
+    const statPendingEl = document.getElementById('admin-stat-pending');
+    if (statPendingEl) statPendingEl.textContent = pendingCount;
+
+    const sidebarPendingBadge = document.getElementById('sidebar-admin-pending-badge');
+    if (sidebarPendingBadge) {
+      sidebarPendingBadge.textContent = pendingCount;
+      sidebarPendingBadge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
+    }
+
+    // Onay Bekleyenler Bölümünü Yönet
+    const pendingSection = document.getElementById('admin-pending-section');
+    const pendingBadge = document.getElementById('admin-pending-badge');
+    const pendingTbody = document.getElementById('admin-pending-tbody');
+
+    if (pendingSection && pendingTbody) {
+      if (pendingCount > 0) {
+        pendingSection.style.display = 'block';
+        if (pendingBadge) pendingBadge.textContent = pendingCount;
+        pendingTbody.innerHTML = pendingWorkshops.map(w => {
+          const companyEsc = (w.company || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          const emailEsc = (w.email || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          return `
+            <tr>
+              <td style="padding: 12px 16px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">⏳</span> ${escapeHtml(w.company)}
+              </td>
+              <td style="padding: 12px 16px; color: var(--text-muted); font-family: monospace;">${escapeHtml(w.email)}</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: var(--text-muted);">${escapeHtml(w.createdAt || 'Bugün')}</td>
+              <td style="padding: 12px 16px;">
+                <span class="category-badge" style="background: rgba(245, 158, 11, 0.15); color: #d97706; font-weight: 700;">
+                  ⏳ Onay Bekliyor
+                </span>
+              </td>
+              <td style="padding: 12px 16px; text-align: right;">
+                <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+                  <button type="button" class="btn btn-sm" style="background: #10b981; color: white; font-weight: 700; padding: 6px 14px; border-radius: 6px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);" onclick="window.approveWorkshop('${emailEsc}')" title="Üyeliği Onayla ve Başlat">
+                    ✅ Onayla ve Başlat
+                  </button>
+                  <button type="button" class="btn btn-ghost btn-sm" style="color: #ef4444;" onclick="window.deleteWorkshop('${emailEsc}')" title="Başvuruyu Reddet">
+                    ❌ Reddet
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        pendingSection.style.display = 'none';
+      }
+    }
+
     if (!workshops || workshops.length === 0) {
       tbody.innerHTML = '';
       if (emptyState) emptyState.style.display = 'flex';
@@ -1595,22 +1683,35 @@ async function initAdminPage() {
       const companyEsc = (w.company || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
       const emailEsc = (w.email || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
       const planEsc = (w.plan || 'Standard').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const isPending = w.status === 'pending';
       const isBlocked = !!w.blocked;
+
+      let statusBadge = '';
+      if (isPending) {
+        statusBadge = `<span class="category-badge" style="background: rgba(245, 158, 11, 0.15); color: #d97706; font-weight: 700;">⏳ Onay Bekliyor</span>`;
+      } else if (isBlocked) {
+        statusBadge = `<span class="category-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-weight: 700;">⛔ Bloke Edildi</span>`;
+      } else {
+        statusBadge = `<span class="category-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700;">✅ ${escapeHtml(w.plan || 'Standard')} (Aktif)</span>`;
+      }
 
       return `
         <tr>
           <td style="padding: 12px 16px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 18px;">🏭</span> ${escapeHtml(w.company)}
+            <span style="font-size: 18px;">${isPending ? '⏳' : '🏭'}</span> ${escapeHtml(w.company)}
           </td>
           <td style="padding: 12px 16px; color: var(--text-muted); font-family: monospace;">${escapeHtml(w.email)}</td>
           <td style="padding: 12px 16px; font-size: 12px; color: var(--text-muted);">${escapeHtml(w.createdAt || 'Bugün')}</td>
           <td style="padding: 12px 16px;">
-            <span class="category-badge" style="background: ${isBlocked ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)'}; color: ${isBlocked ? '#ef4444' : '#10b981'}; font-weight: 700;">
-              ${isBlocked ? '⛔ Bloke Edildi' : escapeHtml(w.plan || 'Standard') + ' (Aktif)'}
-            </span>
+            ${statusBadge}
           </td>
           <td style="padding: 12px 16px;">
             <div style="display: flex; gap: 6px; align-items: center;">
+              ${isPending ? `
+                <button type="button" class="btn btn-sm" style="background: #10b981; color: white; font-weight: 700; padding: 4px 10px; border-radius: 4px;" onclick="window.approveWorkshop('${emailEsc}')" title="Üyeliği Onayla">
+                  ✅ Onayla
+                </button>
+              ` : ''}
               <button type="button" class="btn btn-ghost btn-sm" onclick="window.openWorkshopReport('${companyEsc}', '${emailEsc}', '${planEsc}')" title="Raporları Gör">
                 📊 Raporlar
               </button>
@@ -1701,6 +1802,30 @@ async function openWorkshopReport(companyName, email, plan) {
   } catch (e) {
     console.error('Failed to load detailed report:', e);
   }
+}
+
+async function approveWorkshop(email) {
+  let workshops = getWorkshops();
+  const target = workshops.find(w => w.email.toLowerCase() === email.toLowerCase());
+  if (!target) return;
+
+  target.status = 'active';
+  target.approved = true;
+  saveWorkshops(workshops);
+
+  if (window.supabaseClient) {
+    try {
+      await window.dbUpdate('settings', {
+        key: 'saas_registered_workshops',
+        value: { workshops: workshops }
+      });
+    } catch (e) {
+      console.warn('Cloud sync approve warning:', e);
+    }
+  }
+
+  showToast(`"${target.company}" atölyesi başarıyla onaylandı ve üyeliği aktifleştirildi! 🎉`, 'success');
+  initAdminPage();
 }
 
 async function toggleBlockWorkshop(email) {
@@ -1998,6 +2123,7 @@ window.sendNotificationAlert = sendNotificationAlert;
 window.checkTodayDeadlines = checkTodayDeadlines;
 window.checkStockLimitAndNotify = checkStockLimitAndNotify;
 window.initAdminPage = initAdminPage;
+window.approveWorkshop = approveWorkshop;
 window.openWorkshopReport = openWorkshopReport;
 window.openWorkshopModulesModal = openWorkshopModulesModal;
 window.toggleBlockWorkshop = toggleBlockWorkshop;
